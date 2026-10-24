@@ -7,10 +7,11 @@ import { BRANCH_SHORT, type Branch } from "@/lib/branches";
 import { nationName } from "@/lib/nations";
 
 /** [id, name, nation, rb rank, removed (0/1), branch] from data/public/search.json */
-type Row = [string, string, string, number, number, string];
+export type SearchRow = [string, string, string, number, number, string];
+type Row = SearchRow;
 
 let index: Promise<Row[]> | null = null;
-function loadIndex(): Promise<Row[]> {
+export function loadIndex(): Promise<Row[]> {
   index ??= fetch("/data/search.json").then((r) => r.json());
   return index;
 }
@@ -40,7 +41,16 @@ function search(rows: Row[], q: string, limit = 8): Row[] {
   return scored.slice(0, limit).map((s) => s[1]);
 }
 
-export function SearchBox({ className = "" }: { className?: string }) {
+export function SearchBox({
+  className = "",
+  onSelect,
+  placeholder = "Search vehicles and aircraft",
+}: {
+  className?: string;
+  /** Called instead of navigating to the vehicle page. */
+  onSelect?: (row: Row) => void;
+  placeholder?: string;
+}) {
   const router = useRouter();
   const listId = useId();
   const [q, setQ] = useState("");
@@ -60,6 +70,7 @@ export function SearchBox({ className = "" }: { className?: string }) {
   function go(r: Row) {
     setOpen(false);
     setQ("");
+    if (onSelect) return onSelect(r);
     input.current?.blur();
     router.push(`/vehicle/${r[0]}/`);
   }
@@ -70,8 +81,8 @@ export function SearchBox({ className = "" }: { className?: string }) {
         ref={input}
         type="search"
         value={q}
-        placeholder="Search vehicles and aircraft"
-        aria-label="Search vehicles"
+        placeholder={placeholder}
+        aria-label={placeholder}
         role="combobox"
         aria-expanded={open && results.length > 0}
         aria-controls={listId}

@@ -63,6 +63,7 @@ export default function ExplorePage() {
           <a href="#most-changed">Most changed</a>
           <a href="#thermals">Thermal finder</a>
           <a href="#top-br">Top BR over time</a>
+          <Link href="/compare/">Compare vehicles</Link>
         </nav>
       </header>
 

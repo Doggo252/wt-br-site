@@ -22,6 +22,7 @@ const PAGES = [
   ["/explore/", "Biggest moves"],
   ["/dev/", "Dev server"],
   ["/about/", "About Uptier"],
+  ["/compare/?ids=us_m42_duster,p-51d-5", "M42"],
 ];
 
 const server = createServer((req, res) => {

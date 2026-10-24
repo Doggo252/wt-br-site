@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: url("/records/"), lastModified },
     { url: url("/explore/"), lastModified },
     { url: url("/about/") },
+    { url: url("/compare/") },
     ...BRANCHES.flatMap((b) => [
       { url: url(branchHref(b)), lastModified },
       ...nationsOf(b).map((n) => ({ url: url(treeHref(b, n)), lastModified })),

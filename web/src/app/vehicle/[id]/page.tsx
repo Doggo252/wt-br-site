@@ -113,7 +113,12 @@ export default async function VehiclePage({ params }: Params) {
       <Section title="Battle Rating history">
         {u.history && u.history.length > 0 ? (
           <div className="space-y-4">
-            <HistorySummary u={u} />
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <HistorySummary u={u} />
+              <Link href={`/compare/?ids=${u.id}`} className="text-sm">
+                Compare with other vehicles →
+              </Link>
+            </div>
             <BrStepChart history={u.history} asOf={meta.date} />
             <ChangeLog history={u.history} absences={u.absences} added={u.added} />
           </div>
