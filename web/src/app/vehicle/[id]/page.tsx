@@ -11,6 +11,7 @@ import { MODES, MODE_LABEL, MODE_NAME, formatBr, type Mode } from "@/lib/br";
 import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getUnit } from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { treeHref } from "@/lib/branches";
+import { plural } from "@/lib/format";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
 import type { CrewRole, Sight as ChipSight } from "@/lib/units";
 
@@ -60,6 +61,16 @@ export default async function VehiclePage({ params }: Params) {
   const plannedNow = announced.find(
     ({ a, change }) => a.kind === "planned" && Object.values(change.outcome ?? {}).includes("pending"),
   );
+  const plannedForChart = plannedNow
+    ? {
+        date: plannedNow.a.date,
+        ...Object.fromEntries(
+          (["ab", "rb", "sb"] as const)
+            .filter((m) => plannedNow.change.outcome?.[m] === "pending" && plannedNow.change[m])
+            .map((m) => [m, plannedNow.change[m]![1]]),
+        ),
+      }
+    : undefined;
 
   return (
     <article className="space-y-10">
@@ -151,7 +162,7 @@ export default async function VehiclePage({ params }: Params) {
                 Compare with other vehicles →
               </Link>
             </div>
-            <BrStepChart history={u.history} asOf={meta.date} />
+            <BrStepChart history={u.history} asOf={meta.date} planned={plannedForChart} />
             <ChangeLog history={u.history} absences={u.absences} added={u.added} />
           </div>
         ) : (
@@ -246,10 +257,9 @@ function HistorySummary({ u }: { u: UnitDetail }) {
   const first = h[0];
   const parts: string[] = [];
   parts.push(u.added ? `Added in update ${u.added}.` : `In the game since before March 2020.`);
+  const changes = u.changes ?? 0;
   parts.push(
-    u.changes === 0
-      ? "Its BR has never changed."
-      : `Its BR has changed in ${u.changes} update${u.changes === 1 ? "" : "s"}.`,
+    changes === 0 ? "Its BR has never changed." : `Its BR has changed in ${plural(changes, "update")}.`,
   );
   if (first && first.rb !== u.br.rb) {
     parts.push(`Realistic: ${formatBr(first.rb)} → ${formatBr(u.br.rb)} since ${u.added ? "release" : "2020"}.`);

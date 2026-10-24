@@ -11,16 +11,33 @@ const SERIES: Record<Mode, { color: string; dash?: string; width: number }> = {
   sb: { color: "var(--color-mode-sb)", dash: "2 3", width: 2 },
 };
 
-type Row = { t: number; v: string; ab: number; rb: number; sb: number; end?: boolean };
+type Row = {
+  t: number;
+  v: string;
+  ab: number | null;
+  rb: number | null;
+  sb: number | null;
+  end?: boolean;
+  /** A future point showing Gaijin's announced BR. */
+  planned?: boolean;
+  abPlan?: number;
+  rbPlan?: number;
+  sbPlan?: number;
+};
+
+/** How far right the planned step is drawn; the announced change has no exact date. */
+const PLAN_DAYS = 45;
 
 type Props = {
   history: HistoryPoint[];
   /** Date of the latest data, so the last step runs to the present. */
   asOf: string;
+  /** Announced but not yet live: new ranks per mode, and the announcement date. */
+  planned?: { date: string; ab?: number; rb?: number; sb?: number };
 };
 
 /** BR over time, one stepped line per game mode. Steps hold until the next change. */
-export function BrStepChart({ history, asOf }: Props) {
+export function BrStepChart({ history, asOf, planned }: Props) {
   const [hidden, setHidden] = useState<Set<Mode>>(new Set());
 
   const rows: Row[] = history.map((h) => ({
@@ -33,8 +50,23 @@ export function BrStepChart({ history, asOf }: Props) {
   const last = rows[rows.length - 1];
   const end = Date.parse(asOf.slice(0, 10));
   if (last && end > last.t) rows.push({ ...last, t: end, end: true });
+  const plannedModes = MODES.filter((m) => planned?.[m] !== undefined);
+  if (planned && plannedModes.length && rows.length) {
+    const now = rows[rows.length - 1];
+    const day = 86_400_000;
+    // Step up right after today and hold, so the jump is visible.
+    const soon: Row = { t: now.t + day, v: "", ab: null, rb: null, sb: null, planned: true };
+    const later: Row = { ...soon, t: now.t + PLAN_DAYS * day };
+    for (const m of plannedModes) {
+      now[`${m}Plan`] = now[m] ?? undefined;
+      soon[`${m}Plan`] = later[`${m}Plan`] = rankToBr(planned[m]!);
+    }
+    rows.push(soon, later);
+  }
 
-  const values = rows.flatMap((r) => MODES.filter((m) => !hidden.has(m)).map((m) => r[m]));
+  const values = rows.flatMap((r) =>
+    MODES.filter((m) => !hidden.has(m)).flatMap((m) => [r[m], r[`${m}Plan`]].filter((v): v is number => typeof v === "number")),
+  );
   const lo = Math.floor(Math.min(...values, 99) - 0.34);
   const hi = Math.ceil(Math.max(...values, 0) + 0.34);
   const ticks = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
@@ -101,7 +133,7 @@ export function BrStepChart({ history, asOf }: Props) {
               width={44}
             />
             <Tooltip
-              content={<ChartTooltip hidden={hidden} />}
+              content={<ChartTooltip hidden={hidden} plannedDate={planned?.date} />}
               cursor={{ stroke: "var(--color-fg-3)", strokeWidth: 1 }}
               isAnimationActive={false}
             />
@@ -118,6 +150,24 @@ export function BrStepChart({ history, asOf }: Props) {
                 isAnimationActive={false}
               />
             ))}
+            {plannedModes
+              .filter((m) => !hidden.has(m))
+              .map((m) => (
+                <Line
+                  key={`${m}-plan`}
+                  dataKey={`${m}Plan`}
+                  type="stepAfter"
+                  stroke={SERIES[m].color}
+                  strokeOpacity={0.6}
+                  strokeWidth={2}
+                  strokeDasharray="3 4"
+                  dot={false}
+                  activeDot={false}
+                  connectNulls
+                  isAnimationActive={false}
+                  legendType="none"
+                />
+              ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -138,13 +188,29 @@ function ChartTooltip({
   active,
   payload,
   hidden,
+  plannedDate,
 }: {
   active?: boolean;
   payload?: { payload: Row }[];
   hidden: Set<Mode>;
+  plannedDate?: string;
 }) {
   const row = payload?.[0]?.payload;
   if (!active || !row) return null;
+  if (row.planned) {
+    return (
+      <div className="border border-card-premium-border bg-bg/95 px-3 py-2 text-sm shadow-lg">
+        <div className="mb-1 font-display text-gold">Planned by Gaijin</div>
+        <div className="mb-1 text-xs text-fg-3">Announced {plannedDate}, not live yet</div>
+        {MODES.filter((m) => !hidden.has(m) && typeof row[`${m}Plan`] === "number").map((m) => (
+          <div key={m} className="flex items-center justify-between gap-6">
+            <span className="text-fg-2">{MODE_LABEL[m]}</span>
+            <span className="font-display tabular text-fg">{(row[`${m}Plan`] as number).toFixed(1)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="border border-card-border bg-bg/95 px-3 py-2 text-sm shadow-lg">
       <div className="mb-1 font-display text-fg">
@@ -157,7 +223,7 @@ function ChartTooltip({
             <span className="inline-block h-0.5 w-3" style={{ background: SERIES[m].color }} />
             {MODE_LABEL[m]}
           </span>
-          <span className="font-display tabular text-fg">{row[m].toFixed(1)}</span>
+          <span className="font-display tabular text-fg">{row[m]?.toFixed(1)}</span>
         </div>
       ))}
     </div>
