@@ -61,6 +61,26 @@ class UnitSummary(Model):
     br: Ranks
     thermal: dict[Crew, int] = {}  # best thermal generation per crew position
     image: bool = False  # whether img/units/<id>.webp exists
+    added: str | None = None  # version first seen; None if already in the first snapshot (2020-03)
+    removedIn: str | None = None  # set when the vehicle is no longer in the game
+    changes: int = 0  # number of updates that changed its BR in any mode
+
+
+class HistoryPoint(Model):
+    """BR from this version on (until the next point)."""
+
+    v: str
+    d: str  # date, YYYY-MM-DD
+    ab: int
+    rb: int
+    sb: int
+
+
+class Absence(Model):
+    """A stretch when the vehicle was out of the game."""
+
+    removed: str
+    returned: str | None = None
 
 
 class UnitDetail(UnitSummary):
@@ -70,6 +90,39 @@ class UnitDetail(UnitSummary):
     sights: dict[Crew, list[Sight]] = {}
     stats: Stats = Stats()
     eventName: str | None = None
+    history: list[HistoryPoint] = []
+    absences: list[Absence] = []
+
+
+class VersionInfo(Model):
+    """One row of data/versions.json: a live game version that changed ground vehicles."""
+
+    v: str
+    d: str
+    major: str
+    changes: int = 0
+    up: int = 0  # RB uptiers
+    down: int = 0  # RB downtiers
+    added: int = 0
+    removed: int = 0
+
+
+class BrChange(Model):
+    id: str
+    before: Ranks
+    after: Ranks
+
+
+class UpdateDiff(Model):
+    """data/updates/<version>.json."""
+
+    v: str
+    d: str
+    prev: str | None = None
+    next: str | None = None
+    changes: list[BrChange] = []
+    added: list[str] = []
+    removed: list[str] = []
 
 
 class TreeCell(Model):
@@ -96,3 +149,19 @@ class Meta(Model):
     generatedAt: str
     unitCount: int
     nations: list[str]
+
+
+class TimeMachineUnit(Model):
+    n: str  # name
+    s: Status
+    i: bool = False  # has image
+    h: list[tuple[int, int, int, int]]  # (version index, ab, rb, sb) change points
+
+
+class TimeMachine(Model):
+    """data/public/timemachine/<nation>.json, fetched by the tech tree's patch slider.
+    Version indexes refer to data/versions.json."""
+
+    nation: str
+    layouts: list[tuple[int, list[list[TreeCell]]]]  # (from version index, columns)
+    units: dict[str, TimeMachineUnit]

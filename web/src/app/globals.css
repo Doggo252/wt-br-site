@@ -38,6 +38,15 @@
   --color-card-disabled-top: #43463b;
 
   /*
+   * Chart series, one per game mode. Validated with the dataviz palette checker
+   * against the panel surface (#1B2226): lightness band, chroma, CVD and
+   * contrast all pass for every pair. Lines also differ by dash pattern.
+   */
+  --color-mode-ab: #d55181;
+  --color-mode-rb: #3b8fd9;
+  --color-mode-sb: #c98500;
+
+  /*
    * WTSymbols comes first in both stacks. Its unicode-range limits it to the
    * game's name glyphs, so every other character falls through to the next font.
    */

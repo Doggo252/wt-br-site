@@ -1,4 +1,4 @@
-"""Build data/ for the current game version."""
+"""Build data/: current vehicles, plus BR history when a HistoryResult is given."""
 
 import json
 import shutil
@@ -9,7 +9,24 @@ from pydantic import BaseModel
 
 from . import parse
 from .datamine import SHOP, UNITS_CSV, UNITTAGS, WEAPONRY_CSV, WPCOST, Datamine
-from .models import Meta, NationTree, Ranks, Sight, Stats, TreeCell, UnitDetail, UnitSummary
+from .history_build import HistoryResult, major_of
+from .models import (
+    Absence,
+    BrChange,
+    HistoryPoint,
+    Meta,
+    NationTree,
+    Ranks,
+    Sight,
+    Stats,
+    TimeMachine,
+    TimeMachineUnit,
+    TreeCell,
+    UnitDetail,
+    UnitSummary,
+    UpdateDiff,
+    VersionInfo,
+)
 
 # In-game nation order.
 NATION_ORDER = [
@@ -32,7 +49,9 @@ def is_hidden(wp: dict, shop_flags: dict) -> bool:
     return any(shop_flags.get(k) or wp.get(k) for k in keys)
 
 
-def build_current(dm: Datamine, out: Path, images: Path | None = None) -> Meta:
+def build_current(
+    dm: Datamine, out: Path, images: Path | None = None, hist: HistoryResult | None = None
+) -> Meta:
     wpcost = dm.read_json(WPCOST)
     shop_units, shop_trees = parse.parse_shop(dm.read_json(SHOP))
     unittags = dm.read_json(UNITTAGS)
@@ -40,8 +59,7 @@ def build_current(dm: Datamine, out: Path, images: Path | None = None) -> Meta:
     weaponry = parse.parse_weaponry(dm.read_text(WEAPONRY_CSV))
     ranks = parse.ground_ranks(wpcost)
 
-    summaries: list[UnitSummary] = []
-    details: list[UnitDetail] = []
+    details: dict[str, UnitDetail] = {}
     for uid, su in shop_units.items():
         if uid not in ranks:
             continue
@@ -64,18 +82,23 @@ def build_current(dm: Datamine, out: Path, images: Path | None = None) -> Meta:
             thermal=parse.best_thermal(sights),
             image=image,
         )
-        summaries.append(UnitSummary(**base))
-        details.append(
-            UnitDetail(
-                **base,
-                fullName=lang.get(f"{uid}_0") or base["name"],
-                sights={c: [Sight(**s) for s in ss] for c, ss in sights.items()},
-                stats=Stats(**parse.parse_stats(model, wp, unittags.get(uid) or {}, weaponry)),
-                eventName=su.flags.get("event") or wp.get("event"),
-            )
+        details[uid] = UnitDetail(
+            **base,
+            fullName=lang.get(f"{uid}_0") or base["name"],
+            sights={c: [Sight(**s) for s in ss] for c, ss in sights.items()},
+            stats=Stats(**parse.parse_stats(model, wp, unittags.get(uid) or {}, weaponry)),
+            eventName=su.flags.get("event") or wp.get("event"),
         )
 
-    known = {s.id for s in summaries}
+    if hist:
+        _drop_event_units(hist, details, lang)
+        _add_removed_units(details, hist, wpcost, unittags, lang, images)
+        _attach_history(details, hist)
+
+    summaries = [
+        UnitSummary(**d.model_dump(include=set(UnitSummary.model_fields))) for d in details.values()
+    ]
+    known = {uid for uid, d in details.items() if not d.removedIn}
     trees = []
     for t in shop_trees:
         cols = []
@@ -104,15 +127,157 @@ def build_current(dm: Datamine, out: Path, images: Path | None = None) -> Meta:
     )
 
     if out.exists():
-        for sub in ("units", "trees"):
+        for sub in ("units", "trees", "updates", "public"):
             shutil.rmtree(out / sub, ignore_errors=True)
     _write(out / "meta.json", meta)
     _write(out / "units" / "index.json", sorted(summaries, key=lambda s: s.id))
-    for d in details:
+    for d in details.values():
         _write(out / "units" / f"{d.id}.json", d)
     for t in trees:
         _write(out / "trees" / f"{t.nation}.json", t)
+    if hist:
+        _write_history(out, hist, details, lang)
     return meta
+
+
+TRANSIENT_DAYS = 120
+
+
+def _drop_event_units(hist: HistoryResult, details: dict, lang: dict) -> None:
+    """Remove units that are gone now and were only temporary: April Fools and other event-mode
+    vehicles that briefly sat in a tree. Kept if still in the game or around for months."""
+    vs = hist.versions
+    drop = set()
+    for uid, h in hist.units.items():
+        if uid in details or not h.removed or h.removed[-1][1] != -1:
+            continue
+        start = datetime.fromisoformat(vs[h.points[0][0]].date)
+        end = datetime.fromisoformat(vs[h.removed[-1][0]].date)
+        unnamed = not (lang.get(f"{uid}_shop") or lang.get(f"{uid}_0"))
+        if unnamed or (end - start).days < TRANSIENT_DAYS:
+            drop.add(uid)
+    for uid in drop:
+        del hist.units[uid]
+    for v in vs:
+        v.added = [u for u in v.added if u not in drop]
+        v.removed = [u for u in v.removed if u not in drop]
+        v.changes = [c for c in v.changes if c["id"] not in drop]
+
+
+def _add_removed_units(details, hist: HistoryResult, wpcost, unittags, lang, images) -> None:
+    """Vehicles that were in a tech tree at some point but aren't now."""
+    for uid, h in hist.units.items():
+        if uid in details:
+            continue
+        tags = (unittags.get(uid) or {}).get("tags") or {}
+        wp = wpcost.get(uid) if isinstance(wpcost.get(uid), dict) else {}
+        last = h.points[-1]
+        name = lang.get(f"{uid}_shop") or lang.get(f"{uid}_0") or uid
+        details[uid] = UnitDetail(
+            id=uid,
+            branch="ground",
+            nation=h.nation,
+            operator=parse.operator_country(tags, h.nation),
+            rank=h.tier or 1,
+            type=parse.unit_type(tags),
+            name=name,
+            fullName=lang.get(f"{uid}_0") or name,
+            status=status_of(wp, {}),
+            hidden=True,
+            br=Ranks(ab=last[1], rb=last[2], sb=last[3]),
+            image=bool(images and (images / f"{uid}.webp").exists()),
+        )
+
+
+def _attach_history(details: dict[str, UnitDetail], hist: HistoryResult) -> None:
+    vs = hist.versions
+    for uid, h in hist.units.items():
+        d = details[uid]
+        d.history = [
+            HistoryPoint(v=vs[i].version, d=vs[i].date[:10], ab=ab, rb=rb, sb=sb)
+            for i, ab, rb, sb in h.points
+        ]
+        d.added = vs[h.points[0][0]].version if h.points[0][0] > 0 else None
+        d.changes = sum(1 for a, b in zip(h.points, h.points[1:], strict=False) if a[1:] != b[1:])
+        d.absences = [
+            Absence(removed=vs[a].version, returned=vs[b].version if b >= 0 else None)
+            for a, b in h.removed
+        ]
+        if h.removed and h.removed[-1][1] == -1:
+            d.removedIn = vs[h.removed[-1][0]].version
+
+
+def _write_history(out: Path, hist: HistoryResult, details: dict[str, UnitDetail], lang) -> None:
+    vs = hist.versions
+    infos = []
+    for i, v in enumerate(vs):
+        infos.append(
+            VersionInfo(
+                v=v.version,
+                d=v.date[:10],
+                major=major_of(v.version),
+                changes=len(v.changes),
+                up=sum(1 for c in v.changes if c["to"][1] > c["from"][1]),
+                down=sum(1 for c in v.changes if c["to"][1] < c["from"][1]),
+                added=len(v.added) if i > 0 else 0,
+                removed=len(v.removed),
+            )
+        )
+        diff = UpdateDiff(
+            v=v.version,
+            d=v.date[:10],
+            prev=vs[i - 1].version if i > 0 else None,
+            next=vs[i + 1].version if i + 1 < len(vs) else None,
+            changes=[
+                BrChange(id=c["id"], before=Ranks(**_r(c["from"])), after=Ranks(**_r(c["to"])))
+                for c in v.changes
+            ],
+            added=v.added if i > 0 else [],
+            removed=v.removed,
+        )
+        _write(out / "updates" / f"{v.version}.json", diff)
+    _write(out / "versions.json", infos)
+    # The slider needs the version list client-side too.
+    _write(out / "public" / "versions.json", infos)
+
+    for nation, layouts in hist.layouts.items():
+        ids = {u for _, cols in layouts for col in cols for _, us, _ in col for u in us}
+        tm = TimeMachine(
+            nation=nation,
+            layouts=[
+                (
+                    i,
+                    [
+                        [
+                            TreeCell(
+                                rank=r,
+                                units=[u for u in us if u in hist.units],
+                                group=g,
+                                groupName=lang.get(f"shop/group/{g}") if g else None,
+                            )
+                            for r, us, g in col
+                        ]
+                        for col in cols
+                    ],
+                )
+                for i, cols in layouts
+            ],
+            units={
+                u: TimeMachineUnit(
+                    n=details[u].name,
+                    s=details[u].status,
+                    i=details[u].image,
+                    h=hist.units[u].points,
+                )
+                for u in sorted(ids)
+                if u in hist.units
+            },
+        )
+        _write(out / "public" / "timemachine" / f"{nation}.json", tm)
+
+
+def _r(x: list[int]) -> dict[str, int]:
+    return {"ab": x[0], "rb": x[1], "sb": x[2]}
 
 
 def _write(path: Path, obj) -> None:

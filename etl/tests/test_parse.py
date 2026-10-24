@@ -128,3 +128,18 @@ def test_gun_name_lookup_is_case_insensitive():
     }
     stats = parse.parse_stats(model, {}, {}, {"88mm_kwk36_user_cannon": "88 mm KwK36 cannon"})
     assert stats["mainGun"] == "88 mm KwK36 cannon"
+
+
+def test_parse_shop_old_list_format():
+    old = {
+        "country_usa": {
+            "army": [
+                {"range": {"us_m2a4": {"rank": 1}}},
+                {"range": {"us_m2_medium": {"rank": 1}, "us_m3_lee": {"rank": 2}}},
+            ]
+        }
+    }
+    units, trees = parse.parse_shop(old)
+    assert set(units) == {"us_m2a4", "us_m2_medium", "us_m3_lee"}
+    assert units["us_m3_lee"].column == 1
+    assert len(trees[0].columns) == 2

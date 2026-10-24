@@ -30,6 +30,29 @@ export interface TreeCell {
 }
 
 /**
+ * data/public/timemachine/<nation>.json, fetched by the tech tree's patch slider.
+ * Version indexes refer to data/versions.json.
+ */
+
+export interface TimeMachine {
+  nation: string;
+  layouts: [number, TreeCell[][]][];
+  units: {
+    [k: string]: TimeMachineUnit;
+  };
+}
+/**
+ * A single vehicle or a folder of vehicles in one tech tree column.
+ */
+
+export interface TimeMachineUnit {
+  n: string;
+  s: "tree" | "premium" | "squadron" | "event";
+  i?: boolean;
+  h: [number, number, number, number][];
+}
+
+/**
  * data/units/<id>.json.
  */
 
@@ -48,12 +71,17 @@ export interface UnitDetail {
     [k: string]: number;
   };
   image?: boolean;
+  added?: string | null;
+  removedIn?: string | null;
+  changes?: number;
   fullName: string;
   sights?: {
     [k: string]: Sight[];
   };
   stats?: Stats;
   eventName?: string | null;
+  history?: HistoryPoint[];
+  absences?: Absence[];
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -88,6 +116,25 @@ export interface Stats {
   armorHull?: [number, number, number] | null;
   armorTurret?: [number, number, number] | null;
 }
+/**
+ * BR from this version on (until the next point).
+ */
+
+export interface HistoryPoint {
+  v: string;
+  d: string;
+  ab: number;
+  rb: number;
+  sb: number;
+}
+/**
+ * A stretch when the vehicle was out of the game.
+ */
+
+export interface Absence {
+  removed: string;
+  returned?: string | null;
+}
 
 /**
  * One row of data/units/index.json.
@@ -108,7 +155,48 @@ export interface UnitSummary {
     [k: string]: number;
   };
   image?: boolean;
+  added?: string | null;
+  removedIn?: string | null;
+  changes?: number;
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
  */
+
+/**
+ * data/updates/<version>.json.
+ */
+
+export interface UpdateDiff {
+  v: string;
+  d: string;
+  prev?: string | null;
+  next?: string | null;
+  changes?: BrChange[];
+  added?: string[];
+  removed?: string[];
+}
+
+export interface BrChange {
+  id: string;
+  before: Ranks;
+  after: Ranks;
+}
+/**
+ * Raw economic ranks. BR = rank / 3 + 1.
+ */
+
+/**
+ * One row of data/versions.json: a live game version that changed ground vehicles.
+ */
+
+export interface VersionInfo {
+  v: string;
+  d: string;
+  major: string;
+  changes?: number;
+  up?: number;
+  down?: number;
+  added?: number;
+  removed?: number;
+}

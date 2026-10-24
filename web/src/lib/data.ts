@@ -6,7 +6,7 @@ import "server-only";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cache } from "react";
-import type { Meta, NationTree, UnitDetail, UnitSummary } from "./data.gen";
+import type { Meta, NationTree, UnitDetail, UnitSummary, UpdateDiff, VersionInfo } from "./data.gen";
 
 const DATA = join(process.cwd(), "..", "data");
 
@@ -27,3 +27,27 @@ export const getTree = cache((nation: string) => read<NationTree>("trees", `${na
 export function unitsInNation(nation: string): UnitSummary[] {
   return getIndex().filter((u) => u.nation === nation);
 }
+
+// The ETL omits default values (0, []) to keep files small; fill them back in here.
+
+export type Version = Required<Omit<VersionInfo, "major">> & Pick<VersionInfo, "major">;
+
+export const getVersions = cache((): Version[] =>
+  read<VersionInfo[]>("versions.json").map((v) => ({
+    ...v,
+    changes: v.changes ?? 0,
+    up: v.up ?? 0,
+    down: v.down ?? 0,
+    added: v.added ?? 0,
+    removed: v.removed ?? 0,
+  })),
+);
+
+export type Update = UpdateDiff & Required<Pick<UpdateDiff, "changes" | "added" | "removed">>;
+
+export const getUpdate = cache((v: string): Update => {
+  const u = read<UpdateDiff>("updates", `${v}.json`);
+  return { ...u, changes: u.changes ?? [], added: u.added ?? [], removed: u.removed ?? [] };
+});
+
+export const getLatestBrUpdate = cache(() => [...getVersions()].reverse().find((v) => v.changes > 0));

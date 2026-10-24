@@ -24,7 +24,7 @@ export default async function NationPage({ params }: Params) {
   const { nation } = await params;
   const tree = getTree(nation);
   const units: Record<string, TreeUnit> = {};
-  for (const u of unitsInNation(nation)) {
+  for (const u of unitsInNation(nation).filter((u) => !u.removedIn)) {
     units[u.id] = { name: u.name, status: u.status, hidden: u.hidden, br: u.br, image: u.image };
   }
   const meta = getMeta();

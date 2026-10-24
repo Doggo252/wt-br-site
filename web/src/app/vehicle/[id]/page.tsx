@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BrBadge } from "@/components/BrBadge";
+import { BrStepChart } from "@/components/BrStepChart";
+import { ChangeLog } from "@/components/ChangeLog";
 import { SameBrStrip } from "@/components/SameBrStrip";
 import type { TreeUnit } from "@/components/TechTree";
 import { ThermalChip } from "@/components/ThermalChip";
@@ -70,7 +72,11 @@ export default async function VehiclePage({ params }: Params) {
           {u.fullName !== u.name && <p className="mt-1 text-fg-2">{u.fullName}</p>}
           <p className="mt-2 text-sm">
             <span className={STATUS_COLOR[u.status]}>{STATUS_LABEL[u.status]}</span>
-            {u.hidden && <span className="text-fg-3"> · not currently obtainable</span>}
+            {u.removedIn ? (
+              <span className="text-bad"> · removed in update {u.removedIn}</span>
+            ) : (
+              u.hidden && <span className="text-fg-3"> · not currently obtainable</span>
+            )}
           </p>
           <dl className="mt-5 grid max-w-sm grid-cols-3 border border-card-border bg-panel">
             {MODES.map((m) => (
@@ -86,10 +92,17 @@ export default async function VehiclePage({ params }: Params) {
       </header>
 
       <Section title="Battle Rating history">
-        <p className="border border-dashed border-card-border bg-panel p-5 text-sm text-fg-2">
-          The BR chart and change log for every update since 2020 are being built. Current as of update{" "}
-          <span className="tabular">{meta.version}</span>.
-        </p>
+        {u.history && u.history.length > 0 ? (
+          <div className="space-y-4">
+            <HistorySummary u={u} />
+            <BrStepChart history={u.history} asOf={meta.date} />
+            <ChangeLog history={u.history} absences={u.absences} added={u.added} />
+          </div>
+        ) : (
+          <p className="border border-dashed border-card-border bg-panel p-5 text-sm text-fg-2">
+            No history recorded for this vehicle yet.
+          </p>
+        )}
       </Section>
 
       <div className="grid gap-10 md:grid-cols-2">
@@ -111,6 +124,23 @@ export default async function VehiclePage({ params }: Params) {
       </p>
     </article>
   );
+}
+
+function HistorySummary({ u }: { u: UnitDetail }) {
+  const h = u.history ?? [];
+  const first = h[0];
+  const parts: string[] = [];
+  parts.push(u.added ? `Added in update ${u.added}.` : `In the game since before March 2020.`);
+  parts.push(
+    u.changes === 0
+      ? "Its BR has never changed."
+      : `Its BR has changed in ${u.changes} update${u.changes === 1 ? "" : "s"}.`,
+  );
+  if (first && first.rb !== u.br.rb) {
+    parts.push(`Realistic: ${formatBr(first.rb)} → ${formatBr(u.br.rb)} since ${u.added ? "release" : "2020"}.`);
+  }
+  if (u.removedIn) parts.push(`Removed in update ${u.removedIn}.`);
+  return <p className="text-fg-2">{parts.join(" ")}</p>;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

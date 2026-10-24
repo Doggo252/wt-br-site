@@ -77,7 +77,7 @@ def parse_shop(shop: dict, section: str = "army") -> tuple[dict[str, ShopUnit], 
             continue
         nation = nation_of(country)
         tree = ShopTree(nation)
-        for ci, column in enumerate(_as_list(sec.get("range"))):
+        for ci, column in enumerate(_columns(sec)):
             cells: list[ShopCell] = []
             for key, v in column.items():
                 if not isinstance(v, dict):
@@ -96,6 +96,16 @@ def parse_shop(shop: dict, section: str = "army") -> tuple[dict[str, ShopUnit], 
             tree.columns.append(cells)
         trees.append(tree)
     return units, trees
+
+
+def _columns(section) -> list[dict]:
+    """Columns of one tree. Current files: {"range": [col, ...]}.
+    Older files (2020-2022): [{"range": col}, ...]."""
+    if isinstance(section, list):
+        return [
+            x["range"] for x in section if isinstance(x, dict) and isinstance(x.get("range"), dict)
+        ]
+    return [c for c in _as_list(section.get("range")) if isinstance(c, dict)]
 
 
 def _as_list(x) -> list:

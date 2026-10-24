@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function GroundIndex() {
   const meta = getMeta();
-  const index = getIndex();
+  const index = getIndex().filter((u) => !u.removedIn);
   return (
     <div>
       <h1 className="text-3xl font-bold">Ground forces</h1>

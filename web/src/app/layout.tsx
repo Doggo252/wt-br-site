@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 // Sections link once their build step lands (see PLAN.md §8).
 const NAV = [
   { href: "/ground/", label: "Ground", ready: true },
-  { href: "/updates/", label: "Updates", ready: false },
+  { href: "/updates/", label: "Updates", ready: true },
   { href: "/records/", label: "Records", ready: false },
   { href: "/explore/", label: "Explore", ready: false },
   { href: "/design/", label: "Design", ready: true },
