@@ -104,10 +104,14 @@ def norm(name: str) -> str:
 GLYPHS = re.compile(r"[\u2400-\u24ff\u2580-\u25ff\u22e0\u2622\uf000-\uf8ff]")
 
 
+# Cyrillic letters that look Latin, which turn up as typos in hand-made tables ("Т-90А").
+CYRILLIC_LOOKALIKES = str.maketrans("авекмнорстхуАВЕКМНОРСТХУ", "abekmhopctxyABEKMHOPCTXY")
+
+
 def loose(name: str) -> str:
-    """Looser key: also ignores the game's glyphs (the sheet omits operator-country ones)
-    and accents (Waffenträger / Waffentrager)."""
-    key = GLYPHS.sub("", norm(name))
+    """Looser key: also ignores the game's glyphs (the sheet omits operator-country ones),
+    accents (Waffenträger / Waffentrager) and Cyrillic look-alike letters."""
+    key = GLYPHS.sub("", norm(name.translate(CYRILLIC_LOOKALIKES)))
     key = unicodedata.normalize("NFKD", key)
     return "".join(c for c in key if not unicodedata.combining(c))
 

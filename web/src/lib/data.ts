@@ -8,9 +8,11 @@ import { join } from "node:path";
 import { cache } from "react";
 import { BRANCHES, type Branch } from "./branches";
 import type {
+  Announcement,
   DevPreview,
   Meta,
   NationTree,
+  OfficialChange,
   RecordRow,
   UnitDetail,
   UnitSummary,
@@ -88,3 +90,33 @@ export const getRecords = cache((): RecordRow[] =>
 export const getDev = cache((): DevPreview | null =>
   existsSync(join(DATA, "dev.json")) ? read<DevPreview>("dev.json") : null,
 );
+
+/** Gaijin's BR change announcements, newest first; empty if the ETL ran without them. */
+export const getAnnouncements = cache((): Announcement[] =>
+  existsSync(join(DATA, "official.json")) ? read<Announcement[]>("official.json") : [],
+);
+
+export type VehicleAnnouncement = { a: Announcement; change: OfficialChange };
+
+/** Announcement rows that mention each vehicle, newest first. */
+export const getAnnouncementsByUnit = cache(() => {
+  const map = new Map<string, VehicleAnnouncement[]>();
+  for (const a of getAnnouncements()) {
+    for (const change of a.changes ?? []) {
+      for (const id of change.ids ?? []) {
+        const list = map.get(id) ?? [];
+        list.push({ a, change });
+        map.set(id, list);
+      }
+    }
+  }
+  return map;
+});
+
+/** The newest planned announcement with changes not live yet, if any. */
+export const getPendingPlan = cache(() => {
+  const a = getAnnouncements().find((x) => x.kind === "planned");
+  if (!a) return null;
+  const pending = (a.changes ?? []).filter((c) => Object.values(c.outcome ?? {}).includes("pending"));
+  return pending.length ? { a, pending } : null;
+});

@@ -22,6 +22,7 @@ const PAGES = [
   ["/explore/", "Biggest moves"],
   ["/dev/", "Dev server"],
   ["/about/", "About Uptier"],
+  ["/announcements/", "BR announcements"],
   ["/compare/?ids=us_m42_duster,p-51d-5", "M42"],
 ];
 

@@ -3,12 +3,13 @@
 import argparse
 import json
 
-from . import images, paths, records
+from . import images, official, paths, records
 from .build import build_current
 from .datamine import SHOP, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
 from .history_build import build_history, diff_states, state_at
 from .models import (
+    Announcement,
     DevPreview,
     Meta,
     NationTree,
@@ -32,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--no-history", action="store_true", help="current version only (fast)")
     sub.add_parser("schema", help="write JSON Schema for the output files")
     sub.add_parser("records", help="download the RB records sheet")
+    sub.add_parser("official", help="download Gaijin's BR change announcements")
     sub.add_parser("all", help="history, fetch, images, records, build, schema")
     args = parser.parse_args(argv)
 
@@ -77,6 +79,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd in ("records", "all"):
         records.fetch(paths.CACHE / "records")
         print("records: sheet downloaded")
+    if args.cmd in ("official", "all"):
+        n = len(official.fetch(paths.CACHE / "official"))
+        print(f"official: {n} announcements")
     if args.cmd in ("build", "all"):
         rec_dir = paths.CACHE / "records"
         record_rows = (
@@ -96,7 +101,11 @@ def main(argv: list[str] | None = None) -> int:
                 _, _, _, now = state_at(cache, pending)
                 dev = (pending, points[-1], changes, added, where, {u: list(now[u]) for u in added})
                 print(f"dev server {pending.version}: {len(changes)} BR changes, {len(added)} new")
-        meta = build_current(dm, paths.DATA, paths.UNIT_IMAGES, result, record_rows, dev)
+        off_dir = paths.CACHE / "official"
+        announcements = official.load(off_dir) if off_dir.exists() else None
+        meta = build_current(
+            dm, paths.DATA, paths.UNIT_IMAGES, result, record_rows, dev, announcements
+        )
         counts = ", ".join(
             f"{b}: {sum(1 for k in meta.perNation if k.startswith(b + '/'))} nations"
             for b in meta.branches
@@ -113,6 +122,7 @@ def write_schema() -> None:
     for model in (
         Meta, UnitSummary, UnitDetail, NationTree, VersionInfo, UpdateDiff, TimeMachine, RecordRow,
         DevPreview,
+        Announcement,
     ):  # fmt: skip
         schema = model.model_json_schema(mode="serialization")
         (out / f"{model.__name__}.json").write_text(json.dumps(schema, indent=2))

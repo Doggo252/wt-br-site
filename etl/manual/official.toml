@@ -1,0 +1,12 @@
+# Names in Gaijin's BR-change tables that don't match a datamine name automatically.
+# [branch] "Name in table" = "datamine_id" or ["id", ...].
+
+[ground]
+"M1A1 AIM" = "us_m1a1_aim_abrams"  # shown in game as "M1A1 SA"
+"CV 90120" = "sw_cv_90120"
+"Pantsir-S" = "ussr_pantsyr_s1"
+
+[air]
+"S.O.4050 Vautour IIN" = "so_4050_vautour_2n"  # now "Vautour IIN(C)"
+"Vautour IIN (Israel)" = "so_4050_vautour_2n_iaf"
+"AW159 HMA.2" = "aw_159"  # helicopter, listed in the aircraft table

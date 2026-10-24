@@ -3,7 +3,16 @@ import { Arrow } from "@/components/Arrow";
 import { SearchBox } from "@/components/SearchBox";
 import { UnitCard } from "@/components/UnitCard";
 import { BRANCHES, BRANCH_NAME, branchHref, treeHref } from "@/lib/branches";
-import { getDev, getIndex, getLatestBrUpdate, getUnitMap, getUpdate, getVersions, nationsOf } from "@/lib/data";
+import {
+  getDev,
+  getIndex,
+  getLatestBrUpdate,
+  getPendingPlan,
+  getUnitMap,
+  getUpdate,
+  getVersions,
+  nationsOf,
+} from "@/lib/data";
 import { plural } from "@/lib/format";
 import { nationName } from "@/lib/nations";
 
@@ -12,6 +21,7 @@ export default function Home() {
   const versions = getVersions();
   const latest = getLatestBrUpdate();
   const dev = getDev();
+  const plan = getPendingPlan();
   const update = latest ? getUpdate(latest.v) : null;
   const units = getUnitMap();
 
@@ -56,6 +66,19 @@ export default function Home() {
           <span className="text-fg">
             Update {dev.v} is on the dev server with {plural((dev.changes ?? []).length, "BR change")} and{" "}
             {plural(Object.keys(dev.added ?? {}).length, "new vehicle")}. See what&apos;s coming →
+          </span>
+        </Link>
+      )}
+
+      {plan && (
+        <Link
+          href={`/announcements/${plan.a.id}/`}
+          className="block border border-card-premium-border bg-card-premium-bg px-4 py-3 no-underline hover:brightness-110"
+        >
+          <span className="font-display text-sm uppercase tracking-wide text-gold">Planned by Gaijin</span>{" "}
+          <span className="text-fg">
+            {plural(plan.pending.length, "vehicle")} have BR changes announced on {plan.a.date} that aren&apos;t live
+            yet. See the list →
           </span>
         </Link>
       )}

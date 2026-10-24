@@ -21,6 +21,7 @@ const NAV = [
   { href: "/air/", label: "Air", ready: true },
   { href: "/helicopters/", label: "Helis", ready: true },
   { href: "/updates/", label: "Updates", ready: true },
+  { href: "/announcements/", label: "Planned", ready: true },
   { href: "/records/", label: "Records", ready: true },
   { href: "/explore/", label: "Explore", ready: true },
   { href: "/about/", label: "About", ready: true },

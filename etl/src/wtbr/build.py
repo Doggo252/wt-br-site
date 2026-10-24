@@ -8,11 +8,12 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import parse, paths, records
+from . import official, parse, paths, records
 from .datamine import SHOP, UNITS_CSV, UNITTAGS, WEAPONRY_CSV, WPCOST, Datamine
 from .history_build import HistoryResult, major_of
 from .models import (
     Absence,
+    Announcement,
     BranchCounts,
     BrChange,
     DevPreview,
@@ -20,6 +21,7 @@ from .models import (
     HistoryPoint,
     Meta,
     NationTree,
+    OfficialChange,
     Ranks,
     RecordRow,
     Sight,
@@ -62,6 +64,7 @@ def build_current(
     hist: HistoryResult | None = None,
     record_rows: list | None = None,
     dev: tuple | None = None,
+    announcements: list[dict] | None = None,
 ) -> Meta:
     wpcost = dm.read_json(WPCOST)
     shop = dm.read_json(SHOP)
@@ -149,6 +152,8 @@ def build_current(
     _write(out / "public" / "search.json", search)
     if hist:
         _write_history(out, hist, details, lang)
+    if announcements is not None:
+        _write(out / "official.json", _official(announcements, details, lang, meta.date[:10]))
     if dev:
         _write(out / "dev.json", _dev_preview(dev, lang))
     else:
@@ -402,6 +407,43 @@ def _write_history(out: Path, hist: HistoryResult, details: dict[str, UnitDetail
             },
         )
         _write(out / "public" / "timemachine" / branch / f"{nation}.json", tm)
+
+
+def _official(raw: list[dict], details: dict, lang: dict, today: str) -> list[Announcement]:
+    names = {
+        uid: [n for n in (lang.get(f"{uid}{s}") for s in ("_shop", "_0", "_1")) if n]
+        for uid in details
+    }
+    overrides = official.load_overrides(paths.MANUAL / "official.toml")
+    out = []
+    unmatched = 0
+    for a in sorted(raw, key=lambda a: a["date"], reverse=True):
+        rows = [r for t in a["tabs"] for r in official.parse_tab(t["name"], t["csv"])]
+        official.match_rows(rows, a["date"], details, names, overrides)
+        changes = []
+        for r in rows:
+            ids = r.id.split(",") if r.id else []
+            unmatched += not ids
+            c = OfficialChange(
+                name=r.name, branch=r.branch, ids=ids, comment=r.comment, **r.changes
+            )
+            if a["kind"] == "planned" and ids:
+                hist = details[ids[0]].history
+                c.outcome = {
+                    m: official.outcome(hist, a["date"], today, m, *r.changes[m])
+                    for m in ("ab", "rb", "sb")
+                    if m in r.changes and hist
+                }
+            changes.append(c)
+        out.append(
+            Announcement(
+                id=a["id"], title=a["title"], date=a["date"], kind=a["kind"], url=a["url"],
+                changes=changes, unavailable=bool(a["unavailable"]) and not changes,
+            )
+        )  # fmt: skip
+    total = sum(len(a.changes) for a in out)
+    print(f"official: {len(out)} announcements, {total} rows, {unmatched} unmatched")
+    return out
 
 
 def _dev_preview(dev: tuple, lang: dict) -> DevPreview:

@@ -3,11 +3,12 @@ import Link from "next/link";
 import { BrBadge } from "@/components/BrBadge";
 import { BrStepChart } from "@/components/BrStepChart";
 import { ChangeLog } from "@/components/ChangeLog";
+import { ChangeCell, OutcomeChip, rowOutcome } from "@/components/OfficialChanges";
 import { SameBrStrip } from "@/components/SameBrStrip";
 import type { TreeUnit } from "@/components/TechTree";
 import { ThermalChip } from "@/components/ThermalChip";
-import { MODES, MODE_NAME, formatBr, type Mode } from "@/lib/br";
-import { getDev, getIndex, getMeta, getUnit } from "@/lib/data";
+import { MODES, MODE_LABEL, MODE_NAME, formatBr, type Mode } from "@/lib/br";
+import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getUnit } from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { treeHref } from "@/lib/branches";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
@@ -55,6 +56,10 @@ export default async function VehiclePage({ params }: Params) {
   const dev = getDev();
   const devChange = dev?.changes?.find((c) => c.id === id);
   const devVersion = dev?.v;
+  const announced = getAnnouncementsByUnit().get(id) ?? [];
+  const plannedNow = announced.find(
+    ({ a, change }) => a.kind === "planned" && Object.values(change.outcome ?? {}).includes("pending"),
+  );
 
   return (
     <article className="space-y-10">
@@ -121,6 +126,22 @@ export default async function VehiclePage({ params }: Params) {
         </Link>
       )}
 
+      {plannedNow && (
+        <Link
+          href={`/announcements/${plannedNow.a.id}/`}
+          className="block border border-card-premium-border bg-card-premium-bg px-4 py-3 text-sm no-underline hover:brightness-110"
+        >
+          <span className="font-display uppercase tracking-wide text-gold">Planned by Gaijin</span>{" "}
+          <span className="text-fg">
+            {(["ab", "rb", "sb"] as const)
+              .filter((m) => plannedNow.change.outcome?.[m] === "pending" && plannedNow.change[m])
+              .map((m) => `${MODE_NAME[m]} ${formatBr(plannedNow.change[m]![0])} → ${formatBr(plannedNow.change[m]![1])}`)
+              .join(", ")}
+            . Announced {plannedNow.a.date}, not live yet.
+          </span>
+        </Link>
+      )}
+
       <Section title="Battle Rating history">
         {u.history && u.history.length > 0 ? (
           <div className="space-y-4">
@@ -160,6 +181,35 @@ export default async function VehiclePage({ params }: Params) {
           )}
         </div>
       </div>
+
+      {announced.length > 0 && (
+        <Section title="Official announcements">
+          <ul className="divide-y divide-card-border border border-card-border bg-panel text-sm">
+            {announced.map(({ a, change }) => {
+              const o = rowOutcome(change);
+              return (
+                <li key={`${a.id}-${change.name}`} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-3 py-2">
+                  <span className="w-24 tabular text-fg-3">{a.date}</span>
+                  <Link href={`/announcements/${a.id}/`} className="min-w-0 flex-1">
+                    {a.title}
+                  </Link>
+                  <span className="flex flex-wrap gap-x-3 font-display tabular">
+                    {(["ab", "rb", "sb", "grb"] as const)
+                      .filter((m) => change[m])
+                      .map((m) => (
+                        <span key={m} className="inline-flex items-center gap-1">
+                          <span className="text-xs text-fg-3">{m === "grb" ? "Ground RB" : MODE_LABEL[m]}</span>
+                          <ChangeCell pair={change[m]} />
+                        </span>
+                      ))}
+                  </span>
+                  {o && <OutcomeChip outcome={o} />}
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
+      )}
 
       <Section title="Same Battle Rating">
         <SameBrStrip byMode={same.byMode} units={same.units} rank={u.br} />

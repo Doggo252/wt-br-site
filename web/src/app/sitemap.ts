@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { BRANCHES, branchHref, treeHref } from "@/lib/branches";
-import { getIndex, getMeta, getVersions, nationsOf } from "@/lib/data";
+import { getAnnouncements, getIndex, getMeta, getVersions, nationsOf } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-static";
@@ -16,6 +16,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: url("/explore/"), lastModified },
     { url: url("/about/") },
     { url: url("/compare/") },
+    { url: url("/announcements/") },
+    ...getAnnouncements()
+      .filter((a) => !a.unavailable && (a.changes ?? []).length > 0)
+      .map((a) => ({ url: url(`/announcements/${a.id}/`), lastModified: a.date })),
     ...BRANCHES.flatMap((b) => [
       { url: url(branchHref(b)), lastModified },
       ...nationsOf(b).map((n) => ({ url: url(treeHref(b, n)), lastModified })),

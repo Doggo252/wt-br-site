@@ -213,6 +213,36 @@ class DevPreview(Model):
     added: dict[str, DevUnit] = {}
 
 
+Outcome = Literal["pending", "applied", "different", "not_applied"]
+
+
+class OfficialChange(Model):
+    """One row of a Gaijin BR-change table: (was, now) ranks per mode it changes."""
+
+    name: str  # as written in the table
+    branch: Branch
+    ids: list[str] = []  # matched vehicles (same-named copies share a row)
+    ab: tuple[int, int] | None = None
+    rb: tuple[int, int] | None = None
+    sb: tuple[int, int] | None = None
+    grb: tuple[int, int] | None = None  # aircraft in ground battles
+    comment: str | None = None
+    # Planned tables only: what happened next, per mode, judged 45 days later.
+    outcome: dict[Literal["ab", "rb", "sb"], Outcome] = {}
+
+
+class Announcement(Model):
+    """data/official.json: Gaijin's BR change posts (forum tag br-changes), newest first."""
+
+    id: int
+    title: str
+    date: str
+    kind: Literal["planned", "implemented", "other"]
+    url: str
+    changes: list[OfficialChange] = []
+    unavailable: bool = False  # the linked table is no longer published
+
+
 class TimeMachineUnit(Model):
     n: str  # name
     s: Status
