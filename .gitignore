@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# ETL caches (datamine clone, downloaded sheets, images)
+etl/cache/
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+.DS_Store
