@@ -3,13 +3,15 @@ import { Arrow } from "@/components/Arrow";
 import { SearchBox } from "@/components/SearchBox";
 import { UnitCard } from "@/components/UnitCard";
 import { BRANCHES, BRANCH_NAME, branchHref, treeHref } from "@/lib/branches";
-import { getIndex, getLatestBrUpdate, getUnitMap, getUpdate, getVersions, nationsOf } from "@/lib/data";
+import { getDev, getIndex, getLatestBrUpdate, getUnitMap, getUpdate, getVersions, nationsOf } from "@/lib/data";
+import { plural } from "@/lib/format";
 import { nationName } from "@/lib/nations";
 
 export default function Home() {
   const index = getIndex();
   const versions = getVersions();
   const latest = getLatestBrUpdate();
+  const dev = getDev();
   const update = latest ? getUpdate(latest.v) : null;
   const units = getUnitMap();
 
@@ -44,6 +46,19 @@ export default function Home() {
           <Stat label="BR changes recorded" value={totalChanges.toLocaleString("en")} />
         </dl>
       </section>
+
+      {dev && (
+        <Link
+          href="/dev/"
+          className="block border border-card-premium-border bg-card-premium-bg px-4 py-3 no-underline hover:brightness-110"
+        >
+          <span className="font-display text-sm uppercase tracking-wide text-gold">Dev server</span>{" "}
+          <span className="text-fg">
+            Update {dev.v} is on the dev server with {plural((dev.changes ?? []).length, "BR change")} and{" "}
+            {plural(Object.keys(dev.added ?? {}).length, "new vehicle")}. See what&apos;s coming →
+          </span>
+        </Link>
+      )}
 
       {latest && update && (
         <section className="border border-card-border bg-panel p-4 sm:p-6">

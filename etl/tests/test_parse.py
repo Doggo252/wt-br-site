@@ -172,3 +172,29 @@ def test_air_stats_from_shop_card():
         "turnTimeS": 23.0,
         "crew": 1,
     }
+
+
+def test_classify_dev_builds():
+    from datetime import UTC, datetime
+
+    from wtbr.history import classify
+
+    v = ["2.59.0.80", "2.60.0.5", "2.59.0.84", "2.60.0.9"]
+    d = [
+        "2026-10-01T00:00:00+00:00",
+        "2026-10-03T00:00:00+00:00",
+        "2026-10-05T00:00:00+00:00",
+        "2026-10-07T00:00:00+00:00",
+    ]
+    # Interleaved dev build is not live; the trailing one is pending while the live patch is recent.
+    live, pending = classify(v, d, now=datetime(2026, 10, 8, tzinfo=UTC))
+    assert live == [True, False, True, False]
+    assert pending == [False, False, False, True]
+    # Weeks later with no older-major patches: assume the update released.
+    live, pending = classify(v, d, now=datetime(2026, 11, 1, tzinfo=UTC))
+    assert live == [True, False, True, True] and not any(pending)
+    # A new major with no earlier dev builds is just live.
+    live, pending = classify(
+        ["2.59.0.80", "2.60.0.30"], d[:2], now=datetime(2026, 10, 4, tzinfo=UTC)
+    )
+    assert live == [True, True] and not any(pending)

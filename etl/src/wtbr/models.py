@@ -190,6 +190,26 @@ class Meta(Model):
     perNation: dict[str, int] = {}  # vehicles currently in each tree, keyed "branch/nation"
 
 
+class DevUnit(Model):
+    """A vehicle that exists only on the dev server, so the site has no page for it."""
+
+    name: str
+    branch: Branch
+    nation: str
+    br: Ranks
+
+
+class DevPreview(Model):
+    """data/dev.json: BRs on the dev server compared with the live game. Only written while the
+    newest datamine build looks like a dev-server build."""
+
+    v: str
+    d: str
+    base: str  # live version compared against
+    changes: list[BrChange] = []
+    added: dict[str, DevUnit] = {}
+
+
 class TimeMachineUnit(Model):
     n: str  # name
     s: Status

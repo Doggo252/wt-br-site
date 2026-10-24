@@ -15,6 +15,8 @@ from .models import (
     Absence,
     BranchCounts,
     BrChange,
+    DevPreview,
+    DevUnit,
     HistoryPoint,
     Meta,
     NationTree,
@@ -59,6 +61,7 @@ def build_current(
     images: Path | None = None,
     hist: HistoryResult | None = None,
     record_rows: list | None = None,
+    dev: tuple | None = None,
 ) -> Meta:
     wpcost = dm.read_json(WPCOST)
     shop = dm.read_json(SHOP)
@@ -146,6 +149,10 @@ def build_current(
     _write(out / "public" / "search.json", search)
     if hist:
         _write_history(out, hist, details, lang)
+    if dev:
+        _write(out / "dev.json", _dev_preview(dev, lang))
+    else:
+        (out / "dev.json").unlink(missing_ok=True)
     if record_rows is not None:
         rows = [
             RecordRow(
@@ -393,6 +400,29 @@ def _write_history(out: Path, hist: HistoryResult, details: dict[str, UnitDetail
             },
         )
         _write(out / "public" / "timemachine" / branch / f"{nation}.json", tm)
+
+
+def _dev_preview(dev: tuple, lang: dict) -> DevPreview:
+    """dev = (pending Point, base Point, changes, added ids, {id: (branch, nation)}, ranks)."""
+    point, base, changes, added, where, ranks = dev
+    return DevPreview(
+        v=point.version,
+        d=point.date[:10],
+        base=base.version,
+        changes=[
+            BrChange(id=c["id"], before=Ranks(**_r(c["from"])), after=Ranks(**_r(c["to"])))
+            for c in changes
+        ],
+        added={
+            u: DevUnit(
+                name=lang.get(f"{u}_shop") or lang.get(f"{u}_0") or u,
+                branch=where[u][0],
+                nation=where[u][1],
+                br=Ranks(**_r(ranks[u])),
+            )
+            for u in added
+        },
+    )
 
 
 def _r(x: list[int]) -> dict[str, int]:

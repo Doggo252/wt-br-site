@@ -7,7 +7,7 @@ import { SameBrStrip } from "@/components/SameBrStrip";
 import type { TreeUnit } from "@/components/TechTree";
 import { ThermalChip } from "@/components/ThermalChip";
 import { MODES, MODE_NAME, formatBr, type Mode } from "@/lib/br";
-import { getIndex, getMeta, getUnit } from "@/lib/data";
+import { getDev, getIndex, getMeta, getUnit } from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { treeHref } from "@/lib/branches";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
@@ -52,6 +52,9 @@ export default async function VehiclePage({ params }: Params) {
   const u = getUnit(id);
   const meta = getMeta();
   const same = sameBr(u, getIndex());
+  const dev = getDev();
+  const devChange = dev?.changes?.find((c) => c.id === id);
+  const devVersion = dev?.v;
 
   return (
     <article className="space-y-10">
@@ -91,6 +94,21 @@ export default async function VehiclePage({ params }: Params) {
           </dl>
         </div>
       </header>
+
+      {devChange && (
+        <Link
+          href="/dev/"
+          className="block border border-card-premium-border bg-card-premium-bg px-4 py-3 text-sm no-underline hover:brightness-110"
+        >
+          <span className="font-display uppercase tracking-wide text-gold">Dev server {devVersion}</span>{" "}
+          <span className="text-fg">
+            {MODES.filter((m) => devChange.before[m] !== devChange.after[m])
+              .map((m) => `${MODE_NAME[m]} ${formatBr(devChange.before[m])} → ${formatBr(devChange.after[m])}`)
+              .join(", ")}
+            . Not live yet.
+          </span>
+        </Link>
+      )}
 
       <Section title="Battle Rating history">
         {u.history && u.history.length > 0 ? (

@@ -35,8 +35,9 @@ class Datamine:
     def __init__(self, path: Path):
         self.path = path
 
-    def sync(self) -> None:
-        """Clone if missing, otherwise move to the latest upstream commit."""
+    def sync(self, rev: str | None = None) -> None:
+        """Clone if missing, then check out `rev` (a commit sha) or the latest upstream commit.
+        Only the files in SPARSE_PATHS are downloaded."""
         if not (self.path / ".git").exists():
             self.path.parent.mkdir(parents=True, exist_ok=True)
             subprocess.run(
@@ -46,9 +47,8 @@ class Datamine:
                 ],
                 check=True,
             )  # fmt: skip
-        else:
-            _git(self.path, "fetch", "--depth", "1", "origin")
-            _git(self.path, "reset", "--soft", "FETCH_HEAD")
+        _git(self.path, "fetch", "--depth", "1", "--filter=blob:none", "origin", rev or "HEAD")
+        _git(self.path, "reset", "--soft", "FETCH_HEAD")
         _git(self.path, "sparse-checkout", "set", "--no-cone", *SPARSE_PATHS)
         _git(self.path, "checkout", "-f", "HEAD")
 

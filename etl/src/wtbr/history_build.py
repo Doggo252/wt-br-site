@@ -43,6 +43,39 @@ class HistoryResult:
     layouts: dict[tuple[str, str], list[tuple[int, list]]]
 
 
+def state_at(cache: BlobCache, p: Point):
+    """(wpcost rows, shop layouts, uid -> (branch, nation), uid -> ranks of units in the game)."""
+    wp = cache.load(WPCOST, p.wpcost)
+    shop = cache.load(SHOP, p.shop) if p.shop else {}
+    in_tree = {
+        uid: (branch, nation)
+        for branch, trees in shop.items()
+        for nation, cols in trees.items()
+        for col in cols
+        for _, ids, _ in col
+        for uid in ids
+    }
+    present = {
+        uid: (row[0], row[1], row[2])
+        for uid, row in wp.items()
+        if uid in in_tree and branch_of(row) == in_tree[uid][0]
+    }
+    return wp, shop, in_tree, present
+
+
+def diff_states(cache: BlobCache, base: Point, new: Point) -> tuple[list[dict], list[str], dict]:
+    """BR changes and additions from `base` to `new`, plus (branch, nation) of added units."""
+    _, _, _, before = state_at(cache, base)
+    _, _, in_tree, after = state_at(cache, new)
+    changes = [
+        {"id": u, "from": list(before[u]), "to": list(br)}
+        for u, br in after.items()
+        if u in before and before[u] != br
+    ]
+    added = [u for u in after if u not in before]
+    return changes, added, {u: in_tree[u] for u in added}
+
+
 def build_history(points: list[Point], cache: BlobCache) -> HistoryResult:
     versions: list[Version] = []
     units: dict[str, UnitHistory] = {}
@@ -52,22 +85,7 @@ def build_history(points: list[Point], cache: BlobCache) -> HistoryResult:
     prev_layout: dict[tuple[str, str], list] = {}
 
     for p in points:
-        wp = cache.load(WPCOST, p.wpcost)
-        shop = cache.load(SHOP, p.shop) if p.shop else {}
-        # uid -> (branch, nation) for every unit in a tree
-        in_tree = {
-            uid: (branch, nation)
-            for branch, trees in shop.items()
-            for nation, cols in trees.items()
-            for col in cols
-            for _, ids, _ in col
-            for uid in ids
-        }
-        present = {
-            uid: (row[0], row[1], row[2])
-            for uid, row in wp.items()
-            if uid in in_tree and branch_of(row) == in_tree[uid][0]
-        }
+        wp, shop, in_tree, present = state_at(cache, p)
 
         v = Version(p.version, p.date, p.commit)
         for uid, br in present.items():

@@ -16,6 +16,7 @@ import subprocess
 from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from .datamine import REPO_URL, SHOP, WPCOST
@@ -42,6 +43,43 @@ def _git(repo: Path, *args: str, input: str | None = None) -> str:
     ).stdout
 
 
+PENDING_DAYS = 14
+
+
+def classify(versions: list[str], dates: list[str], now: datetime | None = None):
+    """(live, pending) flags per commit, oldest first.
+
+    Live: no later commit has a lower version. That catches dev-server builds of the next
+    major update interleaved with live patches, but not dev builds at the very end of the
+    history (nothing later to compare with). So: if the newest builds are of a major that
+    already showed up as dev builds, and the last older-major build is under PENDING_DAYS
+    old, treat those newest builds as pending (probably still on the dev server).
+    """
+    n = len(versions)
+    live = [False] * n
+    floor: tuple[int, ...] | None = None
+    for i in range(n - 1, -1, -1):
+        k = version_key(versions[i])
+        if floor is None or k <= floor:
+            live[i] = True
+            floor = k
+
+    pending = [False] * n
+    if n:
+        major = [version_key(v)[:2] for v in versions]
+        last = major[-1]
+        older = [i for i in range(n) if major[i] < last]
+        if older:
+            p = older[-1]
+            had_dev = any(major[j] == last for j in range(p))
+            age = (now or datetime.now(UTC)) - datetime.fromisoformat(dates[p])
+            if had_dev and age < timedelta(days=PENDING_DAYS):
+                for j in range(p + 1, n):
+                    if major[j] == last:
+                        live[j], pending[j] = False, True
+    return live, pending
+
+
 @dataclass
 class Commit:
     sha: str
@@ -49,6 +87,7 @@ class Commit:
     version: str
     live: bool
     blobs: dict[str, str]  # path -> blob sha, for tracked paths changed in this commit
+    pending: bool = False  # newest builds that are probably still dev-server (see classify)
 
 
 class History:
@@ -63,7 +102,8 @@ class History:
                 check=True,
             )
         else:
-            _git(self.path, "fetch", "--filter=blob:none", "origin", "+HEAD:HEAD")
+            # Bare clones have no fetch refspec; update the branches explicitly.
+            _git(self.path, "fetch", "--filter=blob:none", "origin", "+refs/heads/*:refs/heads/*")
 
     def commits(self, paths: Iterable[str] = (WPCOST, SHOP)) -> list[Commit]:
         """All commits, oldest first, with live/dev classification and tracked blob changes."""
@@ -94,17 +134,9 @@ class History:
             last = ".".join(m.groups()) if m else last
             versions.append(last)
 
-        # Live iff no later commit has a lower version.
-        live = [False] * len(rows)
-        floor: tuple[int, ...] | None = None
-        for i in range(len(rows) - 1, -1, -1):
-            k = version_key(versions[i])
-            if floor is None or k <= floor:
-                live[i] = True
-                floor = k
-
+        live, pending = classify(versions, [r[2] for r in rows])
         return [
-            Commit(sha, date, versions[i], live[i], changed.get(sha, {}))
+            Commit(sha, date, versions[i], live[i], changed.get(sha, {}), pending[i])
             for i, (_, sha, date, _) in enumerate(rows)
         ]
 
@@ -225,6 +257,18 @@ def timeline(commits: list[Commit]) -> list[Point]:
         else:
             points.append(p)
     return points
+
+
+def pending_point(commits: list[Commit]) -> Point | None:
+    """Game state at the newest pending (probable dev-server) build, if any."""
+    if not commits or not commits[-1].pending:
+        return None
+    wp = shop = None
+    for c in commits:
+        wp = c.blobs.get(WPCOST, wp)
+        shop = c.blobs.get(SHOP, shop)
+    last = commits[-1]
+    return Point(last.version, last.date, last.sha, wp, shop) if wp else None
 
 
 def branch_of(row: list) -> str | None:

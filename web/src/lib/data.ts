@@ -7,7 +7,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cache } from "react";
 import { BRANCHES, type Branch } from "./branches";
-import type { Meta, NationTree, RecordRow, UnitDetail, UnitSummary, UpdateDiff, VersionInfo } from "./data.gen";
+import type {
+  DevPreview,
+  Meta,
+  NationTree,
+  RecordRow,
+  UnitDetail,
+  UnitSummary,
+  UpdateDiff,
+  VersionInfo,
+} from "./data.gen";
 
 const DATA = join(process.cwd(), "..", "data");
 
@@ -73,4 +82,9 @@ export function nationsOf(branch: Branch): string[] {
 /** Rows of the records sheet; empty if the ETL ran without it. */
 export const getRecords = cache((): RecordRow[] =>
   existsSync(join(DATA, "records.json")) ? read<RecordRow[]>("records.json") : [],
+);
+
+/** Dev-server preview, only present while the newest datamine build is a dev-server build. */
+export const getDev = cache((): DevPreview | null =>
+  existsSync(join(DATA, "dev.json")) ? read<DevPreview>("dev.json") : null,
 );
