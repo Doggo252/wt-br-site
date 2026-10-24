@@ -7,6 +7,9 @@ export interface Meta {
   generatedAt: string;
   unitCount: number;
   nations: string[];
+  perNation?: {
+    [k: string]: number;
+  };
 }
 
 /**

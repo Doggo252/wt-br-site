@@ -171,6 +171,7 @@ class Meta(Model):
     generatedAt: str
     unitCount: int
     nations: list[str]
+    perNation: dict[str, int] = {}  # vehicles currently in each tree
 
 
 class TimeMachineUnit(Model):

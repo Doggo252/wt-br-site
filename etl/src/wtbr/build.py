@@ -1,6 +1,7 @@
 """Build data/: current vehicles, plus BR history when a HistoryResult is given."""
 
 import json
+import os
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
@@ -133,7 +134,12 @@ def build_current(
         generatedAt=datetime.now(UTC).isoformat(timespec="seconds"),
         unitCount=len(summaries),
         nations=nations,
+        perNation={
+            n: sum(1 for d in details.values() if d.nation == n and not d.removedIn)
+            for n in nations
+        },
     )
+    validate(meta, out / "meta.json", details)
 
     if out.exists():
         for sub in ("units", "trees", "updates", "public"):
@@ -186,6 +192,36 @@ def _drop_event_units(hist: HistoryResult, details: dict, lang: dict) -> None:
         v.added = [u for u in v.added if u not in drop]
         v.removed = [u for u in v.removed if u not in drop]
         v.changes = [c for c in v.changes if c["id"] not in drop]
+
+
+class ValidationError(RuntimeError):
+    pass
+
+
+MAX_NATION_DROP = 0.05
+
+
+def validate(meta: Meta, previous: Path, details: dict[str, UnitDetail]) -> None:
+    """Refuse to overwrite good data with obviously broken data (e.g. a datamine format change).
+    Set WTBR_SKIP_VALIDATION=1 to override after checking the cause."""
+    problems = []
+    for uid, d in details.items():
+        if not d.name or d.rank < 1:
+            problems.append(f"{uid}: missing name or tier")
+        if min(d.br.ab, d.br.rb, d.br.sb) < 0:
+            problems.append(f"{uid}: negative economic rank")
+        if d.history and [h.v for h in d.history] != sorted(
+            (h.v for h in d.history), key=lambda v: tuple(int(x) for x in v.split("."))
+        ):
+            problems.append(f"{uid}: history out of order")
+    if previous.exists():
+        old = json.loads(previous.read_text())
+        for nation, count in old.get("perNation", {}).items():
+            new = meta.perNation.get(nation, 0)
+            if new < count * (1 - MAX_NATION_DROP):
+                problems.append(f"{nation}: {count} -> {new} vehicles (more than a 5% drop)")
+    if problems and not os.environ.get("WTBR_SKIP_VALIDATION"):
+        raise ValidationError("data validation failed:\n  " + "\n  ".join(problems[:50]))
 
 
 def _attach_records(details: dict[str, UnitDetail], rows: list, lang: dict) -> None:
