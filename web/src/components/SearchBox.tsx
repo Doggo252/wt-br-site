@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 import { formatBr } from "@/lib/br";
+import { BRANCH_SHORT, type Branch } from "@/lib/branches";
 import { nationName } from "@/lib/nations";
 
-/** [id, name, nation, rb rank, removed (0/1)] from data/public/search.json */
-type Row = [string, string, string, number, number];
+/** [id, name, nation, rb rank, removed (0/1), branch] from data/public/search.json */
+type Row = [string, string, string, number, number, string];
 
 let index: Promise<Row[]> | null = null;
 function loadIndex(): Promise<Row[]> {
@@ -69,7 +70,7 @@ export function SearchBox({ className = "" }: { className?: string }) {
         ref={input}
         type="search"
         value={q}
-        placeholder="Search vehicles"
+        placeholder="Search vehicles and aircraft"
         aria-label="Search vehicles"
         role="combobox"
         aria-expanded={open && results.length > 0}
@@ -115,7 +116,8 @@ export function SearchBox({ className = "" }: { className?: string }) {
             >
               <span className={`truncate font-display ${r[4] ? "text-fg-3" : "text-fg"}`}>{r[1]}</span>
               <span className="shrink-0 text-xs text-fg-3">
-                {nationName(r[2])} · <span className="tabular">{formatBr(r[3])}</span>
+                {BRANCH_SHORT[r[5] as Branch] ?? r[5]} · {nationName(r[2])} ·{" "}
+                <span className="tabular">{formatBr(r[3])}</span>
               </span>
             </li>
           ))}

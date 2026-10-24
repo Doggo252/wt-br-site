@@ -18,7 +18,7 @@ from .models import (
     UpdateDiff,
     VersionInfo,
 )
-from .parse import ground_ranks, parse_shop
+from .parse import BRANCHES, parse_shop, unit_ranks
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -39,8 +39,15 @@ def main(argv: list[str] | None = None) -> int:
         dm.sync()
         print(f"datamine at {dm.version} ({dm.commit[:10]})")
     if args.cmd in ("images", "all"):
-        ground = ground_ranks(dm.read_json(WPCOST))
-        ids = sorted(u for u in parse_shop(dm.read_json(SHOP))[0] if u in ground)
+        wpcost, shop = dm.read_json(WPCOST), dm.read_json(SHOP)
+        ids = sorted(
+            {
+                u
+                for section, move_types in BRANCHES.values()
+                for u in parse_shop(shop, section)[0]
+                if u in unit_ranks(wpcost, move_types)
+            }
+        )
         res = images.mirror(ids, paths.UNIT_IMAGES)
         print("images:", {k: len(v) for k, v in res.items()})
         if res.get("missing"):
@@ -70,9 +77,13 @@ def main(argv: list[str] | None = None) -> int:
         result = None
         if not getattr(args, "no_history", False) and hist.path.exists():
             result = build_history(timeline(hist.commits()), cache)
-            print(f"history: {len(result.versions)} versions with ground changes")
+            print(f"history: {len(result.versions)} versions with tree or BR changes")
         meta = build_current(dm, paths.DATA, paths.UNIT_IMAGES, result, record_rows)
-        print(f"built {meta.unitCount} units for {meta.version} across {len(meta.nations)} nations")
+        counts = ", ".join(
+            f"{b}: {sum(1 for k in meta.perNation if k.startswith(b + '/'))} nations"
+            for b in meta.branches
+        )
+        print(f"built {meta.unitCount} units for {meta.version} ({counts})")
     if args.cmd in ("schema", "all"):
         write_schema()
     return 0

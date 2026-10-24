@@ -1,14 +1,14 @@
 """Turn the timeline of (wpcost, shop) snapshots into history outputs.
 
-A ground vehicle is "in the game" at a version when it is in that version's
-ground tech tree (shop.blkx) and has a wpcost entry. Test and tutorial units
-that never appear in a tree are ignored.
+A vehicle is "in the game" at a version when it is in one of that version's
+tech trees (shop.blkx) for its branch and has a wpcost entry. Test and tutorial
+units that never appear in a tree are ignored.
 """
 
 from dataclasses import dataclass, field
 
 from .datamine import SHOP, WPCOST
-from .history import BlobCache, Point, is_ground
+from .history import BlobCache, Point, branch_of
 
 
 def major_of(version: str) -> str:
@@ -17,6 +17,7 @@ def major_of(version: str) -> str:
 
 @dataclass
 class UnitHistory:
+    branch: str
     nation: str
     tier: int
     points: list[tuple[int, int, int, int]] = field(default_factory=list)  # (vIdx, ab, rb, sb)
@@ -31,31 +32,33 @@ class Version:
     changes: list[dict] = field(default_factory=list)  # {id, from: [ab,rb,sb], to: [...]}
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
-    layoutChanged: list[str] = field(default_factory=list)  # nations
+    layoutChanged: list[tuple[str, str]] = field(default_factory=list)  # (branch, nation)
 
 
 @dataclass
 class HistoryResult:
     versions: list[Version]
     units: dict[str, UnitHistory]
-    # nation -> list of (vIdx, layout) where layout is [[ [rank, [ids], group], ...], ...]
-    layouts: dict[str, list[tuple[int, list]]]
+    # (branch, nation) -> list of (vIdx, layout); layout is [[ [rank, [ids], group], ...], ...]
+    layouts: dict[tuple[str, str], list[tuple[int, list]]]
 
 
 def build_history(points: list[Point], cache: BlobCache) -> HistoryResult:
     versions: list[Version] = []
     units: dict[str, UnitHistory] = {}
-    layouts: dict[str, list[tuple[int, list]]] = {}
+    layouts: dict[tuple[str, str], list[tuple[int, list]]] = {}
 
     prev_present: dict[str, tuple[int, int, int]] = {}
-    prev_layout: dict[str, list] = {}
+    prev_layout: dict[tuple[str, str], list] = {}
 
     for p in points:
         wp = cache.load(WPCOST, p.wpcost)
         shop = cache.load(SHOP, p.shop) if p.shop else {}
+        # uid -> (branch, nation) for every unit in a tree
         in_tree = {
-            uid: nation
-            for nation, cols in shop.items()
+            uid: (branch, nation)
+            for branch, trees in shop.items()
+            for nation, cols in trees.items()
             for col in cols
             for _, ids, _ in col
             for uid in ids
@@ -63,7 +66,7 @@ def build_history(points: list[Point], cache: BlobCache) -> HistoryResult:
         present = {
             uid: (row[0], row[1], row[2])
             for uid, row in wp.items()
-            if is_ground(row) and uid in in_tree
+            if uid in in_tree and branch_of(row) == in_tree[uid][0]
         }
 
         v = Version(p.version, p.date, p.commit)
@@ -75,18 +78,19 @@ def build_history(points: list[Point], cache: BlobCache) -> HistoryResult:
                 v.changes.append({"id": uid, "from": list(old), "to": list(br)})
         v.removed = [uid for uid in prev_present if uid not in present]
 
-        ground_layout = {
-            nation: [[c for c in col if any(u in present for u in c[1])] for col in cols]
-            for nation, cols in shop.items()
+        layout = {
+            (branch, nation): [[c for c in col if any(u in present for u in c[1])] for col in cols]
+            for branch, trees in shop.items()
+            for nation, cols in trees.items()
         }
-        v.layoutChanged = [n for n, cols in ground_layout.items() if prev_layout.get(n) != cols]
+        v.layoutChanged = [k for k, cols in layout.items() if prev_layout.get(k) != cols]
 
         if v.changes or v.added or v.removed or v.layoutChanged or not versions:
             idx = len(versions)
             versions.append(v)
             for uid in v.added:
-                row = wp[uid]
-                h = units.setdefault(uid, UnitHistory(in_tree[uid], row[5]))
+                branch, nation = in_tree[uid]
+                h = units.setdefault(uid, UnitHistory(branch, nation, wp[uid][5]))
                 if h.removed and h.removed[-1][1] == -1:
                     h.removed[-1] = (h.removed[-1][0], idx)
                 h.points.append((idx, *present[uid]))
@@ -94,13 +98,13 @@ def build_history(points: list[Point], cache: BlobCache) -> HistoryResult:
                 units[c["id"]].points.append((idx, *c["to"]))
             for uid in v.removed:
                 units[uid].removed.append((idx, -1))
-            for n in v.layoutChanged:
-                layouts.setdefault(n, []).append((idx, ground_layout[n]))
+            for k in v.layoutChanged:
+                layouts.setdefault(k, []).append((idx, layout[k]))
             for uid in present:
-                units[uid].nation = in_tree[uid]
+                units[uid].branch, units[uid].nation = in_tree[uid]
                 units[uid].tier = wp[uid][5]
 
         prev_present = present
-        prev_layout = ground_layout
+        prev_layout = layout
 
     return HistoryResult(versions, units, layouts)

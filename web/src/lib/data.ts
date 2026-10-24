@@ -6,6 +6,7 @@ import "server-only";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cache } from "react";
+import { BRANCHES, type Branch } from "./branches";
 import type { Meta, NationTree, RecordRow, UnitDetail, UnitSummary, UpdateDiff, VersionInfo } from "./data.gen";
 
 const DATA = join(process.cwd(), "..", "data");
@@ -22,25 +23,34 @@ export const getUnitMap = cache(() => new Map(getIndex().map((u) => [u.id, u])))
 
 export const getUnit = cache((id: string) => read<UnitDetail>("units", `${id}.json`));
 
-export const getTree = cache((nation: string) => read<NationTree>("trees", `${nation}.json`));
+export const getTree = cache((branch: string, nation: string) =>
+  read<NationTree>("trees", branch, `${nation}.json`),
+);
 
-export function unitsInNation(nation: string): UnitSummary[] {
-  return getIndex().filter((u) => u.nation === nation);
+export function unitsInNation(branch: string, nation: string): UnitSummary[] {
+  return getIndex().filter((u) => u.branch === branch && u.nation === nation);
 }
 
 // The ETL omits default values (0, []) to keep files small; fill them back in here.
 
-export type Version = Required<Omit<VersionInfo, "major">> & Pick<VersionInfo, "major">;
+type Counts = { changes: number; up: number; down: number; added: number; removed: number };
+
+/** A version with per-branch counts filled in, plus totals across branches. */
+export type Version = Pick<VersionInfo, "v" | "d" | "major"> & Counts & { byBranch: Record<Branch, Counts> };
+
+const ZERO: Counts = { changes: 0, up: 0, down: 0, added: 0, removed: 0 };
 
 export const getVersions = cache((): Version[] =>
-  read<VersionInfo[]>("versions.json").map((v) => ({
-    ...v,
-    changes: v.changes ?? 0,
-    up: v.up ?? 0,
-    down: v.down ?? 0,
-    added: v.added ?? 0,
-    removed: v.removed ?? 0,
-  })),
+  read<VersionInfo[]>("versions.json").map((v) => {
+    const byBranch = Object.fromEntries(
+      BRANCHES.map((b) => [b, { ...ZERO, ...(v.byBranch?.[b] ?? {}) }]),
+    ) as Record<Branch, Counts>;
+    const total = { ...ZERO };
+    for (const c of Object.values(byBranch)) {
+      for (const k of Object.keys(total) as (keyof Counts)[]) total[k] += c[k];
+    }
+    return { v: v.v, d: v.d, major: v.major, ...total, byBranch };
+  }),
 );
 
 export type Update = UpdateDiff & Required<Pick<UpdateDiff, "changes" | "added" | "removed">>;
@@ -55,6 +65,10 @@ export const getLatestBrUpdate = cache(() => {
   const rev = [...getVersions()].reverse();
   return rev.find((v) => v.changes >= 10) ?? rev.find((v) => v.changes > 0);
 });
+
+export function nationsOf(branch: Branch): string[] {
+  return getMeta().branches[branch] ?? [];
+}
 
 /** Rows of the records sheet; empty if the ETL ran without it. */
 export const getRecords = cache((): RecordRow[] =>

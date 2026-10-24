@@ -1,36 +1,45 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
+import { Tabs } from "@/components/Tabs";
 import { ThermalFinder, type ThermalUnit } from "@/components/ThermalFinder";
+import { BRANCHES, BRANCH_SHORT } from "@/lib/branches";
 import { TopBrChart, type TopBrPoint } from "@/components/TopBrChart";
 import { formatBr, formatBrDelta, rankToBr } from "@/lib/br";
-import { getIndex, getMeta, getUnit, getVersions } from "@/lib/data";
+import { getIndex, getUnit, getVersions, nationsOf } from "@/lib/data";
 import type { UnitDetail } from "@/lib/data.gen";
 import { nationName } from "@/lib/nations";
 
 export const metadata: Metadata = {
   title: "Explore",
   description:
-    "War Thunder ground vehicles with the biggest Battle Rating moves since 2020, the most-changed vehicles, a thermal sight finder and BR creep over time.",
+    "War Thunder vehicles and aircraft with the biggest Battle Rating moves since 2020, the most-changed vehicles, a thermal sight finder and BR creep over time.",
 };
 
 export default function ExplorePage() {
-  const meta = getMeta();
   const versions = getVersions();
   const live = getIndex().filter((u) => !u.removedIn);
   const details = live.map((u) => getUnit(u.id));
 
-  // Net RB change since each vehicle's first recorded BR.
-  const net = details
-    .filter((d) => d.history && d.history.length > 1)
-    .map((d) => ({ d, first: d.history![0].rb, delta: d.br.rb - d.history![0].rb, since: d.history![0] }))
-    .filter((x) => x.delta !== 0);
-  const ups = [...net].sort((a, b) => b.delta - a.delta || a.d.name.localeCompare(b.d.name)).slice(0, 15);
-  const downs = [...net].sort((a, b) => a.delta - b.delta || a.d.name.localeCompare(b.d.name)).slice(0, 15);
-  const most = [...details].sort((a, b) => (b.changes ?? 0) - (a.changes ?? 0)).slice(0, 15);
+  const byBranch = BRANCHES.map((b) => {
+    const ds = details.filter((d) => d.branch === b);
+    // Net RB change since each vehicle's first recorded BR.
+    const net = ds
+      .filter((d) => d.history && d.history.length > 1)
+      .map((d) => ({ d, first: d.history![0].rb, delta: d.br.rb - d.history![0].rb }))
+      .filter((x) => x.delta !== 0);
+    return {
+      branch: b,
+      ups: [...net].sort((a, b) => b.delta - a.delta || a.d.name.localeCompare(b.d.name)).slice(0, 15),
+      downs: [...net].sort((a, b) => a.delta - b.delta || a.d.name.localeCompare(b.d.name)).slice(0, 15),
+      most: [...ds].sort((a, b) => (b.changes ?? 0) - (a.changes ?? 0)).slice(0, 15),
+      top: topBr(ds, versions.map((v) => v.v), versions.map((v) => v.d)),
+    };
+  });
+  const labels = byBranch.map((x) => BRANCH_SHORT[x.branch]);
 
   const thermal: ThermalUnit[] = live
-    .filter((u) => u.thermal && Object.keys(u.thermal).length > 0)
+    .filter((u) => u.branch === "ground" && u.thermal && Object.keys(u.thermal).length > 0)
     .map((u) => ({
       id: u.id,
       name: u.name,
@@ -60,27 +69,35 @@ export default function ExplorePage() {
       <section id="movers" className="scroll-mt-16">
         <h2 className="mb-1 text-xl font-semibold">Biggest moves</h2>
         <p className="mb-4 text-sm text-fg-3">Net RB change from the first recorded BR to today.</p>
-        <div className="grid gap-6 md:grid-cols-2">
-          <MoverTable title="Most uptiered" rows={ups} />
-          <MoverTable title="Most downtiered" rows={downs} />
-        </div>
+        <Tabs labels={labels}>
+          {byBranch.map((x) => (
+            <div key={x.branch} className="grid gap-6 md:grid-cols-2">
+              <MoverTable title="Most uptiered" rows={x.ups} />
+              <MoverTable title="Most downtiered" rows={x.downs} />
+            </div>
+          ))}
+        </Tabs>
       </section>
 
       <section id="most-changed" className="scroll-mt-16">
         <h2 className="mb-1 text-xl font-semibold">Most changed</h2>
         <p className="mb-4 text-sm text-fg-3">Updates that changed a vehicle&apos;s BR in any mode.</p>
-        <ol className="divide-y divide-card-border border border-card-border bg-panel">
-          {most.map((d, i) => (
-            <li key={d.id} className="flex items-baseline gap-3 px-3 py-1.5 text-sm">
-              <span className="w-6 text-right tabular text-fg-3">{i + 1}</span>
-              <Link href={`/vehicle/${d.id}/`} className="min-w-0 flex-1 truncate font-display">
-                {d.name}
-              </Link>
-              <span className="text-fg-3">{nationName(d.nation)}</span>
-              <span className="w-24 text-right tabular text-fg">{d.changes} changes</span>
-            </li>
+        <Tabs labels={labels}>
+          {byBranch.map((x) => (
+            <ol key={x.branch} className="divide-y divide-card-border border border-card-border bg-panel">
+              {x.most.map((d, i) => (
+                <li key={d.id} className="flex items-baseline gap-3 px-3 py-1.5 text-sm">
+                  <span className="w-6 text-right tabular text-fg-3">{i + 1}</span>
+                  <Link href={`/vehicle/${d.id}/`} className="min-w-0 flex-1 truncate font-display">
+                    {d.name}
+                  </Link>
+                  <span className="text-fg-3">{nationName(d.nation)}</span>
+                  <span className="w-24 text-right tabular text-fg">{d.changes} changes</span>
+                </li>
+              ))}
+            </ol>
           ))}
-        </ol>
+        </Tabs>
       </section>
 
       <section id="thermals" className="scroll-mt-16">
@@ -88,13 +105,17 @@ export default function ExplorePage() {
         <p className="mb-4 text-sm text-fg-3">
           Best thermal sight per crew position, including ones that need a modification. Sorted from the lowest BR.
         </p>
-        <ThermalFinder units={thermal} nations={meta.nations} />
+        <ThermalFinder units={thermal} nations={nationsOf("ground")} />
       </section>
 
       <section id="top-br" className="scroll-mt-16">
         <h2 className="mb-1 text-xl font-semibold">Top BR over time</h2>
-        <p className="mb-4 text-sm text-fg-3">The highest Realistic Battles BR of any ground vehicle at each update.</p>
-        <TopBrChart data={topBr(details, versions.map((v) => v.v), versions.map((v) => v.d))} />
+        <p className="mb-4 text-sm text-fg-3">The highest Realistic Battles BR in each branch at each update.</p>
+        <Tabs labels={labels}>
+          {byBranch.map((x) => (
+            <TopBrChart key={x.branch} data={x.top} />
+          ))}
+        </Tabs>
       </section>
     </div>
   );
@@ -105,7 +126,7 @@ function MoverTable({
   rows,
 }: {
   title: string;
-  rows: { d: UnitDetail; first: number; delta: number; since: { v: string; d: string } }[];
+  rows: { d: UnitDetail; first: number; delta: number }[];
 }) {
   return (
     <div>

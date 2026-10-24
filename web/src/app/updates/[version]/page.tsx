@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, formatBr, formatBrDelta } from "@/lib/br";
-import { getMeta, getUnitMap, getUpdate, getVersions } from "@/lib/data";
+import { BRANCHES, BRANCH_NAME, type Branch } from "@/lib/branches";
+import { getUnitMap, getUpdate, getVersions, nationsOf } from "@/lib/data";
 import type { BrChange, UnitSummary } from "@/lib/data.gen";
 import { nationName } from "@/lib/nations";
 
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const u = getUpdate(version);
   return {
     title: `Update ${version} BR changes`,
-    description: `${u.changes.length} ground Battle Rating changes in War Thunder update ${version} (${u.d}).`,
+    description: `${u.changes.length} Battle Rating changes in War Thunder update ${version} (${u.d}).`,
   };
 }
 
@@ -28,14 +29,15 @@ export default async function UpdatePage({ params }: Params) {
   const { version } = await params;
   const u = getUpdate(version);
   const units = getUnitMap();
-  const nations = getMeta().nations;
 
-  const byNation = new Map<string, BrChange[]>();
-  for (const c of u.changes) {
-    const n = units.get(c.id)?.nation ?? "other";
-    byNation.set(n, [...(byNation.get(n) ?? []), c]);
+  // Group changes by branch, then nation, in game order.
+  const groups: { branch: Branch; nation: string; changes: BrChange[] }[] = [];
+  for (const b of BRANCHES) {
+    for (const n of nationsOf(b)) {
+      const changes = u.changes.filter((c) => units.get(c.id)?.branch === b && units.get(c.id)?.nation === n);
+      if (changes.length) groups.push({ branch: b, nation: n, changes });
+    }
   }
-  const order = [...byNation.keys()].sort((a, b) => nations.indexOf(a) - nations.indexOf(b));
   const up = u.changes.filter((c) => c.after.rb > c.before.rb).length;
   const down = u.changes.filter((c) => c.after.rb < c.before.rb).length;
 
@@ -64,10 +66,17 @@ export default async function UpdatePage({ params }: Params) {
         )}
       </header>
 
-      {order.map((nation) => (
-        <section key={nation}>
-          <h2 className="mb-2 text-xl font-semibold">{nationName(nation)}</h2>
-          <DiffTable changes={byNation.get(nation)!} units={units} />
+      {BRANCHES.filter((b) => groups.some((g) => g.branch === b)).map((b) => (
+        <section key={b} className="space-y-6">
+          <h2 className="border-b border-card-border pb-1 text-2xl font-semibold">{BRANCH_NAME[b]}</h2>
+          {groups
+            .filter((g) => g.branch === b)
+            .map((g) => (
+              <div key={g.nation}>
+                <h3 className="mb-2 text-lg font-semibold">{nationName(g.nation)}</h3>
+                <DiffTable changes={g.changes} units={units} />
+              </div>
+            ))}
         </section>
       ))}
 

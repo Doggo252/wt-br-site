@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { RecordsTable } from "@/components/RecordsTable";
-import { getMeta, getRecords } from "@/lib/data";
+import { getRecords, nationsOf } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "RB kill records",
@@ -11,7 +11,6 @@ const SHEET_URL = "https://docs.google.com/spreadsheets/d/1MJEjscVDZ1hgU7fHp6dB0
 
 export default function RecordsPage() {
   const rows = getRecords();
-  const meta = getMeta();
   const withKills = rows.filter((r) => r.kills);
   return (
     <div className="space-y-6">
@@ -29,7 +28,7 @@ export default function RecordsPage() {
           . Submit new records there, not here. Uptier only links each record to its vehicle.
         </p>
       </header>
-      <RecordsTable rows={rows} nations={meta.nations} />
+      <RecordsTable rows={rows} nations={nationsOf("ground")} />
     </div>
   );
 }

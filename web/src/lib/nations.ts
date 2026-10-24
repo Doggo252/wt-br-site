@@ -31,6 +31,11 @@ export const TYPE_NAME: Record<string, string> = {
   heavy_tank: "Heavy tank",
   tank_destroyer: "Tank destroyer",
   spaa: "SPAA",
+  fighter: "Fighter",
+  strike: "Strike aircraft",
+  bomber: "Bomber",
+  attack_helicopter: "Attack helicopter",
+  utility_helicopter: "Utility helicopter",
   other: "Other",
 };
 

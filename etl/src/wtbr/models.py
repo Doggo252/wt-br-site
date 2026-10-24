@@ -11,7 +11,11 @@ from pydantic import BaseModel, ConfigDict
 Branch = Literal["ground", "air", "heli", "naval"]
 Status = Literal["tree", "premium", "squadron", "event"]
 Crew = Literal["commander", "gunner", "driver"]
-UnitType = Literal["light_tank", "medium_tank", "heavy_tank", "tank_destroyer", "spaa", "other"]
+UnitType = Literal[
+    "light_tank", "medium_tank", "heavy_tank", "tank_destroyer", "spaa",
+    "fighter", "strike", "bomber", "attack_helicopter", "utility_helicopter",
+    "other",
+]  # fmt: skip
 
 
 class Model(BaseModel):
@@ -44,6 +48,13 @@ class Stats(Model):
     mainGun: str | None = None
     armorHull: tuple[float, float, float] | None = None  # front, side, rear (mm)
     armorTurret: tuple[float, float, float] | None = None
+    # Aircraft and helicopters
+    maxSpeedKmh: float | None = None
+    maxSpeedAltM: float | None = None
+    climbRate: float | None = None  # m/s
+    turnTimeS: float | None = None
+    ceilingM: float | None = None
+    rollRate: float | None = None  # deg/s
 
 
 class UnitSummary(Model):
@@ -116,17 +127,22 @@ class UnitDetail(UnitSummary):
     record: UnitRecord | None = None
 
 
-class VersionInfo(Model):
-    """One row of data/versions.json: a live game version that changed ground vehicles."""
-
-    v: str
-    d: str
-    major: str
+class BranchCounts(Model):
     changes: int = 0
     up: int = 0  # RB uptiers
     down: int = 0  # RB downtiers
     added: int = 0
     removed: int = 0
+
+
+class VersionInfo(Model):
+    """One row of data/versions.json: a live game version that changed any tracked vehicle.
+    Version indexes elsewhere (history, time machine) refer to positions in this list."""
+
+    v: str
+    d: str
+    major: str
+    byBranch: dict[Branch, BranchCounts] = {}
 
 
 class BrChange(Model):
@@ -157,7 +173,7 @@ class TreeCell(Model):
 
 
 class NationTree(Model):
-    """data/trees/<nation>.json. Columns in in-game order, cells top to bottom."""
+    """data/trees/<branch>/<nation>.json. Columns in in-game order, cells top to bottom."""
 
     nation: str
     branch: Branch
@@ -170,8 +186,8 @@ class Meta(Model):
     date: str
     generatedAt: str
     unitCount: int
-    nations: list[str]
-    perNation: dict[str, int] = {}  # vehicles currently in each tree
+    branches: dict[Branch, list[str]]  # nations with a tree, in game order, per branch
+    perNation: dict[str, int] = {}  # vehicles currently in each tree, keyed "branch/nation"
 
 
 class TimeMachineUnit(Model):
@@ -182,9 +198,10 @@ class TimeMachineUnit(Model):
 
 
 class TimeMachine(Model):
-    """data/public/timemachine/<nation>.json, fetched by the tech tree's patch slider.
+    """data/public/timemachine/<branch>/<nation>.json, fetched by the tech tree's patch slider.
     Version indexes refer to data/versions.json."""
 
     nation: str
+    branch: Branch
     layouts: list[tuple[int, list[list[TreeCell]]]]  # (from version index, columns)
     units: dict[str, TimeMachineUnit]

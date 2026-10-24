@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .datamine import REPO_URL, SHOP, WPCOST
-from .parse import GROUND_MOVE_TYPES, nation_of, parse_shop
+from .parse import MOVE_BRANCH, SECTION_BRANCH, nation_of, parse_shop
 
 VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)\.(\d+)")
 FETCH_BATCH = 150
@@ -138,15 +138,21 @@ def _wpcost_extract(repo: str, blob: str) -> dict:
 
 
 def _shop_extract(repo: str, blob: str) -> dict:
-    """Ground tech tree layout: {nation: [[ [rank, [ids], group], ... ], ...]}."""
+    """Tech tree layouts: {branch: {nation: [[ [rank, [ids], group], ... ], ...]}}."""
     data = json.loads(_git(Path(repo), "cat-file", "blob", blob))
-    _, trees = parse_shop(data)
-    return {
-        t.nation: [[[c.rank, c.units, c.group] for c in col] for col in t.columns] for t in trees
-    }
+    out = {}
+    for section, branch in SECTION_BRANCH.items():
+        _, trees = parse_shop(data, section)
+        out[branch] = {
+            t.nation: [[[c.rank, c.units, c.group] for c in col] for col in t.columns]
+            for t in trees
+        }
+    return out
 
 
 EXTRACTORS = {WPCOST: _wpcost_extract, SHOP: _shop_extract}
+# Bump a name when its extractor's output changes, so old cache entries aren't reused.
+CACHE_NAMES = {WPCOST: "wpcost", SHOP: "shop-v3"}
 
 
 def _extract_to_cache(args: tuple[str, str, str, str]) -> str:
@@ -164,7 +170,7 @@ class BlobCache:
         self.root = root
 
     def file(self, path: str, blob: str) -> Path:
-        return self.root / Path(path).stem / f"{blob}.json.gz"
+        return self.root / CACHE_NAMES[path] / f"{blob}.json.gz"
 
     def load(self, path: str, blob: str):
         with gzip.open(self.file(path, blob), "rt", encoding="utf-8") as f:
@@ -221,5 +227,6 @@ def timeline(commits: list[Commit]) -> list[Point]:
     return points
 
 
-def is_ground(row: list) -> bool:
-    return row[3] in GROUND_MOVE_TYPES
+def branch_of(row: list) -> str | None:
+    """Branch of an extracted wpcost row, from its unitMoveType."""
+    return MOVE_BRANCH.get(row[3])

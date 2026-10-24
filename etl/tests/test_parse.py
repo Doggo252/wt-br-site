@@ -143,3 +143,32 @@ def test_parse_shop_old_list_format():
     assert set(units) == {"us_m2a4", "us_m2_medium", "us_m3_lee"}
     assert units["us_m3_lee"].column == 1
     assert len(trees[0].columns) == 2
+
+
+def test_air_and_heli_types():
+    assert (
+        parse.unit_type(
+            {"air": True, "type_fighter": True}, {"unitMoveType": "air", "unitClass": "exp_bomber"}
+        )
+        == "bomber"
+    )
+    heli_tags = {"air": True, "type_attack_helicopter": True}
+    assert parse.unit_type(heli_tags, {"unitMoveType": "helicopter"}) == "attack_helicopter"
+    assert (
+        parse.unit_type({"type_utility_helicopter": True}, {"unitMoveType": "helicopter"})
+        == "utility_helicopter"
+    )
+
+
+def test_air_stats_from_shop_card():
+    stats = parse.parse_air_stats(
+        {"Shop": {"maxSpeed": 194.0, "maxSpeedAlt": 7620.0, "climbSpeed": 18.0, "turnTime": 23.0}},
+        {"crewTotalCount": 1},
+    )
+    assert stats == {
+        "maxSpeedKmh": 698.0,
+        "maxSpeedAltM": 7620.0,
+        "climbRate": 18.0,
+        "turnTimeS": 23.0,
+        "crew": 1,
+    }

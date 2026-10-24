@@ -9,6 +9,7 @@ import { ThermalChip } from "@/components/ThermalChip";
 import { MODES, MODE_NAME, formatBr, type Mode } from "@/lib/br";
 import { getIndex, getMeta, getUnit } from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
+import { treeHref } from "@/lib/branches";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
 import type { CrewRole, Sight as ChipSight } from "@/lib/units";
 
@@ -63,7 +64,7 @@ export default async function VehiclePage({ params }: Params) {
         </div>
         <div>
           <p className="text-sm text-fg-3">
-            <Link href={`/ground/${u.nation}/`} className="text-fg-2 no-underline hover:text-fg">
+            <Link href={treeHref(u.branch, u.nation)} className="text-fg-2 no-underline hover:text-fg">
               {nationName(u.nation)}
             </Link>
             {u.operator && <> · {nationName(u.operator)}</>} · Rank {roman(u.rank)} · {TYPE_NAME[u.type]}
@@ -106,12 +107,17 @@ export default async function VehiclePage({ params }: Params) {
       </Section>
 
       <div className="grid gap-10 md:grid-cols-2">
-        <Section title="Night vision">
-          <NightVision sights={u.sights ?? {}} />
-        </Section>
+        {u.branch === "ground" ? (
+          <Section title="Night vision">
+            <NightVision sights={u.sights ?? {}} />
+          </Section>
+        ) : null}
         <div className="space-y-10">
-          <Section title="Stats">
+          <Section title={u.branch === "ground" ? "Stats" : "Flight performance"}>
             <StatGrid u={u} />
+            {u.branch !== "ground" && (
+              <p className="mt-2 text-xs text-fg-3">From the in-game stat card, stock (unupgraded).</p>
+            )}
           </Section>
           {u.record && (
             <Section title="RB kill record">
@@ -226,6 +232,7 @@ function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
 
 function StatGrid({ u }: { u: UnitDetail }) {
   const s = u.stats ?? {};
+  if (u.branch !== "ground") return <AirStatGrid u={u} />;
   const rows: [string, string | null][] = [
     ["Main gun", s.mainGun ?? null],
     ["Reload", s.reloadS != null ? `${s.reloadS.toFixed(1)} s` : null],
@@ -255,13 +262,39 @@ function StatGrid({ u }: { u: UnitDetail }) {
   );
 }
 
-/** Ground vehicles at exactly the same BR in each mode: same nation first, then others. */
+function AirStatGrid({ u }: { u: UnitDetail }) {
+  const s = u.stats ?? {};
+  const n = (v: number | null | undefined, unit: string, digits = 0) =>
+    v != null ? `${v.toLocaleString("en", { maximumFractionDigits: digits })} ${unit}` : null;
+  const rows: [string, string | null][] = [
+    ["Max speed", s.maxSpeedKmh != null ? `${n(s.maxSpeedKmh, "km/h")}${s.maxSpeedAltM ? ` at ${n(s.maxSpeedAltM, "m")}` : ""}` : null],
+    ["Climb rate", n(s.climbRate, "m/s", 1)],
+    ["Turn time", n(s.turnTimeS, "s", 1)],
+    ["Roll rate", n(s.rollRate, "°/s")],
+    ["Ceiling", n(s.ceilingM, "m")],
+    ["Crew", s.crew != null ? String(s.crew) : null],
+  ];
+  return (
+    <dl className="divide-y divide-card-border border border-card-border bg-panel">
+      {rows
+        .filter((r): r is [string, string] => r[1] !== null)
+        .map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-4 px-3 py-1.5 text-sm">
+            <dt className="text-fg-3">{k}</dt>
+            <dd className="text-right font-display tabular text-fg">{v}</dd>
+          </div>
+        ))}
+    </dl>
+  );
+}
+
+/** Vehicles of the same branch at exactly the same BR in each mode: same nation first, then others. */
 function sameBr(u: UnitDetail, index: UnitSummary[], limit = 30) {
   const byMode = {} as Record<Mode, string[]>;
   const units: Record<string, TreeUnit> = {};
   for (const m of MODES) {
     const peers = index
-      .filter((o) => o.id !== u.id && o.br[m] === u.br[m] && !o.hidden)
+      .filter((o) => o.id !== u.id && o.branch === u.branch && o.br[m] === u.br[m] && !o.hidden && !o.removedIn)
       .sort((a, b) => Number(b.nation === u.nation) - Number(a.nation === u.nation) || a.name.localeCompare(b.name))
       .slice(0, limit);
     byMode[m] = peers.map((o) => o.id);

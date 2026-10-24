@@ -2,11 +2,11 @@ import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { SearchBox } from "@/components/SearchBox";
 import { UnitCard } from "@/components/UnitCard";
-import { getIndex, getLatestBrUpdate, getMeta, getUnitMap, getUpdate, getVersions } from "@/lib/data";
+import { BRANCHES, BRANCH_NAME, branchHref, treeHref } from "@/lib/branches";
+import { getIndex, getLatestBrUpdate, getUnitMap, getUpdate, getVersions, nationsOf } from "@/lib/data";
 import { nationName } from "@/lib/nations";
 
 export default function Home() {
-  const meta = getMeta();
   const index = getIndex();
   const versions = getVersions();
   const latest = getLatestBrUpdate();
@@ -34,7 +34,8 @@ export default function Home() {
       <section className="max-w-3xl">
         <h1 className="text-4xl font-bold sm:text-5xl">Every BR change, patch by patch.</h1>
         <p className="mt-3 text-lg text-fg-2">
-          The Battle Rating history of every War Thunder ground vehicle since March 2020, straight from the game files.
+          The Battle Rating history of every War Thunder tank, aircraft and helicopter since March 2020, straight from
+          the game files.
         </p>
         <SearchBox className="mt-5 max-w-md" />
         <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3">
@@ -53,7 +54,7 @@ export default function Home() {
             <span className="text-sm tabular text-fg-3">{latest.d}</span>
           </div>
           <p className="mt-1 text-fg-2">
-            {latest.changes} ground vehicle{latest.changes === 1 ? "" : "s"} changed.{" "}
+            {latest.changes} vehicle{latest.changes === 1 ? "" : "s"} changed.{" "}
             <span className="inline-flex items-center gap-1 text-bad">
               <Arrow dir="up" /> {latest.up} up
             </span>
@@ -123,18 +124,29 @@ export default function Home() {
         </section>
         <section>
           <h2 className="mb-3 text-xl font-semibold">Tech trees</h2>
-          <ul className="grid grid-cols-2 gap-2">
-            {meta.nations.map((n) => (
-              <li key={n}>
-                <Link
-                  href={`/ground/${n}/`}
-                  className="block border border-card-border bg-card-bg px-3 py-2 font-display text-fg no-underline hover:brightness-125"
-                >
-                  {nationName(n)}
-                </Link>
-              </li>
+          <div className="space-y-4">
+            {BRANCHES.map((b) => (
+              <div key={b}>
+                <h3 className="mb-1.5 font-display text-sm font-semibold uppercase tracking-wide text-fg-3">
+                  <Link href={branchHref(b)} className="text-fg-3 no-underline hover:text-fg">
+                    {BRANCH_NAME[b]}
+                  </Link>
+                </h3>
+                <ul className="flex flex-wrap gap-1.5">
+                  {nationsOf(b).map((n) => (
+                    <li key={n}>
+                      <Link
+                        href={treeHref(b, n)}
+                        className="block border border-card-border bg-card-bg px-2.5 py-1 font-display text-sm text-fg no-underline hover:brightness-125"
+                      >
+                        {nationName(n)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
           <p className="mt-3 text-sm text-fg-3">
             Each tree has a time machine: rewind it to any update since 2020.
           </p>

@@ -2,7 +2,7 @@
 
 A fan site showing the Battle Rating (BR) history of every War Thunder vehicle. Tanks come first and aircraft are added later as a module. No other site shows per-vehicle BR history, so that is the core feature. The tech tree, stats, thermals and records exist to support it.
 
-Status: steps 1–4 are built, plus most of step 5a (Explore). See "Progress" below.
+Status: steps 1–4, 5a and 5c are built (ground, air and helicopters). See "Progress" below.
 
 ## Progress
 
@@ -14,7 +14,7 @@ Status: steps 1–4 are built, plus most of step 5a (Explore). See "Progress" be
 | 4. Records | Done | 1,215/1,215 sheet rows matched (40 via `etl/manual/records.toml`). Maintainers not yet contacted. |
 | 5a. Explore | Mostly done | Biggest moves, most changed, thermal finder, top BR over time. |
 | 5b. Official sheets | Not started | |
-| 5c. Air | Not started | Data model is ready (`branch`). |
+| 5c. Air | Done | Aviation (1,364) and helicopters (115): trees, history, time machine, flight stats from the in-game stat card. Killstreak/nuke units excluded. |
 | Pre-2020 (ControlNet) | Deferred | Only covers 2019-11 to 2020-03, keyed by wiki names, and the data repo is AGPL-3.0. Needs a licensing decision. |
 | Infra | Done, not live | CI, daily deploy workflow, validation. Needs push access and a Firebase project. |
 

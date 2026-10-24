@@ -2,6 +2,7 @@
 
 import csv
 import io
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
@@ -9,6 +10,18 @@ from .br import WPCOST_FIELD
 from .thermals import thermal_gen
 
 GROUND_MOVE_TYPES = {"tank", "heavy_tank", "wheeled_vehicle"}
+
+# Branch -> (shop.blkx section, wpcost unitMoveTypes). Naval comes later.
+BRANCHES: dict[str, tuple[str, set[str]]] = {
+    "ground": ("army", GROUND_MOVE_TYPES),
+    "air": ("aviation", {"air"}),
+    "heli": ("helicopters", {"helicopter"}),
+}
+SECTION_BRANCH = {section: branch for branch, (section, _) in BRANCHES.items()}
+MOVE_BRANCH = {mt: branch for branch, (_, mts) in BRANCHES.items() for mt in mts}
+
+# wpcost unitClass -> our type, for aircraft.
+AIR_CLASS = {"exp_fighter": "fighter", "exp_assault": "strike", "exp_bomber": "bomber"}
 
 # unittags type_* tag -> our unit type, in priority order.
 TYPE_TAGS = [
@@ -28,13 +41,19 @@ def nation_of(country: str) -> str:
 # --- wpcost.blkx -----------------------------------------------------------
 
 
-def ground_ranks(wpcost: dict) -> dict[str, dict[str, int]]:
-    """{unit_id: {"ab": r, "rb": r, "sb": r}} for every ground vehicle."""
+def unit_ranks(wpcost: dict, move_types: set[str] | None = None) -> dict[str, dict[str, int]]:
+    """{unit_id: {"ab": r, "rb": r, "sb": r}} for units of the given move types (default: all)."""
     out = {}
     for uid, u in wpcost.items():
-        if isinstance(u, dict) and u.get("unitMoveType") in GROUND_MOVE_TYPES:
+        if not isinstance(u, dict) or not u.get("unitMoveType"):
+            continue
+        if move_types is None or u["unitMoveType"] in move_types:
             out[uid] = {mode: int(u.get(f, 0)) for mode, f in WPCOST_FIELD.items()}
     return out
+
+
+def ground_ranks(wpcost: dict) -> dict[str, dict[str, int]]:
+    return unit_ranks(wpcost, GROUND_MOVE_TYPES)
 
 
 # --- shop.blkx -------------------------------------------------------------
@@ -63,6 +82,11 @@ class ShopTree:
     columns: list[list[ShopCell]] = field(default_factory=list)
 
 
+# Units that sit hidden in the trees but aren't player vehicles: killstreak and nuke aircraft
+# ("nt_"), tutorial copies.
+NOT_PLAYER_UNIT = re.compile(r"^nt_|_killstreak$|_tutorial$")
+
+
 def _is_unit(v: dict) -> bool:
     return "rank" in v
 
@@ -83,10 +107,16 @@ def parse_shop(shop: dict, section: str = "army") -> tuple[dict[str, ShopUnit], 
                 if not isinstance(v, dict):
                     continue
                 if _is_unit(v):
+                    if NOT_PLAYER_UNIT.search(key):
+                        continue
                     units[key] = ShopUnit(key, nation, int(v["rank"]), ci, v)
                     cells.append(ShopCell(int(v["rank"]), [key]))
                 else:
-                    members = [(k, m) for k, m in v.items() if isinstance(m, dict) and _is_unit(m)]
+                    members = [
+                        (k, m)
+                        for k, m in v.items()
+                        if isinstance(m, dict) and _is_unit(m) and not NOT_PLAYER_UNIT.search(k)
+                    ]
                     if not members:
                         continue
                     for k, m in members:
@@ -145,11 +175,38 @@ def parse_weaponry(text: str) -> dict[str, str]:
 # --- unittags.blkx ---------------------------------------------------------
 
 
-def unit_type(tags: dict) -> str:
+def unit_type(tags: dict, wp: dict | None = None) -> str:
+    move = (wp or {}).get("unitMoveType")
+    # Helicopters first: their tags include "air" too.
+    heli_tags = tags.get("type_attack_helicopter") or tags.get("type_utility_helicopter")
+    if move == "helicopter" or heli_tags:
+        return "attack_helicopter" if tags.get("type_attack_helicopter") else "utility_helicopter"
+    if move == "air" or tags.get("air"):
+        return AIR_CLASS.get((wp or {}).get("unitClass", ""), "fighter")
     for tag, t in TYPE_TAGS:
         if tags.get(tag):
             return t
     return "other"
+
+
+def parse_air_stats(unittag: dict, wp: dict) -> dict:
+    """The in-game stat card for aircraft and helicopters (unittags.blkx Shop block)."""
+    shop = unittag.get("Shop") or {}
+
+    def num(key, scale=1.0, digits=0):
+        v = shop.get(key)
+        return round(v * scale, digits) if isinstance(v, (int, float)) else None
+
+    stats = {
+        "maxSpeedKmh": num("maxSpeed", 3.6),  # stored in m/s
+        "maxSpeedAltM": num("maxSpeedAlt"),
+        "climbRate": num("climbSpeed", digits=1),  # m/s
+        "turnTimeS": num("turnTime", digits=1),
+        "ceilingM": num("maxAltitude"),
+        "rollRate": num("rollRate"),  # deg/s
+        "crew": wp.get("crewTotalCount"),
+    }
+    return {k: v for k, v in stats.items() if v is not None}
 
 
 def operator_country(tags: dict, nation: str) -> str | None:

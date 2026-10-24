@@ -6,14 +6,16 @@ export interface Meta {
   date: string;
   generatedAt: string;
   unitCount: number;
-  nations: string[];
+  branches: {
+    [k: string]: string[];
+  };
   perNation?: {
     [k: string]: number;
   };
 }
 
 /**
- * data/trees/<nation>.json. Columns in in-game order, cells top to bottom.
+ * data/trees/<branch>/<nation>.json. Columns in in-game order, cells top to bottom.
  */
 
 export interface NationTree {
@@ -47,12 +49,13 @@ export interface RecordRow {
 }
 
 /**
- * data/public/timemachine/<nation>.json, fetched by the tech tree's patch slider.
+ * data/public/timemachine/<branch>/<nation>.json, fetched by the tech tree's patch slider.
  * Version indexes refer to data/versions.json.
  */
 
 export interface TimeMachine {
   nation: string;
+  branch: "ground" | "air" | "heli" | "naval";
   layouts: [number, TreeCell[][]][];
   units: {
     [k: string]: TimeMachineUnit;
@@ -79,7 +82,18 @@ export interface UnitDetail {
   nation: string;
   operator?: string | null;
   rank: number;
-  type: "light_tank" | "medium_tank" | "heavy_tank" | "tank_destroyer" | "spaa" | "other";
+  type:
+    | "light_tank"
+    | "medium_tank"
+    | "heavy_tank"
+    | "tank_destroyer"
+    | "spaa"
+    | "fighter"
+    | "strike"
+    | "bomber"
+    | "attack_helicopter"
+    | "utility_helicopter"
+    | "other";
   name: string;
   status: "tree" | "premium" | "squadron" | "event";
   hidden?: boolean;
@@ -134,6 +148,12 @@ export interface Stats {
   mainGun?: string | null;
   armorHull?: [number, number, number] | null;
   armorTurret?: [number, number, number] | null;
+  maxSpeedKmh?: number | null;
+  maxSpeedAltM?: number | null;
+  climbRate?: number | null;
+  turnTimeS?: number | null;
+  ceilingM?: number | null;
+  rollRate?: number | null;
 }
 /**
  * BR from this version on (until the next point).
@@ -174,7 +194,18 @@ export interface UnitSummary {
   nation: string;
   operator?: string | null;
   rank: number;
-  type: "light_tank" | "medium_tank" | "heavy_tank" | "tank_destroyer" | "spaa" | "other";
+  type:
+    | "light_tank"
+    | "medium_tank"
+    | "heavy_tank"
+    | "tank_destroyer"
+    | "spaa"
+    | "fighter"
+    | "strike"
+    | "bomber"
+    | "attack_helicopter"
+    | "utility_helicopter"
+    | "other";
   name: string;
   status: "tree" | "premium" | "squadron" | "event";
   hidden?: boolean;
@@ -216,13 +247,20 @@ export interface BrChange {
  */
 
 /**
- * One row of data/versions.json: a live game version that changed ground vehicles.
+ * One row of data/versions.json: a live game version that changed any tracked vehicle.
+ * Version indexes elsewhere (history, time machine) refer to positions in this list.
  */
 
 export interface VersionInfo {
   v: string;
   d: string;
   major: string;
+  byBranch?: {
+    [k: string]: BranchCounts;
+  };
+}
+
+export interface BranchCounts {
   changes?: number;
   up?: number;
   down?: number;

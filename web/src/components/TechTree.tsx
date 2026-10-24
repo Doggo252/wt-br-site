@@ -23,6 +23,7 @@ export type TreeUnit = {
 };
 
 type Props = {
+  branch: string;
   nation: string;
   columns: TreeCell[][];
   units: Record<string, TreeUnit>;
@@ -30,7 +31,7 @@ type Props = {
 
 type History = { versions: VersionInfo[]; tm: TimeMachine };
 
-export function TechTree({ nation, columns, units }: Props) {
+export function TechTree({ branch, nation, columns, units }: Props) {
   const [mode, setMode] = useMode();
   const [showHidden, setShowHidden] = useState(true);
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -45,7 +46,7 @@ export function TechTree({ nation, columns, units }: Props) {
     try {
       const [versions, tm] = await Promise.all([
         fetch("/data/versions.json").then((r) => r.json() as Promise<VersionInfo[]>),
-        fetch(`/data/timemachine/${nation}.json`).then((r) => r.json() as Promise<TimeMachine>),
+        fetch(`/data/timemachine/${branch}/${nation}.json`).then((r) => r.json() as Promise<TimeMachine>),
       ]);
       const h = { versions, tm };
       setHistory(h);
@@ -110,6 +111,7 @@ export function TechTree({ nation, columns, units }: Props) {
       </div>
 
       <PatchSlider
+        branch={branch}
         history={history}
         loading={loading}
         vIdx={vIdx}
@@ -225,12 +227,14 @@ function stateAt(tm: TimeMachine, vIdx: number): { columns: TreeCell[][]; units:
 }
 
 function PatchSlider({
+  branch,
   history,
   loading,
   vIdx,
   onOpen,
   onChange,
 }: {
+  branch: string;
   history: History | null;
   loading: boolean;
   vIdx: number | null;
@@ -256,7 +260,8 @@ function PatchSlider({
   // Jump between versions that changed something, skipping layout-only ones.
   const step = (dir: -1 | 1) => {
     for (let i = vIdx + dir; i >= 0 && i <= max; i += dir) {
-      if (history.versions[i].changes || history.versions[i].added || i === 0 || i === max) return onChange(i);
+      const c = history.versions[i].byBranch?.[branch as keyof VersionInfo["byBranch"]];
+      if (c?.changes || c?.added || c?.removed || i === 0 || i === max) return onChange(i);
     }
   };
   return (

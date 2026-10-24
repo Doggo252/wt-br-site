@@ -16,9 +16,10 @@ export const metadata: Metadata = {
   description: "Battle Rating history for every War Thunder vehicle, patch by patch.",
 };
 
-// Sections link once their build step lands (see PLAN.md §8).
 const NAV = [
   { href: "/ground/", label: "Ground", ready: true },
+  { href: "/air/", label: "Air", ready: true },
+  { href: "/helicopters/", label: "Helis", ready: true },
   { href: "/updates/", label: "Updates", ready: true },
   { href: "/records/", label: "Records", ready: true },
   { href: "/explore/", label: "Explore", ready: true },
