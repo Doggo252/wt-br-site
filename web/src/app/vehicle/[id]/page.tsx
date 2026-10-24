@@ -1,0 +1,216 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { BrBadge } from "@/components/BrBadge";
+import { SameBrStrip } from "@/components/SameBrStrip";
+import type { TreeUnit } from "@/components/TechTree";
+import { ThermalChip } from "@/components/ThermalChip";
+import { MODES, MODE_NAME, formatBr, type Mode } from "@/lib/br";
+import { getIndex, getMeta, getUnit } from "@/lib/data";
+import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
+import { TYPE_NAME, nationName, roman } from "@/lib/nations";
+import type { CrewRole, Sight as ChipSight } from "@/lib/units";
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return getIndex().map((u) => ({ id: u.id }));
+}
+
+type Params = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { id } = await params;
+  const u = getUnit(id);
+  return {
+    title: `${u.name} BR history`,
+    description: `${u.fullName} (${nationName(u.nation)}): Battle Rating ${formatBr(u.br.ab)} AB / ${formatBr(u.br.rb)} RB / ${formatBr(u.br.sb)} SB, with stats and night vision.`,
+    openGraph: u.image ? { images: [`/img/units/${id}.webp`] } : undefined,
+  };
+}
+
+const STATUS_LABEL: Record<UnitDetail["status"], string> = {
+  tree: "Tech tree",
+  premium: "Premium",
+  squadron: "Squadron",
+  event: "Event",
+};
+
+const STATUS_COLOR: Record<UnitDetail["status"], string> = {
+  tree: "text-fg-2",
+  premium: "text-premium",
+  squadron: "text-squadron",
+  event: "text-premium",
+};
+
+const CREWS: CrewRole[] = ["commander", "gunner", "driver"];
+
+export default async function VehiclePage({ params }: Params) {
+  const { id } = await params;
+  const u = getUnit(id);
+  const meta = getMeta();
+  const same = sameBr(u, getIndex());
+
+  return (
+    <article className="space-y-10">
+      <header className="grid gap-6 md:grid-cols-[minmax(0,512px)_1fr] md:items-center">
+        <div className="relative aspect-[2/1] w-full border border-card-border bg-panel">
+          {u.image && (
+            // eslint-disable-next-line @next/next/no-img-element -- static export
+            <img src={`/img/units/${id}.webp`} alt={u.name} className="h-full w-full object-contain" />
+          )}
+        </div>
+        <div>
+          <p className="text-sm text-fg-3">
+            <Link href={`/ground/${u.nation}/`} className="text-fg-2 no-underline hover:text-fg">
+              {nationName(u.nation)}
+            </Link>
+            {u.operator && <> · {nationName(u.operator)}</>} · Rank {roman(u.rank)} · {TYPE_NAME[u.type]}
+          </p>
+          <h1 className="mt-1 text-4xl font-bold leading-tight">{u.name}</h1>
+          {u.fullName !== u.name && <p className="mt-1 text-fg-2">{u.fullName}</p>}
+          <p className="mt-2 text-sm">
+            <span className={STATUS_COLOR[u.status]}>{STATUS_LABEL[u.status]}</span>
+            {u.hidden && <span className="text-fg-3"> · not currently obtainable</span>}
+          </p>
+          <dl className="mt-5 grid max-w-sm grid-cols-3 border border-card-border bg-panel">
+            {MODES.map((m) => (
+              <div key={m} className="border-r border-card-border px-3 py-2 last:border-r-0">
+                <dt className="text-xs text-fg-3">{MODE_NAME[m]}</dt>
+                <dd>
+                  <BrBadge rank={u.br[m]} size="lg" />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </header>
+
+      <Section title="Battle Rating history">
+        <p className="border border-dashed border-card-border bg-panel p-5 text-sm text-fg-2">
+          The BR chart and change log for every update since 2020 are being built. Current as of update{" "}
+          <span className="tabular">{meta.version}</span>.
+        </p>
+      </Section>
+
+      <div className="grid gap-10 md:grid-cols-2">
+        <Section title="Night vision">
+          <NightVision sights={u.sights ?? {}} />
+        </Section>
+        <Section title="Stats">
+          <StatGrid u={u} />
+        </Section>
+      </div>
+
+      <Section title="Same Battle Rating">
+        <SameBrStrip byMode={same.byMode} units={same.units} rank={u.br} />
+      </Section>
+
+      <p className="text-xs text-fg-3">
+        Data from the War Thunder Datamine, update <span className="tabular">{meta.version}</span>. Vehicle id{" "}
+        <code>{u.id}</code>.
+      </p>
+    </article>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="mb-3 text-xl font-semibold">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function toChip(s: Sight): ChipSight {
+  if (s.kind === "ir") return { kind: "nv" };
+  return {
+    kind: "thermal",
+    gen: s.gen === 1 || s.gen === 2 || s.gen === 3 ? s.gen : undefined,
+    resolution: s.resolution,
+  };
+}
+
+function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
+  const anyMod = Object.values(sights).some((ss) => ss.some((s) => s.viaModification));
+  if (Object.keys(sights).length === 0) {
+    return <p className="text-sm text-fg-2">No night vision or thermal sights.</p>;
+  }
+  return (
+    <div className="space-y-3">
+      <dl className="space-y-2">
+        {CREWS.map((crew) => {
+          const ss = sights[crew] ?? [];
+          return (
+            <div key={crew} className="flex flex-wrap items-center gap-2">
+              <dt className="sr-only">{crew}</dt>
+              <dd className="flex flex-wrap items-center gap-2">
+                {ss.length === 0 ? (
+                  <ThermalChip crew={crew} sight={{ kind: "none" }} />
+                ) : (
+                  ss.map((s, i) => (
+                    <span key={i} className="inline-flex items-center gap-1">
+                      <ThermalChip crew={crew} sight={toChip(s)} />
+                      {s.viaModification && (
+                        <span className="text-xs text-fg-3" title="Needs a researched modification">
+                          mod
+                        </span>
+                      )}
+                    </span>
+                  ))
+                )}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+      {anyMod && <p className="text-xs text-fg-3">“mod” sights need the night vision modification researched.</p>}
+    </div>
+  );
+}
+
+function StatGrid({ u }: { u: UnitDetail }) {
+  const s = u.stats ?? {};
+  const rows: [string, string | null][] = [
+    ["Main gun", s.mainGun ?? null],
+    ["Reload", s.reloadS != null ? `${s.reloadS.toFixed(1)} s` : null],
+    ["Crew", s.crew != null ? String(s.crew) : null],
+    ["Mass", s.massT != null ? `${s.massT.toFixed(1)} t` : null],
+    ["Engine", s.enginePowerHp != null ? `${Math.round(s.enginePowerHp)} hp` : null],
+    ["Power-to-weight", s.powerToWeight != null ? `${s.powerToWeight.toFixed(1)} hp/t` : null],
+    [
+      "Max speed",
+      s.maxSpeedFwd != null ? `${Math.round(s.maxSpeedFwd)} / ${Math.round(s.maxSpeedRev ?? 0)} km/h` : null,
+    ],
+    ["Hull armor", s.armorHull ? `${s.armorHull.map((x) => Math.round(x)).join(" / ")} mm` : null],
+    ["Turret armor", s.armorTurret ? `${s.armorTurret.map((x) => Math.round(x)).join(" / ")} mm` : null],
+  ];
+  return (
+    <dl className="divide-y divide-card-border border border-card-border bg-panel">
+      {rows
+        .filter((r): r is [string, string] => r[1] !== null)
+        .map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-4 px-3 py-1.5 text-sm">
+            <dt className="text-fg-3">{k}</dt>
+            <dd className="text-right font-display tabular text-fg">{v}</dd>
+          </div>
+        ))}
+      <p className="px-3 py-1.5 text-xs text-fg-3">Armor is front / side / rear. Speeds are forward / reverse.</p>
+    </dl>
+  );
+}
+
+/** Ground vehicles at exactly the same BR in each mode: same nation first, then others. */
+function sameBr(u: UnitDetail, index: UnitSummary[], limit = 30) {
+  const byMode = {} as Record<Mode, string[]>;
+  const units: Record<string, TreeUnit> = {};
+  for (const m of MODES) {
+    const peers = index
+      .filter((o) => o.id !== u.id && o.br[m] === u.br[m] && !o.hidden)
+      .sort((a, b) => Number(b.nation === u.nation) - Number(a.nation === u.nation) || a.name.localeCompare(b.name))
+      .slice(0, limit);
+    byMode[m] = peers.map((o) => o.id);
+    for (const o of peers) units[o.id] = { name: o.name, status: o.status, hidden: o.hidden, br: o.br, image: o.image };
+  }
+  return { byMode, units };
+}

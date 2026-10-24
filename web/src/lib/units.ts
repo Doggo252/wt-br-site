@@ -7,9 +7,11 @@ export type UnitStatus = "tree" | "premium" | "squadron" | "event";
 
 /**
  * Where a vehicle stands at the version being viewed.
- * "notYet" is used by the time machine for vehicles added after that version.
+ * "unobtainable": in the game but hidden from the tree unless owned (old events, removed premiums).
+ * "removed": gone from the game files at that version.
+ * "notYet": the time machine is showing a version before the vehicle was added.
  */
-export type Availability = "current" | "removed" | "notYet";
+export type Availability = "current" | "unobtainable" | "removed" | "notYet";
 
 export type CrewRole = "commander" | "gunner" | "driver";
 

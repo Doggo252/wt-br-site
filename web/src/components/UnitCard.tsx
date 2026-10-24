@@ -34,6 +34,7 @@ const NAME_COLOR: Record<UnitStatus, string> = {
 
 const TAG: Partial<Record<UnitStatus | Availability, string>> = {
   event: "Event",
+  unobtainable: "Unobtainable",
   removed: "Removed",
   notYet: "Not yet added",
 };

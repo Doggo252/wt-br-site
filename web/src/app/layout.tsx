@@ -7,15 +7,17 @@ import "@fontsource/fira-sans-condensed/700.css";
 import "@fontsource/pt-sans/400.css";
 import "@fontsource/pt-sans/700.css";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: { default: "Uptier — War Thunder BR history", template: "%s · Uptier" },
   description: "Battle Rating history for every War Thunder vehicle, patch by patch.",
 };
 
 // Sections link once their build step lands (see PLAN.md §8).
 const NAV = [
-  { href: "/ground/", label: "Ground", ready: false },
+  { href: "/ground/", label: "Ground", ready: true },
   { href: "/updates/", label: "Updates", ready: false },
   { href: "/records/", label: "Records", ready: false },
   { href: "/explore/", label: "Explore", ready: false },
@@ -25,7 +27,7 @@ const NAV = [
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="flex min-h-dvh flex-col">
+      <body className="flex min-h-dvh flex-col overflow-x-clip">
         <header className="border-b border-card-border bg-header">
           <div className="mx-auto flex h-12 max-w-6xl items-center gap-6 px-4">
             <Link href="/" className="font-display text-lg font-bold tracking-wide text-fg no-underline hover:text-fg">

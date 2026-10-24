@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "ETL for Uptier: turns War Thunder datamine files into JSON for the site"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pillow>=13.0.0",
+    "pydantic>=2.14.1",
+]
 
 [project.scripts]
 wtbr = "wtbr.cli:main"
@@ -21,3 +24,6 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]

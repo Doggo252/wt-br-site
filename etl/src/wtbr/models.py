@@ -1,0 +1,98 @@
+"""Output schemas. These are the contract with the site.
+
+`wtbr schema` writes JSON Schema to data/schema/, and the site generates its
+TypeScript types from that (web: `pnpm gen:types`).
+"""
+
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+Branch = Literal["ground", "air", "heli", "naval"]
+Status = Literal["tree", "premium", "squadron", "event"]
+Crew = Literal["commander", "gunner", "driver"]
+UnitType = Literal["light_tank", "medium_tank", "heavy_tank", "tank_destroyer", "spaa", "other"]
+
+
+class Model(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class Ranks(Model):
+    """Raw economic ranks. BR = rank / 3 + 1."""
+
+    ab: int
+    rb: int
+    sb: int
+
+
+class Sight(Model):
+    kind: Literal["thermal", "ir"]
+    resolution: tuple[int, int]
+    gen: int | None = None  # thermal only; None when the resolution isn't mapped
+    viaModification: bool = False  # needs a researched modification
+
+
+class Stats(Model):
+    massT: float | None = None
+    enginePowerHp: float | None = None
+    powerToWeight: float | None = None
+    maxSpeedFwd: float | None = None
+    maxSpeedRev: float | None = None
+    crew: int | None = None
+    reloadS: float | None = None
+    mainGun: str | None = None
+    armorHull: tuple[float, float, float] | None = None  # front, side, rear (mm)
+    armorTurret: tuple[float, float, float] | None = None
+
+
+class UnitSummary(Model):
+    """One row of data/units/index.json."""
+
+    id: str
+    branch: Branch
+    nation: str  # tech tree nation, e.g. "germany"
+    operator: str | None = None  # flag country when it differs from the tree nation
+    rank: int  # tech tree tier, 1-8
+    type: UnitType
+    name: str  # short shop name, may contain WTSymbols glyphs
+    status: Status
+    hidden: bool = False  # only shown in-game to owners / not currently obtainable
+    br: Ranks
+    thermal: dict[Crew, int] = {}  # best thermal generation per crew position
+    image: bool = False  # whether img/units/<id>.webp exists
+
+
+class UnitDetail(UnitSummary):
+    """data/units/<id>.json."""
+
+    fullName: str
+    sights: dict[Crew, list[Sight]] = {}
+    stats: Stats = Stats()
+    eventName: str | None = None
+
+
+class TreeCell(Model):
+    """A single vehicle or a folder of vehicles in one tech tree column."""
+
+    rank: int
+    units: list[str]  # one id, or several for a folder
+    group: str | None = None  # folder id
+    groupName: str | None = None
+
+
+class NationTree(Model):
+    """data/trees/<nation>.json. Columns in in-game order, cells top to bottom."""
+
+    nation: str
+    branch: Branch
+    columns: list[list[TreeCell]]
+
+
+class Meta(Model):
+    version: str
+    commit: str
+    date: str
+    generatedAt: str
+    unitCount: int
+    nations: list[str]

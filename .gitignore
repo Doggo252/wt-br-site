@@ -12,3 +12,5 @@ etl/cache/
 firebase-debug.log
 
 .DS_Store
+data/
+web/public/img/units/
