@@ -2,7 +2,31 @@
 
 A fan site showing the Battle Rating (BR) history of every War Thunder vehicle. Tanks come first and aircraft are added later as a module. No other site shows per-vehicle BR history, so that is the core feature. The tech tree, stats, thermals and records exist to support it.
 
-Status: step 1 (scaffold and design system) is done. Step 2 is next.
+Status: steps 1–4 are built, plus most of step 5a (Explore). See "Progress" below.
+
+## Progress
+
+| Step | State | Notes |
+|---|---|---|
+| 1. Scaffold, design system | Done | `/design` style guide. Glyph font still missing (see §2). |
+| 2. Current vehicles, vehicle pages | Done | 1,242 ground vehicles in 10 nations; 1,235 images mirrored (7 have none on the CDN). |
+| 3. BR history | Done | 221 versions with ground changes since 2020-03, 91 of them with BR changes; time machine rewinds layout and BRs. |
+| 4. Records | Done | 1,215/1,215 sheet rows matched (40 via `etl/manual/records.toml`). Maintainers not yet contacted. |
+| 5a. Explore | Mostly done | Biggest moves, most changed, thermal finder, top BR over time. |
+| 5b. Official sheets | Not started | |
+| 5c. Air | Not started | Data model is ready (`branch`). |
+| Pre-2020 (ControlNet) | Deferred | Only covers 2019-11 to 2020-03, keyed by wiki names, and the data repo is AGPL-3.0. Needs a licensing decision. |
+| Infra | Done, not live | CI, daily deploy workflow, validation. Needs push access and a Firebase project. |
+
+### What the real data showed (replaces the **(verify)** guesses)
+- `shop.blkx` gives the tree: `country_x.army.range` is a list of columns (2020–2022 files use a list of `{range: column}` instead). Folders are nested dicts. Group names are `shop/group/<id>` in `units.csv`.
+- Ground vehicles in `wpcost.blkx`: `unitMoveType` is `tank`, `heavy_tank` or `wheeled_vehicle`. Squadron: `researchType = clanVehicle` / shop `isClanVehicle`. Event: shop/wpcost `event` or `marketplaceItemdefId`. Premium: `costGold` or `gift`.
+- Types come from `unittags.blkx` `type_*` tags; operator flags from extra `country_*` tags. Armor (hull/turret front/side/rear) is in `unittags.blkx` `Shop`.
+- Tank model files are lower-case IDs; so are encyclopedia image URLs.
+- Night vision: `nightVision.{gunner,commanderView,driver}{Thermal,Ir}` in the model, with thermals often added by the `night_vision_system` modification. IR also uses 800×600 / 1600×1200.
+- The datamine mixes in dev-server builds. A commit counts as live only if no later commit has a lower version.
+- Full history fits in a ~170 MB blobless clone plus one batched fetch of every `wpcost`/`shop` version (~25 MB once extracted).
+- `symbols_skyquake.ttf` is not in the datamine; only the client's packed `ui/fonts.vromfs.bin` has it.
 
 Items marked **(verify)** are assumptions to confirm against real data in the step that first needs them. They are not settled facts.
 

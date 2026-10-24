@@ -7,12 +7,14 @@ runs:
     - uses: astral-sh/setup-uv@v5
 
     # The datamine clones, extracted history and mirrored images are reused between runs;
-    # only new game versions and new vehicles are fetched.
+    # only new game versions and new vehicles are fetched. The previous meta.json lets the
+    # ETL's validation compare vehicle counts against the last build.
     - uses: actions/cache@v4
       with:
         path: |
           etl/cache
           web/public/img/units
+          data/meta.json
         key: etl-cache-${{ github.run_id }}
         restore-keys: etl-cache-
 
