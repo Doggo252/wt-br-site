@@ -32,11 +32,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className="flex min-h-dvh flex-col overflow-x-clip">
         <header className="border-b border-card-border bg-header">
-          <div className="mx-auto flex h-12 max-w-6xl items-center gap-6 px-4">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 sm:h-12 sm:flex-nowrap sm:py-0">
             <Link href="/" className="font-display text-lg font-bold tracking-wide text-fg no-underline hover:text-fg">
               UPTIER
             </Link>
-            <nav aria-label="Main" className="flex gap-4 overflow-x-auto">
+            <nav aria-label="Main" className="flex min-w-0 flex-1 gap-4 overflow-x-auto sm:flex-none">
               {NAV.map((item) =>
                 item.ready ? (
                   <Link
@@ -57,7 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 ),
               )}
             </nav>
-            <SearchBox className="ml-auto hidden w-56 sm:block" />
+            <SearchBox className="order-last w-full sm:order-none sm:ml-auto sm:w-56" />
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
