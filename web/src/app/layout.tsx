@@ -22,7 +22,7 @@ const NAV = [
   { href: "/updates/", label: "Updates", ready: true },
   { href: "/records/", label: "Records", ready: true },
   { href: "/explore/", label: "Explore", ready: true },
-  { href: "/design/", label: "Design", ready: true },
+  { href: "/about/", label: "About", ready: true },
 ];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -63,7 +63,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div className="mx-auto max-w-6xl px-4 py-4 text-xs text-fg-3">
             Uptier is a fan site and is not affiliated with or endorsed by Gaijin Entertainment. War Thunder and
             related names are trademarks of Gaijin. Game data from the{" "}
-            <a href="https://github.com/gszabi99/War-Thunder-Datamine">War Thunder Datamine</a>.
+            <a href="https://github.com/gszabi99/War-Thunder-Datamine">War Thunder Datamine</a>.{" "}
+            <Link href="/about/">About</Link> · <Link href="/design/">Style guide</Link>
           </div>
         </footer>
       </body>

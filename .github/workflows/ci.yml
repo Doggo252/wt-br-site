@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
 
 jobs:
@@ -23,39 +21,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-
-      # Mirrored vehicle images only change when vehicles are added, so keep them between runs.
-      - uses: actions/cache@v4
-        with:
-          path: web/public/img/units
-          key: unit-images-${{ github.run_id }}
-          restore-keys: unit-images-
-
-      - name: ETL
-        working-directory: etl
-        run: |
-          uv sync
-          uv run wtbr all
-
-      - uses: pnpm/action-setup@v4
-        with:
-          package_json_file: web/package.json
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: web/pnpm-lock.yaml
-      - name: Build site
-        working-directory: web
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm gen:types
-          git diff --exit-code src/lib/data.gen.ts || (echo "data.gen.ts is stale: run pnpm gen:types" && exit 1)
-          pnpm lint
-          pnpm build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: site
-          path: web/out
-          retention-days: 7
+      - uses: ./.github/actions/build-site

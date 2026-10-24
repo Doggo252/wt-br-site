@@ -1,0 +1,49 @@
+name: Build site
+description: Run the ETL (datamine, BR history, records, images) and build the static site into web/out.
+
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v5
+
+    # The datamine clones, extracted history and mirrored images are reused between runs;
+    # only new game versions and new vehicles are fetched.
+    - uses: actions/cache@v4
+      with:
+        path: |
+          etl/cache
+          web/public/img/units
+        key: etl-cache-${{ github.run_id }}
+        restore-keys: etl-cache-
+
+    - name: ETL
+      shell: bash
+      working-directory: etl
+      run: |
+        uv sync
+        uv run wtbr all
+
+    - uses: pnpm/action-setup@v4
+      with:
+        package_json_file: web/package.json
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+        cache-dependency-path: web/pnpm-lock.yaml
+
+    - name: Build
+      shell: bash
+      working-directory: web
+      run: |
+        pnpm install --frozen-lockfile
+        pnpm gen:types
+        git diff --exit-code src/lib/data.gen.ts || (echo "data.gen.ts is stale: run pnpm gen:types and commit" && exit 1)
+        pnpm lint
+        pnpm build
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: site
+        path: web/out
+        retention-days: 7

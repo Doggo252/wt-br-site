@@ -1,0 +1,30 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Daily, after the datamine usually updates. 05:17 UTC (off the hour to avoid queue spikes).
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build-site
+
+      - name: Deploy to Firebase Hosting
+        # Needs the FIREBASE_SERVICE_ACCOUNT secret and FIREBASE_PROJECT_ID variable (see README).
+        if: ${{ vars.FIREBASE_PROJECT_ID != '' }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          channelId: live
