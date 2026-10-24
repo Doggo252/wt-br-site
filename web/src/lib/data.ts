@@ -3,10 +3,10 @@
  * Server components only: everything here runs during `next build`.
  */
 import "server-only";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cache } from "react";
-import type { Meta, NationTree, UnitDetail, UnitSummary, UpdateDiff, VersionInfo } from "./data.gen";
+import type { Meta, NationTree, RecordRow, UnitDetail, UnitSummary, UpdateDiff, VersionInfo } from "./data.gen";
 
 const DATA = join(process.cwd(), "..", "data");
 
@@ -55,3 +55,8 @@ export const getLatestBrUpdate = cache(() => {
   const rev = [...getVersions()].reverse();
   return rev.find((v) => v.changes >= 10) ?? rev.find((v) => v.changes > 0);
 });
+
+/** Rows of the records sheet; empty if the ETL ran without it. */
+export const getRecords = cache((): RecordRow[] =>
+  existsSync(join(DATA, "records.json")) ? read<RecordRow[]>("records.json") : [],
+);

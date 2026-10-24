@@ -109,9 +109,16 @@ export default async function VehiclePage({ params }: Params) {
         <Section title="Night vision">
           <NightVision sights={u.sights ?? {}} />
         </Section>
-        <Section title="Stats">
-          <StatGrid u={u} />
-        </Section>
+        <div className="space-y-10">
+          <Section title="Stats">
+            <StatGrid u={u} />
+          </Section>
+          {u.record && (
+            <Section title="RB kill record">
+              <RecordCard record={u.record} />
+            </Section>
+          )}
+        </div>
       </div>
 
       <Section title="Same Battle Rating">
@@ -123,6 +130,24 @@ export default async function VehiclePage({ params }: Params) {
         <code>{u.id}</code>.
       </p>
     </article>
+  );
+}
+
+function RecordCard({ record }: { record: NonNullable<UnitDetail["record"]> }) {
+  return (
+    <div className="flex items-center gap-4 border border-card-premium-border bg-card-premium-bg p-4">
+      <span className="font-display text-4xl font-bold tabular text-gold">{record.kills}</span>
+      <div className="text-sm">
+        <p className="text-fg">kills in one life</p>
+        <p className="text-fg-2">
+          {record.player && <>by {record.player}</>}
+          {record.patch && <> · update {record.patch}</>}
+        </p>
+        <p className="mt-1 text-xs text-fg-3">
+          From the community <Link href="/records/">Ground RB Records</Link> sheet.
+        </p>
+      </div>
+    </div>
   );
 }
 

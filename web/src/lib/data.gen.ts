@@ -30,6 +30,20 @@ export interface TreeCell {
 }
 
 /**
+ * One row of data/records.json: a sheet row, matched to a vehicle when possible.
+ */
+
+export interface RecordRow {
+  nation: string;
+  name: string;
+  id?: string | null;
+  kills?: number | null;
+  player?: string | null;
+  br?: string | null;
+  patch?: string | null;
+}
+
+/**
  * data/public/timemachine/<nation>.json, fetched by the tech tree's patch slider.
  * Version indexes refer to data/versions.json.
  */
@@ -74,6 +88,7 @@ export interface UnitDetail {
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
+  recordKills?: number | null;
   fullName: string;
   sights?: {
     [k: string]: Sight[];
@@ -82,6 +97,7 @@ export interface UnitDetail {
   eventName?: string | null;
   history?: HistoryPoint[];
   absences?: Absence[];
+  record?: UnitRecord | null;
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -135,6 +151,15 @@ export interface Absence {
   removed: string;
   returned?: string | null;
 }
+/**
+ * Most RB kills in one life, from the community records sheet.
+ */
+
+export interface UnitRecord {
+  kills: number;
+  player?: string | null;
+  patch?: string | null;
+}
 
 /**
  * One row of data/units/index.json.
@@ -158,6 +183,7 @@ export interface UnitSummary {
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
+  recordKills?: number | null;
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.

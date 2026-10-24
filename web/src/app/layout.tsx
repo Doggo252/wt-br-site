@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 const NAV = [
   { href: "/ground/", label: "Ground", ready: true },
   { href: "/updates/", label: "Updates", ready: true },
-  { href: "/records/", label: "Records", ready: false },
+  { href: "/records/", label: "Records", ready: true },
   { href: "/explore/", label: "Explore", ready: true },
   { href: "/design/", label: "Design", ready: true },
 ];

@@ -117,7 +117,7 @@ def _as_list(x) -> list:
 # --- units.csv -------------------------------------------------------------
 
 
-def parse_lang(text: str, wanted_suffixes=("_shop", "_0")) -> dict[str, str]:
+def parse_lang(text: str, wanted_suffixes=("_shop", "_0", "_1")) -> dict[str, str]:
     """English strings keyed by ID, for unit and shop-group rows."""
     out = {}
     reader = csv.reader(io.StringIO(text), delimiter=";", quotechar='"')

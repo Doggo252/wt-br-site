@@ -64,6 +64,27 @@ class UnitSummary(Model):
     added: str | None = None  # version first seen; None if already in the first snapshot (2020-03)
     removedIn: str | None = None  # set when the vehicle is no longer in the game
     changes: int = 0  # number of updates that changed its BR in any mode
+    recordKills: int | None = None  # RB kill record in one life, from the records sheet
+
+
+class UnitRecord(Model):
+    """Most RB kills in one life, from the community records sheet."""
+
+    kills: int
+    player: str | None = None
+    patch: str | None = None
+
+
+class RecordRow(Model):
+    """One row of data/records.json: a sheet row, matched to a vehicle when possible."""
+
+    nation: str
+    name: str
+    id: str | None = None
+    kills: int | None = None
+    player: str | None = None
+    br: str | None = None
+    patch: str | None = None
 
 
 class HistoryPoint(Model):
@@ -92,6 +113,7 @@ class UnitDetail(UnitSummary):
     eventName: str | None = None
     history: list[HistoryPoint] = []
     absences: list[Absence] = []
+    record: UnitRecord | None = None
 
 
 class VersionInfo(Model):

@@ -1,0 +1,63 @@
+# Records sheet names that don't match a datamine name automatically.
+# [nation] then "Name as written in the sheet" = "datamine_id" ("" = deliberately unmatched).
+# SAM systems: the record goes to the launcher (TEL), which is the vehicle that scores the kills.
+
+[usa]
+"NASAMS 3" = "us_nasams_launcher"
+"CLAWS" = "us_sl_amraam_launcher"
+"M1A1 AIM" = "us_m1a1_aim_abrams"  # shown in game as "M1A1 SA"
+"M1A1 (YouTube Cup)" = "us_m1a1_abrams_yt_cup_2019"
+"◇M4" = "us_m4_sherman_promo"
+"M4" = "us_m4_sherman"
+"LVT(A)(1) (RussianBadger)" = "us_lvt_a_1_trb"
+
+[germany]
+"IRIS-T SLM" = "germ_iris_slm_launcher"
+"Leopard 2A5 (YT Cup)" = "germ_leopard_2a5_yt_cup_2019"
+"Leopard A1A1 (L/44)" = "germ_leopard_a1a1_120"  # now "Leopard 1 MPI", 120 mm L/44
+"KV-1B" = "germ_kv_1B_finland"
+"Pz.Sp.Wg.P204(f) PaK" = "germ_amd_35_kwk39"
+"Pz.Sp.Wg.P204(f) KWK" = "germ_amd_35_kwk"
+"A7V" = "germ_a7v"
+"Beutepanzer Mk IV" = "germ_beutepanzer_mk_iv"
+"Garford-Beute" = "germ_garford_putilov"
+
+[ussr]
+'9K317M "BUK-M3"' = "ussr_buk_m3_launcher"
+"🌩️T-80-U-E1" = "ussr_t_80ue1_sm"  # the game name uses Cyrillic Т and Е
+"T-80U (YouTube Cup)" = "ussr_t_80u_yt_cup_2019"
+"ZSU-23-4" = "ussr_zsu_23_4"
+
+[britain]
+"Sky Sabre" = "uk_sky_sabre_launcher"
+"M1A1" = "uk_m1a1_aim_abrams"
+"Challenger 2 (YouTube Cup)" = "uk_challenger_II_yt_cup_2019"
+"Strv 81 (RB 52) (GB)" = "uk_centurion_mk_3_ss11"
+"Harry Hopkins 1" = "uk_a25_mk_8"
+"Mark V" = "uk_mark_v"
+
+[japan]
+"Type 03" = "jp_type_03_chusam_launcher"
+"Tan-SAM Kai" = "jp_type_81_tansam_launcher"
+
+[china]
+"Type 69-IIG" = "cn_type_69_2g"
+"T-62 №545" = "cn_t_62"
+"Type 63-I" = "cn_type_63_I"
+
+[italy]
+"FSAF SAMP/T" = "it_samp_t_launcher"
+"ZSU-23-4" = "it_zsu_23_4"
+
+[france]
+"FSAF SAMP/T (Mamba)" = "fr_samp_t_launcher"
+"TPK 6.41 VPC" = "fr_tpk_641_vpc"
+
+[sweden]
+"NASAMS 3" = "sw_nasams_launcher"
+"CV 90120" = "sw_cv_90120"
+
+[israel]
+"Raam Segol" = "il_merkava_mk_3_raam_segol"
+"Sabra Mk.1" = "il_sabra_mk1"
+"ZSU-23-4" = "il_zsu_23_4"

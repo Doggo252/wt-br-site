@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import parse
+from . import parse, paths, records
 from .datamine import SHOP, UNITS_CSV, UNITTAGS, WEAPONRY_CSV, WPCOST, Datamine
 from .history_build import HistoryResult, major_of
 from .models import (
@@ -17,12 +17,14 @@ from .models import (
     Meta,
     NationTree,
     Ranks,
+    RecordRow,
     Sight,
     Stats,
     TimeMachine,
     TimeMachineUnit,
     TreeCell,
     UnitDetail,
+    UnitRecord,
     UnitSummary,
     UpdateDiff,
     VersionInfo,
@@ -50,7 +52,11 @@ def is_hidden(wp: dict, shop_flags: dict) -> bool:
 
 
 def build_current(
-    dm: Datamine, out: Path, images: Path | None = None, hist: HistoryResult | None = None
+    dm: Datamine,
+    out: Path,
+    images: Path | None = None,
+    hist: HistoryResult | None = None,
+    record_rows: list | None = None,
 ) -> Meta:
     wpcost = dm.read_json(WPCOST)
     shop_units, shop_trees = parse.parse_shop(dm.read_json(SHOP))
@@ -94,6 +100,9 @@ def build_current(
         _drop_event_units(hist, details, lang)
         _add_removed_units(details, hist, wpcost, unittags, lang, images)
         _attach_history(details, hist)
+
+    if record_rows is not None:
+        _attach_records(details, record_rows, lang)
 
     summaries = [
         UnitSummary(**d.model_dump(include=set(UnitSummary.model_fields))) for d in details.values()
@@ -143,6 +152,15 @@ def build_current(
     _write(out / "public" / "search.json", search)
     if hist:
         _write_history(out, hist, details, lang)
+    if record_rows is not None:
+        rows = [
+            RecordRow(
+                nation=r.nation, name=r.name, id=r.id, kills=r.kills, player=r.player,
+                br=r.br, patch=r.patch,
+            )
+            for r in record_rows
+        ]  # fmt: skip
+        _write(out / "records.json", rows)
     return meta
 
 
@@ -168,6 +186,34 @@ def _drop_event_units(hist: HistoryResult, details: dict, lang: dict) -> None:
         v.added = [u for u in v.added if u not in drop]
         v.removed = [u for u in v.removed if u not in drop]
         v.changes = [c for c in v.changes if c["id"] not in drop]
+
+
+def _attach_records(details: dict[str, UnitDetail], rows: list, lang: dict) -> None:
+    """Match sheet rows to vehicles (records.match), then attach the best record per vehicle."""
+    cands = [
+        records.Candidate(
+            d.id, d.nation, [lang.get(f"{d.id}{s}") for s in ("_shop", "_0", "_1")], d.br.rb
+        )
+        for d in details.values()
+    ]
+    overrides = records.load_overrides(paths.MANUAL / "records.toml")
+    unknown = sorted({v for v in overrides.values() if v and v not in details})
+    if unknown:
+        raise ValueError(f"records.toml points at unknown vehicle ids: {unknown}")
+    records.match(rows, cands, overrides)
+    unmatched = [r for r in rows if not r.id]
+    if unmatched:
+        print(f"records: {len(unmatched)} sheet rows not matched to a vehicle:")
+        for r in unmatched:
+            print(f"  [{r.nation}] {r.name!r} (BR {r.br})")
+    for r in rows:
+        if r.id and r.kills:
+            d = details[r.id]
+            if d.record is None or r.kills > d.record.kills:
+                d.record = UnitRecord(kills=r.kills, player=r.player, patch=r.patch)
+                d.recordKills = r.kills
+    matched = sum(1 for r in rows if r.id)
+    print(f"records: {len(rows)} rows, {matched} matched ({matched / max(len(rows), 1):.1%})")
 
 
 def _add_removed_units(details, hist: HistoryResult, wpcost, unittags, lang, images) -> None:
