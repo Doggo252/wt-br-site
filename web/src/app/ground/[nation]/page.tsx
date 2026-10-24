@@ -50,7 +50,7 @@ export default async function NationPage({ params }: Params) {
       </p>
       {/* Break out of the page column so wide trees can use the whole window. */}
       <div className="relative left-1/2 w-[calc(100vw-2rem)] max-w-[1400px] -translate-x-1/2">
-        <TechTree columns={tree.columns} units={units} />
+        <TechTree nation={nation} columns={tree.columns} units={units} />
       </div>
     </div>
   );
