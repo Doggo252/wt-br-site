@@ -8,6 +8,7 @@ import "@fontsource/pt-sans/400.css";
 import "@fontsource/pt-sans/700.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
+import { SearchBox } from "@/components/SearchBox";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -20,7 +21,7 @@ const NAV = [
   { href: "/ground/", label: "Ground", ready: true },
   { href: "/updates/", label: "Updates", ready: true },
   { href: "/records/", label: "Records", ready: false },
-  { href: "/explore/", label: "Explore", ready: false },
+  { href: "/explore/", label: "Explore", ready: true },
   { href: "/design/", label: "Design", ready: true },
 ];
 
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 ),
               )}
             </nav>
+            <SearchBox className="ml-auto hidden w-56 sm:block" />
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>

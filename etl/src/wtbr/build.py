@@ -135,6 +135,12 @@ def build_current(
         _write(out / "units" / f"{d.id}.json", d)
     for t in trees:
         _write(out / "trees" / f"{t.nation}.json", t)
+    # Client-side search: [id, name, nation, rb rank, removed?]
+    search = [
+        [s.id, s.name, s.nation, s.br.rb, 1 if s.removedIn else 0]
+        for s in sorted(summaries, key=lambda s: s.name.lower())
+    ]
+    _write(out / "public" / "search.json", search)
     if hist:
         _write_history(out, hist, details, lang)
     return meta
@@ -282,7 +288,7 @@ def _r(x: list[int]) -> dict[str, int]:
 
 def _write(path: Path, obj) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    if isinstance(obj, list):
+    if isinstance(obj, list) and obj and isinstance(obj[0], BaseModel):
         data = [o.model_dump(mode="json", exclude_defaults=True) for o in obj]
     elif isinstance(obj, BaseModel):
         data = obj.model_dump(mode="json", exclude_defaults=True)

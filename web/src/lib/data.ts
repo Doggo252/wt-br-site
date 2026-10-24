@@ -50,4 +50,8 @@ export const getUpdate = cache((v: string): Update => {
   return { ...u, changes: u.changes ?? [], added: u.added ?? [], removed: u.removed ?? [] };
 });
 
-export const getLatestBrUpdate = cache(() => [...getVersions()].reverse().find((v) => v.changes > 0));
+/** The most recent update with a real batch of BR changes (hotfixes touching a few vehicles are skipped). */
+export const getLatestBrUpdate = cache(() => {
+  const rev = [...getVersions()].reverse();
+  return rev.find((v) => v.changes >= 10) ?? rev.find((v) => v.changes > 0);
+});
