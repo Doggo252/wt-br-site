@@ -3,10 +3,11 @@ import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { Tabs } from "@/components/Tabs";
 import { ThermalFinder, type ThermalUnit } from "@/components/ThermalFinder";
-import { BRANCHES, BRANCH_SHORT } from "@/lib/branches";
+import { BRANCHES, BRANCH_SHORT, type Branch } from "@/lib/branches";
 import { TopBrChart, type TopBrPoint } from "@/components/TopBrChart";
+import { UpDownChart, type UpDownRow } from "@/components/UpDownChart";
 import { formatBr, formatBrDelta, rankToBr } from "@/lib/br";
-import { getIndex, getUnit, getVersions, nationsOf } from "@/lib/data";
+import { getIndex, getUnit, getVersions, nationsOf, type Version } from "@/lib/data";
 import type { UnitDetail } from "@/lib/data.gen";
 import { nationName } from "@/lib/nations";
 
@@ -34,6 +35,7 @@ export default function ExplorePage() {
       downs: [...net].sort((a, b) => a.delta - b.delta || a.d.name.localeCompare(b.d.name)).slice(0, 15),
       most: [...ds].sort((a, b) => (b.changes ?? 0) - (a.changes ?? 0)).slice(0, 15),
       top: topBr(ds, versions.map((v) => v.v), versions.map((v) => v.d)),
+      byYear: upDownByYear(versions, b),
     };
   });
   const labels = byBranch.map((x) => BRANCH_SHORT[x.branch]);
@@ -62,6 +64,7 @@ export default function ExplorePage() {
           <a href="#movers">Biggest moves</a>
           <a href="#most-changed">Most changed</a>
           <a href="#thermals">Thermal finder</a>
+          <a href="#by-year">By year</a>
           <a href="#top-br">Top BR over time</a>
           <Link href="/compare/">Compare vehicles</Link>
         </nav>
@@ -107,6 +110,18 @@ export default function ExplorePage() {
           Best thermal sight per crew position, including ones that need a modification. Sorted from the lowest BR.
         </p>
         <ThermalFinder units={thermal} nations={nationsOf("ground")} />
+      </section>
+
+      <section id="by-year" className="scroll-mt-16">
+        <h2 className="mb-1 text-xl font-semibold">Uptiers and downtiers by year</h2>
+        <p className="mb-4 text-sm text-fg-3">
+          Realistic Battles BR changes per calendar year. 2020 starts in March, when tracking began.
+        </p>
+        <Tabs labels={labels}>
+          {byBranch.map((x) => (
+            <UpDownChart key={x.branch} data={x.byYear} />
+          ))}
+        </Tabs>
       </section>
 
       <section id="top-br" className="scroll-mt-16">
@@ -183,4 +198,16 @@ function topBr(details: UnitDetail[], versions: string[], dates: string[]): TopB
   const end = Date.parse(dates[dates.length - 1]);
   if (last && end > last.t) out.push({ ...last, t: end });
   return out;
+}
+
+function upDownByYear(versions: Version[], branch: Branch): UpDownRow[] {
+  const years = new Map<string, UpDownRow>();
+  for (const v of versions) {
+    const year = v.d.slice(0, 4);
+    const row = years.get(year) ?? { year, up: 0, down: 0 };
+    row.up += v.byBranch[branch].up;
+    row.down += v.byBranch[branch].down;
+    years.set(year, row);
+  }
+  return [...years.values()];
 }

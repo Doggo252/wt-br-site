@@ -193,6 +193,8 @@ def _current_unit(dm, uid, branch, su, wp, ranks, unittags, lang, weaponry, imag
         sights={c: [Sight(**x) for x in ss] for c, ss in sights.items()},
         stats=Stats(**stats),
         eventName=su.flags.get("event") or wp.get("event"),
+        groundBattleRb=wp.get("economicRankTankHistorical") if branch != "ground" else None,
+        groundBattleSb=wp.get("economicRankTankSimulation") if branch != "ground" else None,
     )
 
 

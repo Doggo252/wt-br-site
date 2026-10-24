@@ -122,6 +122,9 @@ class UnitDetail(UnitSummary):
     sights: dict[Crew, list[Sight]] = {}
     stats: Stats = Stats()
     eventName: str | None = None
+    # Aircraft and helicopters used in ground battles have their own RB/SB ranks there.
+    groundBattleRb: int | None = None
+    groundBattleSb: int | None = None
     history: list[HistoryPoint] = []
     absences: list[Absence] = []
     record: UnitRecord | None = None

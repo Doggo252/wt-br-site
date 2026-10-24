@@ -152,6 +152,8 @@ export interface UnitDetail {
   };
   stats?: Stats;
   eventName?: string | null;
+  groundBattleRb?: number | null;
+  groundBattleSb?: number | null;
   history?: HistoryPoint[];
   absences?: Absence[];
   record?: UnitRecord | null;

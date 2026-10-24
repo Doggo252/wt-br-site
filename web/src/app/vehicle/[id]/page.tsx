@@ -92,6 +92,17 @@ export default async function VehiclePage({ params }: Params) {
               </div>
             ))}
           </dl>
+          {u.groundBattleRb != null && (u.groundBattleRb !== u.br.rb || (u.groundBattleSb ?? u.br.sb) !== u.br.sb) && (
+            <p className="mt-2 text-sm text-fg-2">
+              In ground battles: RB <span className="font-display tabular text-fg">{formatBr(u.groundBattleRb)}</span>
+              {u.groundBattleSb != null && (
+                <>
+                  {" "}
+                  · SB <span className="font-display tabular text-fg">{formatBr(u.groundBattleSb)}</span>
+                </>
+              )}
+            </p>
+          )}
         </div>
       </header>
 
