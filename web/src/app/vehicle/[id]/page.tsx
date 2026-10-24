@@ -67,7 +67,7 @@ export default async function VehiclePage({ params }: Params) {
         </div>
         <div>
           <p className="text-sm text-fg-3">
-            <Link href={treeHref(u.branch, u.nation)} className="text-fg-2 no-underline hover:text-fg">
+            <Link href={treeHref(u.branch, u.nation)} className="text-fg-2 hover:text-fg">
               {nationName(u.nation)}
             </Link>
             {u.operator && <> · {nationName(u.operator)}</>} · Rank {roman(u.rank)} · {TYPE_NAME[u.type]}
@@ -266,17 +266,19 @@ function StatGrid({ u }: { u: UnitDetail }) {
     ["Turret armor", s.armorTurret ? `${s.armorTurret.map((x) => Math.round(x)).join(" / ")} mm` : null],
   ];
   return (
-    <dl className="divide-y divide-card-border border border-card-border bg-panel">
-      {rows
-        .filter((r): r is [string, string] => r[1] !== null)
-        .map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-4 px-3 py-1.5 text-sm">
-            <dt className="text-fg-3">{k}</dt>
-            <dd className="text-right font-display tabular text-fg">{v}</dd>
-          </div>
-        ))}
-      <p className="px-3 py-1.5 text-xs text-fg-3">Armor is front / side / rear. Speeds are forward / reverse.</p>
-    </dl>
+    <>
+      <dl className="divide-y divide-card-border border border-card-border bg-panel">
+        {rows
+          .filter((r): r is [string, string] => r[1] !== null)
+          .map(([k, v]) => (
+            <div key={k} className="flex justify-between gap-4 px-3 py-1.5 text-sm">
+              <dt className="text-fg-3">{k}</dt>
+              <dd className="text-right font-display tabular text-fg">{v}</dd>
+            </div>
+          ))}
+      </dl>
+      <p className="mt-2 text-xs text-fg-3">Armor is front / side / rear. Speeds are forward / reverse.</p>
+    </>
   );
 }
 

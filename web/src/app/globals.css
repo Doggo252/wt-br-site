@@ -12,7 +12,8 @@
 
   --color-fg: #ffffff;
   --color-fg-2: #c0c0c0;
-  --color-fg-3: #808080;
+  /* The game's minorTextColor is #808080; lightened so it reaches 4.5:1 on every surface. */
+  --color-fg-3: #a0a0a0;
 
   --color-link: #17cbfc;
   --color-link-hover: #84e0fa;
@@ -92,6 +93,11 @@
   }
   a {
     color: var(--color-link);
+    /* Underlined so links don't rely on color alone; nav and card links opt out with no-underline. */
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
   }
   a:hover {
     color: var(--color-link-hover);

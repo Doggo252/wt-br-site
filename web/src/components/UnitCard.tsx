@@ -59,7 +59,12 @@ export function UnitCard({
       <div className="relative aspect-[2/1] w-full overflow-hidden">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element -- static export, images are pre-sized
-          <img src={image} alt="" loading="lazy" className="h-full w-full object-contain" />
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            className={`h-full w-full object-contain ${inactive ? "opacity-50 grayscale" : ""}`}
+          />
         ) : (
           <TankSilhouette />
         )}
@@ -95,7 +100,6 @@ export function UnitCard({
     "group relative block w-full min-w-[120px] max-w-[180px] border",
     "before:absolute before:inset-x-0 before:-top-px before:h-[2px] before:content-['']",
     PALETTE[inactive ? "disabled" : status],
-    inactive ? "opacity-70" : "",
     selected ? "outline outline-1 outline-fg" : "",
     href ? "transition-[filter] hover:brightness-125 focus-visible:brightness-125" : "",
   ].join(" ");

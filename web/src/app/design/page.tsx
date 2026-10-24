@@ -26,7 +26,7 @@ const COLORS: { group: string; isText?: boolean; tokens: { name: string; value: 
     tokens: [
       { name: "fg", value: "#FFFFFF" },
       { name: "fg-2", value: "#C0C0C0", note: "commonTextColor" },
-      { name: "fg-3", value: "#808080", note: "minorTextColor" },
+      { name: "fg-3", value: "#A0A0A0", note: "minorTextColor, lightened for contrast" },
     ],
   },
   {
