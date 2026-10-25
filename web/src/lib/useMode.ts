@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MODES, type Mode } from "./br";
 
 const STORAGE_KEY = "uptier.mode";
+const EVENT = "uptier-mode";
 
 /**
  * Game mode shared across pages. The URL (?mode=ab) wins so links are shareable;
@@ -21,6 +22,10 @@ export function useMode(): [Mode, (m: Mode) => void] {
     const initial = [fromUrl, stored].find((m): m is Mode => MODES.includes(m as Mode));
     // eslint-disable-next-line react-hooks/set-state-in-effect -- URL/storage only exist on the client
     if (initial) setModeState(initial);
+    // Other toggles on the same page.
+    const onChange = (e: Event) => setModeState((e as CustomEvent<Mode>).detail);
+    window.addEventListener(EVENT, onChange);
+    return () => window.removeEventListener(EVENT, onChange);
   }, []);
 
   const setMode = useCallback((m: Mode) => {
@@ -32,6 +37,7 @@ export function useMode(): [Mode, (m: Mode) => void] {
     if (m === "rb") url.searchParams.delete("mode");
     else url.searchParams.set("mode", m);
     window.history.replaceState(null, "", url);
+    window.dispatchEvent(new CustomEvent(EVENT, { detail: m }));
   }, []);
 
   return [mode, setMode];

@@ -8,6 +8,7 @@ import { SameBrStrip } from "@/components/SameBrStrip";
 import { StarButton } from "@/components/StarButton";
 import type { TreeUnit } from "@/components/TechTree";
 import { ThermalChip } from "@/components/ThermalChip";
+import { TreeLineStrip } from "@/components/TreeLineStrip";
 import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, MODE_NAME, formatBr, type Mode } from "@/lib/br";
 import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getTree, getUnit, getUnitMap } from "@/lib/data";
@@ -304,22 +305,18 @@ export default async function VehiclePage({ params }: Params) {
                 <span />
               )}
             </div>
-            <ul className="flex snap-x gap-2 overflow-x-auto pb-3">
-              {line.units.map((o) => (
-                <li key={o.id} className="w-[140px] shrink-0 snap-start">
-                  <UnitCard
-                    name={o.name}
-                    rank={o.br.rb}
-                    status={o.status}
-                    availability={o.hidden ? "unobtainable" : "current"}
-                    image={o.image ? `/img/units/${o.id}.webp` : undefined}
-                    href={o.id === u.id ? undefined : `/vehicle/${o.id}/`}
-                    selected={o.id === u.id}
-                    type={o.type}
-                  />
-                </li>
-              ))}
-            </ul>
+            <TreeLineStrip
+              current={u.id}
+              units={line.units.map((o) => ({
+                id: o.id,
+                name: o.name,
+                br: o.br,
+                status: o.status,
+                hidden: o.hidden,
+                image: o.image,
+                type: o.type,
+              }))}
+            />
           </nav>
         </Section>
       )}
