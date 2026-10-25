@@ -98,7 +98,8 @@ export function TechTree({ branch, nation, columns, units }: Props) {
   }
 
   return (
-    <div>
+    // As wide as the tree, but never narrower than the page column, so small trees line up with it.
+    <div className="mx-auto w-fit min-w-[min(100%,70rem)] max-w-full">
       <div className="panel mb-4 flex flex-wrap items-center gap-x-5 gap-y-3 px-3 py-2.5">
         <ModeToggle value={mode} onChange={setMode} />
         <label className="flex cursor-pointer items-center gap-2 text-sm text-fg-2">
