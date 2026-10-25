@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TechTree, type TreeUnit } from "@/components/TechTree";
+import { formatBr } from "@/lib/br";
 import { BRANCHES, BRANCH_NAME, BRANCH_SHORT, branchHref, treeHref, type Branch } from "@/lib/branches";
 import { getIndex, getMeta, getPlannedRanks, getTree, nationsOf, unitsInNation } from "@/lib/data";
 import { BranchIcon } from "@/components/BranchIcon";
@@ -104,6 +105,15 @@ export function NationTreePage({ branch, nation }: { branch: Branch; nation: str
     if (planned) units[u.id].planned = planned;
   }
   const meta = getMeta();
+  const list = Object.values(units).filter((u) => !u.hidden);
+  const count = (st: string) => list.filter((u) => u.status === st).length;
+  const top = Math.max(...list.filter((u) => u.status === "tree").map((u) => u.br.rb), 0);
+  const summary: { label: string; value: string | number; className?: string }[] = [
+    { label: "Tech tree", value: count("tree") },
+    { label: "Premium", value: count("premium") + count("event"), className: "text-premium" },
+    { label: "Squadron", value: count("squadron"), className: "text-squadron" },
+    { label: "Top RB", value: formatBr(top) },
+  ];
   return (
     <div>
       <BranchTabs branch={branch} nation={nation} />
@@ -133,6 +143,14 @@ export function NationTreePage({ branch, nation }: { branch: Branch; nation: str
             {Object.keys(units).length} vehicles · update <span className="tabular">{meta.version}</span>
           </p>
         </div>
+        <dl className="ml-auto hidden gap-2 text-center md:flex">
+          {summary.map((x) => (
+            <div key={x.label} className="panel min-w-20 px-3 py-1.5">
+              <dt className="text-[10px] uppercase tracking-wider text-fg-3">{x.label}</dt>
+              <dd className={`font-display text-lg font-semibold tabular ${x.className ?? "text-fg"}`}>{x.value}</dd>
+            </div>
+          ))}
+        </dl>
       </header>
       {/* Break out of the page column so wide trees can use the whole window. */}
       <div className="relative left-1/2 w-[calc(100vw-2rem)] max-w-[1400px] -translate-x-1/2">
