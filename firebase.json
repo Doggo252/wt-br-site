@@ -1,16 +1,61 @@
 {
   "hosting": {
     "public": "web/out",
-    "ignore": ["firebase.json", "**/.*", "fonts/README.md"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "fonts/README.md"
+    ],
     "trailingSlash": true,
     "headers": [
       {
         "source": "/_next/static/**",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
       },
       {
         "source": "/fonts/**",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=2592000"
+          }
+        ]
+      },
+      {
+        "source": "/img/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
+          }
+        ]
+      },
+      {
+        "source": "/data/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          }
+        ]
+      },
+      {
+        "source": "/feed.xml",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/atom+xml; charset=utf-8"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          }
+        ]
       }
     ]
   }
