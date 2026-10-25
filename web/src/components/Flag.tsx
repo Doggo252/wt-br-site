@@ -17,6 +17,8 @@ export function Flag({
     // eslint-disable-next-line @next/next/no-img-element -- static SVG icon
     <img
       src={`/img/flags/${nation}.svg`}
+      width={100}
+      height={66}
       alt={labelled ? nationName(nation) : ""}
       title={labelled ? nationName(nation) : undefined}
       className={`inline-block aspect-[100/66] w-auto shrink-0 rounded-[1px] shadow-[0_0_0_1px_rgb(0_0_0/0.4)] ${className}`}

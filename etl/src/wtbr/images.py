@@ -44,13 +44,21 @@ def mirror(ids: list[str], dest: Path, workers: int = 8) -> dict[str, list[str]]
 def copy_flags(datamine_dir: Path, icons_rel: str, dest: Path) -> int:
     """The game's country icons (gameuiskin/country_<nation>.svg) -> img/flags/<nation>.svg."""
     import re
-    import shutil
 
     dest.mkdir(parents=True, exist_ok=True)
     n = 0
     for f in (datamine_dir / icons_rel).glob("country_*.svg"):
         m = re.fullmatch(r"country_([a-z_]+)\.svg", f.name)
         if m and not m.group(1).endswith(("_round", "_modern")):
-            shutil.copyfile(f, dest / f"{m.group(1)}.svg")
+            (dest / f"{m.group(1)}.svg").write_text(
+                strip_svg_metadata(f.read_text(encoding="utf-8")), encoding="utf-8"
+            )
             n += 1
     return n
+
+
+def strip_svg_metadata(svg: str) -> str:
+    """Drop the editor's <metadata> block (Adobe XMP), most of each icon's bytes."""
+    import re
+
+    return re.sub(r"\s*<metadata>.*?</metadata>", "", svg, flags=re.S)
