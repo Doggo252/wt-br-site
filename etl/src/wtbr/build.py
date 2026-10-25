@@ -42,10 +42,13 @@ NATION_ORDER = [
 ]  # fmt: skip
 
 
-def status_of(wp: dict, shop_flags: dict) -> str:
+def status_of(wp: dict, shop_flags: dict, uid: str = "") -> str:
     if shop_flags.get("isClanVehicle") or wp.get("researchType") == "clanVehicle":
         return "squadron"
     if shop_flags.get("event") or wp.get("event") or shop_flags.get("marketplaceItemdefId"):
+        return "event"
+    # Copies made for event game modes ("germ_a7v_event") carry no shop flags of their own.
+    if uid.endswith("_event"):
         return "event"
     if wp.get("costGold") or wp.get("gift") or shop_flags.get("gift"):
         return "premium"
@@ -190,7 +193,7 @@ def _current_unit(dm, uid, branch, su, wp, ranks, unittags, lang, weaponry, imag
         type=parse.unit_type(tags, wp),
         name=name,
         fullName=lang.get(f"{uid}_0") or name,
-        status=status_of(wp, su.flags),
+        status=status_of(wp, su.flags, uid),
         hidden=is_hidden(wp, su.flags),
         br=Ranks(**ranks),
         thermal=parse.best_thermal(sights),
@@ -306,7 +309,7 @@ def _add_removed_units(details, hist: HistoryResult, wpcost, unittags, lang, ima
             type=parse.unit_type(tags, wp),
             name=name,
             fullName=lang.get(f"{uid}_0") or name,
-            status=status_of(wp, {}),
+            status=status_of(wp, {}, uid),
             hidden=True,
             br=Ranks(ab=last[1], rb=last[2], sb=last[3]),
             image=bool(images and (images / f"{uid}.webp").exists()),

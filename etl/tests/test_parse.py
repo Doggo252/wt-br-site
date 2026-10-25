@@ -116,6 +116,7 @@ def test_status_and_hidden():
     assert status_of({"costGold": 5000}, {}) == "premium"
     assert status_of({"researchType": "clanVehicle"}, {"isClanVehicle": True}) == "squadron"
     assert status_of({}, {"event": "winter_2017"}) == "event"
+    assert status_of({}, {}, "germ_a7v_event") == "event"
     assert is_hidden({}, {"showOnlyWhenBought": True})
     assert not is_hidden({}, {})
 
