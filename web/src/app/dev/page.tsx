@@ -17,16 +17,26 @@ export default function DevPage() {
   const units = getUnitMap();
   if (!dev) {
     return (
-      <div className="max-w-2xl">
-        <h1 className="text-4xl font-bold">Dev server preview</h1>
-        <p className="mt-3 text-fg-2">
-          There is no dev-server build in the datamine right now. Before a major update, Gaijin opens a dev server with
-          the new version; while it is up, this page lists the BR changes and new vehicles it contains compared with the
-          live game.
-        </p>
-        <p className="mt-3">
-          <Link href="/updates/">See past updates →</Link>
-        </p>
+      <div className="max-w-2xl space-y-4">
+        <header>
+          <p className="eyebrow">Before it goes live</p>
+          <h1 className="mt-1 text-4xl font-bold">Dev server preview</h1>
+        </header>
+        <div className="panel space-y-3 p-5 text-fg-2">
+          <p>
+            There is no dev-server build in the datamine right now. Before a major update, Gaijin opens a dev server
+            with the new version; while it is up, this page lists the BR changes and new vehicles it contains compared
+            with the live game.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/updates/" className="btn">
+              Past updates
+            </Link>
+            <Link href="/announcements/" className="btn">
+              Planned changes
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
