@@ -165,6 +165,23 @@ export default async function VehiclePage({ params }: Params) {
         </div>
       </header>
 
+      <nav aria-label="On this page" className="-mt-4 flex flex-wrap gap-2 text-sm">
+        {[
+          "Battle Rating history",
+          u.branch === "ground" ? "Stats" : "Flight performance",
+          announced.length > 0 && "Official announcements",
+          line && "In the tech tree",
+          rivals.length > 0 && "Counterparts",
+          "Same Battle Rating",
+        ]
+          .filter((t): t is string => Boolean(t))
+          .map((t) => (
+            <a key={t} href={`#${slug(t)}`} className="btn px-2.5 py-1 text-xs">
+              {t}
+            </a>
+          ))}
+      </nav>
+
       {devChange && (
         <Link
           href="/dev/"
@@ -387,9 +404,13 @@ function HistorySummary({ u }: { u: UnitDetail }) {
   return <p className="text-fg-2">{parts.join(" ")}</p>;
 }
 
+function slug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section id={slug(title)} className="scroll-mt-20">
       <h2 className="section-title mb-4">{title}</h2>
       {children}
     </section>
