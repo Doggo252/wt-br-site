@@ -3,8 +3,8 @@
 import { Children, useId, useRef, useState } from "react";
 
 /**
- * Accessible tabs over server-rendered panels (one child per label). With `lazy`, a panel
- * mounts the first time it is shown: charts can't measure a hidden container.
+ * Accessible tabs over server-rendered panels (one child per label). With `lazy`, only the
+ * active panel is mounted: charts can't measure a hidden container.
  */
 export function Tabs({
   labels,
@@ -16,14 +16,12 @@ export function Tabs({
   lazy?: boolean;
 }) {
   const [active, setActiveState] = useState(0);
-  const [seen, setSeen] = useState<Set<number>>(() => new Set([0]));
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const id = useId();
   const panels = Children.toArray(children);
 
   function setActive(i: number, focus = false) {
     setActiveState(i);
-    setSeen((s) => (s.has(i) ? s : new Set(s).add(i)));
     if (focus) tabs.current[i]?.focus();
   }
   return (
@@ -63,7 +61,7 @@ export function Tabs({
           aria-labelledby={`${id}-tab-${i}`}
           hidden={i !== active}
         >
-          {!lazy || seen.has(i) ? panel : null}
+          {!lazy || i === active ? panel : null}
         </div>
       ))}
     </div>
