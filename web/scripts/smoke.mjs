@@ -28,6 +28,7 @@ const PAGES = [
   ["/announcements/", "BR announcements"],
   ["/compare/?ids=us_m42_duster,p-51d-5", "M42"],
   ["/lineup/?b=ground&n=germany&br=6.7", "Tiger H1"],
+  ["/watchlist/", "Watchlist"],
 ];
 
 const server = createServer((req, res) => {

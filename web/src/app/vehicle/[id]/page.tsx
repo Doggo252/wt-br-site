@@ -12,6 +12,7 @@ import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { Flag } from "@/components/Flag";
 import { treeHref } from "@/lib/branches";
 import { plainName, plural } from "@/lib/format";
+import { StarButton } from "@/components/StarButton";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
 import { CREW_LABEL, type CrewRole, type Sight as ChipSight } from "@/lib/units";
 
@@ -130,6 +131,7 @@ export default async function VehiclePage({ params }: Params) {
                   </span>
                 )
               )}
+              {!u.removedIn && <StarButton id={u.id} name={plainName(u.name)} br={u.br} />}
             </p>
             <dl className="mt-6 grid max-w-md grid-cols-3 gap-2">
               {MODES.map((m) => (

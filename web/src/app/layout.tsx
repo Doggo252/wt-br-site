@@ -58,6 +58,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/announcements/">Planned changes</Link>
               <Link href="/compare/">Compare</Link>
               <Link href="/lineup/">Lineup planner</Link>
+              <Link href="/watchlist/">Your watchlist</Link>
               <Link href="/explore/">Explore</Link>
             </nav>
             <nav aria-label="About" className="grid content-start gap-1.5">
