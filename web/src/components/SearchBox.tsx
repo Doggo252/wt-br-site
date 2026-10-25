@@ -25,21 +25,57 @@ function norm(s: string): string {
     .replace(/[^a-z0-9а-я]+/g, "");
 }
 
+/** Words that pick a nation ("uk", "soviet") rather than match a name. */
+const NATION_ALIASES: Record<string, string> = {
+  usa: "usa", us: "usa", america: "usa", american: "usa",
+  germany: "germany", german: "germany", ger: "germany",
+  ussr: "ussr", soviet: "ussr", russia: "ussr", russian: "ussr",
+  britain: "britain", uk: "britain", british: "britain", gb: "britain",
+  japan: "japan", japanese: "japan", jp: "japan",
+  china: "china", chinese: "china", prc: "china",
+  italy: "italy", italian: "italy",
+  france: "france", french: "france",
+  sweden: "sweden", swedish: "sweden",
+  israel: "israel", israeli: "israel",
+};
+
+/**
+ * Free text plus optional filters: a nation word ("germany", "uk") and a BR with a
+ * decimal point ("6.7", matched against Realistic BR). "germany 6.7" lists all such vehicles.
+ */
+export function parseQuery(q: string): { text: string; nation?: string; rank?: number } {
+  let nation: string | undefined;
+  let rank: number | undefined;
+  const rest: string[] = [];
+  for (const word of q.trim().split(/\s+/)) {
+    const lower = word.toLowerCase();
+    if (!nation && NATION_ALIASES[lower]) nation = NATION_ALIASES[lower];
+    else if (rank === undefined && /^\d{1,2}\.\d$/.test(word)) rank = Math.round((Number(word) - 1) * 3);
+    else rest.push(word);
+  }
+  return { text: rest.join(" "), nation, rank };
+}
+
 function search(rows: Row[], q: string, limit = 8): Row[] {
-  const nq = norm(q);
-  if (!nq) return [];
+  const { text, nation, rank } = parseQuery(q);
+  const nq = norm(text);
+  if (!nq && nation === undefined && rank === undefined) return [];
   const scored: [number, Row][] = [];
   for (const r of rows) {
+    if (nation && r[2] !== nation) continue;
+    if (rank !== undefined && r[3] !== rank) continue;
     const n = norm(r[1]);
     let score = -1;
-    if (n === nq) score = 0;
+    if (!nq) score = 0;
+    else if (n === nq) score = 0;
     else if (n.startsWith(nq)) score = 1;
     else if (n.includes(nq)) score = 2;
     else if (norm(r[0]).includes(nq)) score = 3;
     if (score >= 0) scored.push([score + r[4] * 0.5, r]);
   }
   scored.sort((a, b) => a[0] - b[0] || a[1][1].length - b[1][1].length);
-  return scored.slice(0, limit).map((s) => s[1]);
+  // Filter-only queries ("germany 6.7") can match many vehicles; show more of them.
+  return scored.slice(0, nq ? limit : limit * 2).map((s) => s[1]);
 }
 
 export function SearchBox({
@@ -139,7 +175,7 @@ export function SearchBox({
         <ul
           id={listId}
           role="listbox"
-          className="absolute right-0 z-50 mt-1 w-full min-w-72 panel shadow-xl"
+          className="absolute right-0 z-50 mt-1 max-h-[70vh] w-full min-w-72 overflow-y-auto panel shadow-xl"
         >
           {results.map((r, i) => (
             <li
