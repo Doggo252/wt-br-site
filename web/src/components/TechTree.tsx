@@ -40,6 +40,8 @@ export function TechTree({ branch, nation, columns, units }: Props) {
   const [loading, setLoading] = useState(false);
   // Index into versions.json, or null for "now".
   const [vIdx, setVIdx] = useState<number | null>(null);
+  // Top BR (rank) of a lineup to highlight: vehicles from 1.0 below it up to it stay lit.
+  const [lineupAt, setLineupAt] = useState<number | null>(null);
 
   async function loadHistory(): Promise<History | null> {
     if (history) return history;
@@ -86,6 +88,12 @@ export function TechTree({ branch, nation, columns, units }: Props) {
   const ranks = [...new Set(view.columns.flat().map((c) => c.rank))].sort((a, b) => a - b);
   const headers = view.columns.map((col) => columnLabel(col, view.units));
   const version = vIdx !== null && history ? history.versions[vIdx] : null;
+  const brOptions = [...new Set(Object.values(view.units).map((u) => u.br[mode]))].sort((a, b) => a - b);
+  const lit = (id: string) => {
+    if (lineupAt === null) return true;
+    const r = view.units[id].br[mode];
+    return r <= lineupAt && r >= lineupAt - 3;
+  };
   const changedHere = Object.values(view.units).filter((u) => u.prev && u.prev[mode] !== u.br[mode]).length;
 
   function toggle(group: string) {
@@ -110,6 +118,21 @@ export function TechTree({ branch, nation, columns, units }: Props) {
             className="accent-link"
           />
           Show unobtainable vehicles
+        </label>
+        <label className="flex items-center gap-2 text-sm text-fg-2">
+          Lineup at
+          <select
+            value={lineupAt ?? ""}
+            onChange={(e) => setLineupAt(e.target.value === "" ? null : Number(e.target.value))}
+            className="border border-card-border bg-bg px-2 py-1 font-display text-sm tabular text-fg focus:border-link focus:outline-none"
+          >
+            <option value="">Off</option>
+            {brOptions.map((r) => (
+              <option key={r} value={r}>
+                {formatBr(r)}
+              </option>
+            ))}
+          </select>
         </label>
         {vIdx === null && (
           <button
@@ -192,11 +215,18 @@ export function TechTree({ branch, nation, columns, units }: Props) {
                           const ids = cell.units.filter(visible);
                           if (ids.length === 0) return null;
                           if (!cell.group || ids.length === 1) {
-                            return ids.map((id) => <TreeCard key={id} id={id} unit={view.units[id]} mode={mode} />);
+                            return ids.map((id) => (
+                              <div key={id} className={`transition-opacity ${lit(id) ? "" : "opacity-20"}`}>
+                                <TreeCard id={id} unit={view.units[id]} mode={mode} />
+                              </div>
+                            ));
                           }
                           const isOpen = open.has(cell.group);
                           return (
-                            <div key={`${cell.group}-${k}`} className="flex flex-col gap-1.5">
+                            <div
+                              key={`${cell.group}-${k}`}
+                              className={`flex flex-col gap-1.5 transition-opacity ${ids.some(lit) ? "" : "opacity-20"}`}
+                            >
                               <FolderCard
                                 name={cell.groupName ?? ids.map((id) => view.units[id].name).join(" / ")}
                                 ids={ids}
@@ -208,7 +238,9 @@ export function TechTree({ branch, nation, columns, units }: Props) {
                               {isOpen && (
                                 <div className="ml-2 flex flex-col gap-1.5 border-l border-card-top pl-2">
                                   {ids.map((id) => (
-                                    <TreeCard key={id} id={id} unit={view.units[id]} mode={mode} />
+                                    <div key={id} className={lit(id) ? "" : "opacity-40"}>
+                                      <TreeCard id={id} unit={view.units[id]} mode={mode} />
+                                    </div>
                                   ))}
                                 </div>
                               )}
