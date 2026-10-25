@@ -24,6 +24,7 @@ export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: s
   const [sort, setSort] = useState<Sort>("kills");
   const [q, setQ] = useState("");
   const [showOpen, setShowOpen] = useState(false);
+  const [limit, setLimit] = useState(PAGE);
 
   const shown = useMemo(() => {
     const nq = q.trim().toLowerCase();
@@ -48,7 +49,10 @@ export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: s
       <div className="flex flex-wrap items-end gap-4 panel p-3">
         <label className="flex flex-col gap-1 text-xs text-fg-3">
           Nation
-          <select value={nation} onChange={(e) => setNation(e.target.value)} className={INPUT}>
+          <select value={nation} onChange={(e) => {
+              setNation(e.target.value);
+              setLimit(PAGE);
+            }} className={INPUT}>
             <option value="all">All nations</option>
             {nations.map((n) => (
               <option key={n} value={n}>
@@ -90,7 +94,7 @@ export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: s
             </tr>
           </thead>
           <tbody className="divide-y divide-card-border">
-            {shown.map((r, i) => (
+            {shown.slice(0, limit).map((r, i) => (
               <tr key={`${r.nation}-${r.name}-${i}`}>
                 <td className="px-3 py-1.5 text-right font-display text-base font-semibold tabular text-gold">
                   {r.kills ?? <span className="text-sm font-normal text-fg-3">open</span>}
@@ -115,8 +119,17 @@ export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: s
           </tbody>
         </table>
       </div>
+      {shown.length > limit && (
+        <div className="text-center">
+          <button type="button" className="btn" onClick={() => setLimit((l) => l + PAGE * 4)}>
+            Show more ({shown.length - limit} left)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
+
+const PAGE = 100;
 
 const INPUT = "border border-card-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-link focus:outline-none";
