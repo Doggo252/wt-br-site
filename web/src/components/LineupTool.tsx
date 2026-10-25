@@ -6,7 +6,7 @@ import { Flag } from "./Flag";
 import { ModeToggle } from "./ModeToggle";
 import { UnitCard } from "./UnitCard";
 import { MODE_NAME, formatBr } from "@/lib/br";
-import { BRANCHES, BRANCH_NAME, type Branch } from "@/lib/branches";
+import { BRANCHES, BRANCH_NAME, BRANCH_SHORT, type Branch } from "@/lib/branches";
 import { nationName } from "@/lib/nations";
 import { useMode } from "@/lib/useMode";
 import type { UnitStatus } from "@/lib/units";
@@ -119,7 +119,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
               className={`btn gap-1.5 ${b === branch ? "border-gold text-fg" : ""}`}
             >
               <BranchIcon branch={b} />
-              {BRANCH_NAME[b]}
+              {BRANCH_SHORT[b]}
             </button>
           ))}
         </div>

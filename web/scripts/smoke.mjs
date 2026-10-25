@@ -58,6 +58,10 @@ for (const [path, text] of PAGES) {
   await page.addScriptTag({ content: AXE });
   const axe = await page.evaluate(() => window.axe.run(document, { resultTypes: ["violations"] }));
   for (const v of axe.violations) errors.push(`axe ${v.id} (${v.nodes.length}): ${v.nodes[0].target.join(" ")}`);
+  // Phone width: nothing may push the page sideways.
+  await page.setViewportSize({ width: 390, height: 800 });
+  const wide = await page.evaluate(() => document.documentElement.scrollWidth);
+  if (wide > 390) errors.push(`page is ${wide}px wide at a 390px viewport`);
   console.log(`${errors.length ? "FAIL" : "ok  "} ${path}`);
   for (const e of errors) console.log(`     ${e}`);
   failures += errors.length ? 1 : 0;

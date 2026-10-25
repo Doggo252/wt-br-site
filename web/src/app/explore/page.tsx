@@ -377,7 +377,7 @@ function NationTable({ rows }: { rows: NationRow[] }) {
             <th className="px-3 py-2 text-right font-semibold">Downtiers</th>
             <th className="px-3 py-2 text-right font-semibold">Net BR</th>
             <th className="px-3 py-2 text-right font-semibold">Per vehicle</th>
-            <th className="w-1/4 px-3 py-2 font-semibold">
+            <th className="relative w-1/4 px-3 py-2 font-semibold">
               <span className="sr-only">Per vehicle, as a bar</span>
             </th>
           </tr>
