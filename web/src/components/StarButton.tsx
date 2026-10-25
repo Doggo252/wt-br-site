@@ -9,16 +9,17 @@ export function StarButton({ id, name, br }: { id: string; name: string; br: Ran
   const on = Boolean(list[id]);
   return (
     <span className="inline-flex items-center gap-2">
+      {/* A toggle keeps one label; aria-pressed and the filled star carry the state. */}
       <button
         type="button"
         aria-pressed={on}
         disabled={!ready}
         onClick={() => set(id, on ? null : br)}
         className={`btn gap-1.5 px-2 py-0.5 text-xs uppercase tracking-wider ${on ? "border-gold/60 text-gold" : ""}`}
-        aria-label={on ? `Remove ${name} from your watchlist` : `Add ${name} to your watchlist`}
+        title={on ? `${name} is on your watchlist` : `Add ${name} to your watchlist`}
       >
         <StarIcon filled={on} />
-        {on ? "Watching" : "Watch"}
+        Watch
       </button>
       {on && (
         <Link href="/watchlist/" className="text-xs">

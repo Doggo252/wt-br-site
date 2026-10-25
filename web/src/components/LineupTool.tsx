@@ -163,6 +163,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
                   type="button"
                   aria-pressed={selected}
                   title={`${formatBr(s)}: ${counts[i]} vehicles`}
+                  aria-label={`BR ${formatBr(s)}: ${counts[i]} vehicles`}
                   onClick={() => setFocus(s)}
                   className="group flex h-full flex-1 flex-col items-center justify-end gap-1"
                 >
