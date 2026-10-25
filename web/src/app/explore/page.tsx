@@ -7,13 +7,7 @@ import { BRANCHES, BRANCH_SHORT, type Branch } from "@/lib/branches";
 import { TopBrChart, type TopBrPoint } from "@/components/TopBrChart";
 import { UpDownChart, type UpDownRow } from "@/components/UpDownChart";
 import { formatBr, formatBrDelta, rankToBr } from "@/lib/br";
-import {
-  getIndex,
-  getUnit,
-  getVersions,
-  nationsOf,
-  type Version,
-} from "@/lib/data";
+import { getIndex, getUnit, getVersions, nationsOf, type Version } from "@/lib/data";
 import type { UnitDetail } from "@/lib/data.gen";
 import { Flag } from "@/components/Flag";
 import { Thumb } from "@/components/Thumb";
@@ -44,15 +38,9 @@ export default function ExplorePage() {
       .filter((x) => x.delta !== 0);
     return {
       branch: b,
-      ups: [...net]
-        .sort((a, b) => b.delta - a.delta || a.d.name.localeCompare(b.d.name))
-        .slice(0, 15),
-      downs: [...net]
-        .sort((a, b) => a.delta - b.delta || a.d.name.localeCompare(b.d.name))
-        .slice(0, 15),
-      most: [...ds]
-        .sort((a, b) => (b.changes ?? 0) - (a.changes ?? 0))
-        .slice(0, 15),
+      ups: [...net].sort((a, b) => b.delta - a.delta || a.d.name.localeCompare(b.d.name)).slice(0, 15),
+      downs: [...net].sort((a, b) => a.delta - b.delta || a.d.name.localeCompare(b.d.name)).slice(0, 15),
+      most: [...ds].sort((a, b) => (b.changes ?? 0) - (a.changes ?? 0)).slice(0, 15),
       top: topBr(
         ds,
         versions.map((v) => v.v),
@@ -66,10 +54,7 @@ export default function ExplorePage() {
   const labels = byBranch.map((x) => BRANCH_SHORT[x.branch]);
 
   const thermal: ThermalUnit[] = live
-    .filter(
-      (u) =>
-        u.branch === "ground" && u.thermal && Object.keys(u.thermal).length > 0,
-    )
+    .filter((u) => u.branch === "ground" && u.thermal && Object.keys(u.thermal).length > 0)
     .map((u) => ({
       id: u.id,
       name: u.name,
@@ -86,8 +71,7 @@ export default function ExplorePage() {
       <header>
         <h1 className="text-4xl font-bold">Explore</h1>
         <p className="mt-2 max-w-2xl text-fg-2">
-          Realistic Battles BR moves since March 2020 (or since a vehicle was
-          added), and tools for finding vehicles.
+          Realistic Battles BR moves since March 2020 (or since a vehicle was added), and tools for finding vehicles.
         </p>
         <nav className="mt-4 flex flex-wrap gap-2 text-sm">
           <a className="btn" href="#movers">
@@ -119,9 +103,7 @@ export default function ExplorePage() {
 
       <section id="movers" className="scroll-mt-16">
         <h2 className="section-title mb-1">Biggest moves</h2>
-        <p className="mb-4 text-sm text-fg-3">
-          Net RB change from the first recorded BR to today.
-        </p>
+        <p className="mb-4 text-sm text-fg-3">Net RB change from the first recorded BR to today.</p>
         <Tabs labels={labels}>
           {byBranch.map((x) => (
             <div key={x.branch} className="grid gap-6 md:grid-cols-2">
@@ -134,31 +116,19 @@ export default function ExplorePage() {
 
       <section id="most-changed" className="scroll-mt-16">
         <h2 className="section-title mb-1">Most changed</h2>
-        <p className="mb-4 text-sm text-fg-3">
-          Updates that changed a vehicle&apos;s BR in any mode.
-        </p>
+        <p className="mb-4 text-sm text-fg-3">Updates that changed a vehicle&apos;s BR in any mode.</p>
         <Tabs labels={labels}>
           {byBranch.map((x) => (
             <ol key={x.branch} className="divide-y divide-card-border panel">
               {x.most.map((d, i) => (
-                <li
-                  key={d.id}
-                  className="flex items-center gap-3 px-3 py-1 text-sm"
-                >
-                  <span className="w-6 text-right font-display tabular text-fg-3">
-                    {i + 1}
-                  </span>
-                  <Link
-                    href={`/vehicle/${d.id}/`}
-                    className="flex min-w-0 flex-1 items-center gap-2 font-display"
-                  >
+                <li key={d.id} className="flex items-center gap-3 px-3 py-1 text-sm">
+                  <span className="w-6 text-right font-display tabular text-fg-3">{i + 1}</span>
+                  <Link href={`/vehicle/${d.id}/`} className="flex min-w-0 flex-1 items-center gap-2 font-display">
                     <Thumb id={d.id} image={d.image} />
                     <Flag nation={d.nation} labelled className="h-3" />
                     <span className="truncate">{d.name}</span>
                   </Link>
-                  <span className="w-24 text-right tabular text-fg">
-                    {d.changes} changes
-                  </span>
+                  <span className="w-24 text-right tabular text-fg">{d.changes} changes</span>
                 </li>
               ))}
             </ol>
@@ -169,38 +139,26 @@ export default function ExplorePage() {
       <section id="stable" className="scroll-mt-16">
         <h2 className="section-title mb-1">Longest unchanged</h2>
         <p className="mb-4 text-sm text-fg-3">
-          Tech tree vehicles whose BR hasn&apos;t moved in any mode for the
-          longest time.
+          Tech tree vehicles whose BR hasn&apos;t moved in any mode for the longest time.
         </p>
         <Tabs labels={labels}>
           {byBranch.map((x) => (
             <div key={x.branch} className="space-y-2">
               {x.stable.never > 0 && (
                 <p className="text-sm text-fg-2">
-                  {plural(x.stable.never, "tech tree vehicle")} still sit at the
-                  BR they had in March 2020.
+                  {plural(x.stable.never, "tech tree vehicle")} still sit at the BR they had in March 2020.
                 </p>
               )}
               <ol className="divide-y divide-card-border panel">
                 {x.stable.rows.map(({ d, since, first }, i) => (
-                  <li
-                    key={d.id}
-                    className="flex items-center gap-3 px-3 py-1 text-sm"
-                  >
-                    <span className="w-6 text-right font-display tabular text-fg-3">
-                      {i + 1}
-                    </span>
-                    <Link
-                      href={`/vehicle/${d.id}/`}
-                      className="flex min-w-0 flex-1 items-center gap-2 font-display"
-                    >
+                  <li key={d.id} className="flex items-center gap-3 px-3 py-1 text-sm">
+                    <span className="w-6 text-right font-display tabular text-fg-3">{i + 1}</span>
+                    <Link href={`/vehicle/${d.id}/`} className="flex min-w-0 flex-1 items-center gap-2 font-display">
                       <Thumb id={d.id} image={d.image} />
                       <Flag nation={d.nation} labelled className="h-3" />
                       <span className="truncate">{d.name}</span>
                     </Link>
-                    <span className="w-12 text-right font-display tabular">
-                      {formatBr(d.br.rb)}
-                    </span>
+                    <span className="w-12 text-right font-display tabular">{formatBr(d.br.rb)}</span>
                     <span className="w-44 text-right tabular text-fg-2">
                       {first ? "since tracking began" : `since ${since.v}`}
                       <span className="block text-xs text-fg-3">{since.d}</span>
@@ -216,8 +174,7 @@ export default function ExplorePage() {
       <section id="thermals" className="scroll-mt-16">
         <h2 className="section-title mb-1">Thermal finder</h2>
         <p className="mb-4 text-sm text-fg-3">
-          Best thermal sight per crew position, including ones that need a
-          modification. Sorted from the lowest BR.
+          Best thermal sight per crew position, including ones that need a modification. Sorted from the lowest BR.
         </p>
         <ThermalFinder units={thermal} nations={nationsOf("ground")} />
       </section>
@@ -225,9 +182,8 @@ export default function ExplorePage() {
       <section id="nations" className="scroll-mt-16">
         <h2 className="section-title mb-1">Uptiers and downtiers by nation</h2>
         <p className="mb-4 text-sm text-fg-3">
-          Every RB change to vehicles in the game today, since March 2020. Net
-          is the sum of all moves (one 1.0 uptier and three 0.3 downtiers come
-          to +0.1); per vehicle divides it by the nation&apos;s vehicle count.
+          Every RB change to vehicles in the game today, since March 2020. Net is the sum of all moves (one 1.0 uptier
+          and three 0.3 downtiers come to +0.1); per vehicle divides it by the nation&apos;s vehicle count.
         </p>
         <Tabs labels={labels}>
           {byBranch.map((x) => (
@@ -239,8 +195,7 @@ export default function ExplorePage() {
       <section id="by-year" className="scroll-mt-16">
         <h2 className="section-title mb-1">Uptiers and downtiers by year</h2>
         <p className="mb-4 text-sm text-fg-3">
-          Realistic Battles BR changes per calendar year. 2020 starts in March,
-          when tracking began.
+          Realistic Battles BR changes per calendar year. 2020 starts in March, when tracking began.
         </p>
         <Tabs labels={labels} lazy>
           {byBranch.map((x) => (
@@ -251,9 +206,7 @@ export default function ExplorePage() {
 
       <section id="top-br" className="scroll-mt-16">
         <h2 className="section-title mb-1">Top BR over time</h2>
-        <p className="mb-4 text-sm text-fg-3">
-          The highest Realistic Battles BR in each branch at each update.
-        </p>
+        <p className="mb-4 text-sm text-fg-3">The highest Realistic Battles BR in each branch at each update.</p>
         <Tabs labels={labels} lazy>
           {byBranch.map((x) => (
             <TopBrChart key={x.branch} data={x.top} />
@@ -264,27 +217,16 @@ export default function ExplorePage() {
   );
 }
 
-function MoverTable({
-  title,
-  rows,
-}: {
-  title: string;
-  rows: { d: UnitDetail; first: number; delta: number }[];
-}) {
+function MoverTable({ title, rows }: { title: string; rows: { d: UnitDetail; first: number; delta: number }[] }) {
   return (
     <div>
-      <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-fg-3">
-        {title}
-      </h3>
+      <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-fg-3">{title}</h3>
       <table className="data-table w-full panel text-sm">
         <tbody className="divide-y divide-card-border">
           {rows.map(({ d, first, delta }) => (
             <tr key={d.id}>
               <td className="w-full px-3 py-1">
-                <Link
-                  href={`/vehicle/${d.id}/`}
-                  className="flex items-center gap-2 font-display"
-                >
+                <Link href={`/vehicle/${d.id}/`} className="flex items-center gap-2 font-display">
                   <Thumb id={d.id} image={d.image} />
                   <Flag nation={d.nation} labelled className="h-3" />
                   <span className="min-w-0 truncate">{d.name}</span>
@@ -320,9 +262,7 @@ function longestUnchanged(details: UnitDetail[]) {
       return { d, since: h[h.length - 1], first: h.length === 1 && !d.added };
     })
     // Oldest first; among equally old, the highest BR is the more surprising.
-    .sort(
-      (a, b) => a.since.d.localeCompare(b.since.d) || b.d.br.rb - a.d.br.rb,
-    );
+    .sort((a, b) => a.since.d.localeCompare(b.since.d) || b.d.br.rb - a.d.br.rb);
   return { rows: all.slice(0, 15), never: all.filter((x) => x.first).length };
 }
 
@@ -355,9 +295,7 @@ function nationBalance(details: UnitDetail[]): NationRow[] {
     }
     rows.set(d.nation, row);
   }
-  return [...rows.values()].sort(
-    (a, b) => b.net / b.vehicles - a.net / a.vehicles,
-  );
+  return [...rows.values()].sort((a, b) => b.net / b.vehicles - a.net / a.vehicles);
 }
 
 function NationTable({ rows }: { rows: NationRow[] }) {
@@ -391,15 +329,9 @@ function NationTable({ rows }: { rows: NationRow[] }) {
                   {nationName(r.nation)}
                 </span>
               </td>
-              <td className="px-3 py-1.5 text-right tabular text-fg-2">
-                {r.vehicles}
-              </td>
-              <td className="px-3 py-1.5 text-right tabular text-fg-2">
-                {r.ups}
-              </td>
-              <td className="px-3 py-1.5 text-right tabular text-fg-2">
-                {r.downs}
-              </td>
+              <td className="px-3 py-1.5 text-right tabular text-fg-2">{r.vehicles}</td>
+              <td className="px-3 py-1.5 text-right tabular text-fg-2">{r.ups}</td>
+              <td className="px-3 py-1.5 text-right tabular text-fg-2">{r.downs}</td>
               <td
                 className={`whitespace-nowrap px-3 py-1.5 text-right font-display tabular ${r.net > 0 ? "text-bad" : r.net < 0 ? "text-good" : "text-fg-2"}`}
               >
@@ -416,9 +348,7 @@ function NationTable({ rows }: { rows: NationRow[] }) {
               <td className="px-3 py-1.5" aria-hidden>
                 {/* Up to the right, down to the left of the baseline (centred when both occur). */}
                 <span className="relative block h-2.5">
-                  <span
-                    className={`absolute inset-y-[-3px] w-px bg-fg-3/50 ${diverging ? "left-1/2" : "left-0"}`}
-                  />
+                  <span className={`absolute inset-y-[-3px] w-px bg-fg-3/50 ${diverging ? "left-1/2" : "left-0"}`} />
                   <span
                     className={`absolute inset-y-0 ${
                       r.net >= 0
@@ -438,28 +368,20 @@ function NationTable({ rows }: { rows: NationRow[] }) {
 }
 
 /** Highest RB BR among vehicles in the game at each version where it changed. */
-function topBr(
-  details: UnitDetail[],
-  versions: string[],
-  dates: string[],
-): TopBrPoint[] {
+function topBr(details: UnitDetail[], versions: string[], dates: string[]): TopBrPoint[] {
   const pos = new Map(versions.map((v, i) => [v, i]));
   const best = new Array<number>(versions.length).fill(0);
   for (const d of details) {
     const h = d.history ?? [];
     h.forEach((p, i) => {
       const from = pos.get(p.v) ?? 0;
-      const to =
-        i + 1 < h.length
-          ? (pos.get(h[i + 1].v) ?? versions.length)
-          : versions.length;
+      const to = i + 1 < h.length ? (pos.get(h[i + 1].v) ?? versions.length) : versions.length;
       for (let k = from; k < to; k++) best[k] = Math.max(best[k], p.rb);
     });
   }
   const out: TopBrPoint[] = [];
   best.forEach((rank, i) => {
-    if (i === 0 || rank !== best[i - 1])
-      out.push({ t: Date.parse(dates[i]), v: versions[i], br: rankToBr(rank) });
+    if (i === 0 || rank !== best[i - 1]) out.push({ t: Date.parse(dates[i]), v: versions[i], br: rankToBr(rank) });
   });
   const last = out[out.length - 1];
   const end = Date.parse(dates[dates.length - 1]);

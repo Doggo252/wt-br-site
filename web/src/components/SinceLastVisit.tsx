@@ -27,9 +27,7 @@ export function SinceLastVisit({ recent }: { recent: Recent }) {
     if (!seen || seen === latest) return;
     const i = recent.findIndex((r) => r[0] === seen);
     // Older than the window we were given: everything in it is new.
-    const after = (i >= 0 ? recent.slice(i + 1) : recent).filter(
-      (r) => r[1] || r[2],
-    );
+    const after = (i >= 0 ? recent.slice(i + 1) : recent).filter((r) => r[1] || r[2]);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- storage only exists on the client
     if (after.length) setMissed(after);
   }, [recent]);
@@ -46,8 +44,7 @@ export function SinceLastVisit({ recent }: { recent: Recent }) {
       <span className="eyebrow">Since your last visit</span>{" "}
       <span className="text-fg">
         {plural(missed.length, "update")} ({first}
-        {missed.length > 1 ? ` to ${missed[missed.length - 1][0]}` : ""}):{" "}
-        {plural(changes, "BR change")}
+        {missed.length > 1 ? ` to ${missed[missed.length - 1][0]}` : ""}): {plural(changes, "BR change")}
         {added ? `, ${plural(added, "vehicle")} added` : ""}.
       </span>
     </Link>

@@ -19,13 +19,7 @@ export type RecordItem = {
 
 type Sort = "kills" | "br" | "name";
 
-export function RecordsTable({
-  rows,
-  nations,
-}: {
-  rows: RecordItem[];
-  nations: string[];
-}) {
+export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: string[] }) {
   const [nation, setNation] = useState("all");
   const [sort, setSort] = useState<Sort>("kills");
   const [q, setQ] = useState("");
@@ -42,38 +36,23 @@ export function RecordsTable({
         (r) =>
           (nation === "all" || r.nation === nation) &&
           (showOpen || r.kills) &&
-          (!nq ||
-            r.name.toLowerCase().includes(nq) ||
-            (r.player ?? "").toLowerCase().includes(nq)),
+          (!nq || r.name.toLowerCase().includes(nq) || (r.player ?? "").toLowerCase().includes(nq)),
       )
       .sort((a, b) => {
-        if (sort === "kills")
-          return (
-            (b.kills ?? -1) - (a.kills ?? -1) || a.name.localeCompare(b.name)
-          );
-        if (sort === "br")
-          return (
-            Number(b.br ?? 0) - Number(a.br ?? 0) ||
-            (b.kills ?? 0) - (a.kills ?? 0)
-          );
+        if (sort === "kills") return (b.kills ?? -1) - (a.kills ?? -1) || a.name.localeCompare(b.name);
+        if (sort === "br") return Number(b.br ?? 0) - Number(a.br ?? 0) || (b.kills ?? 0) - (a.kills ?? 0);
         return a.name.localeCompare(b.name);
       });
   }, [rows, nation, sort, q, showOpen]);
 
-  const open = rows.filter(
-    (r) => (nation === "all" || r.nation === nation) && !r.kills,
-  ).length;
+  const open = rows.filter((r) => (nation === "all" || r.nation === nation) && !r.kills).length;
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-4 panel p-3">
         <label className="flex flex-col gap-1 text-xs text-fg-3">
           Nation
-          <select
-            value={nation}
-            onChange={(e) => setNation(e.target.value)}
-            className={INPUT}
-          >
+          <select value={nation} onChange={(e) => setNation(e.target.value)} className={INPUT}>
             <option value="all">All nations</option>
             {nations.map((n) => (
               <option key={n} value={n}>
@@ -84,11 +63,7 @@ export function RecordsTable({
         </label>
         <label className="flex flex-col gap-1 text-xs text-fg-3">
           Sort by
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            className={INPUT}
-          >
+          <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className={INPUT}>
             <option value="kills">Most kills</option>
             <option value="br">Highest BR</option>
             <option value="name">Vehicle name</option>
@@ -96,12 +71,7 @@ export function RecordsTable({
         </label>
         <label className="flex flex-col gap-1 text-xs text-fg-3">
           Vehicle or player
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className={INPUT}
-          />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} className={INPUT} />
         </label>
         <label className="flex cursor-pointer items-center gap-2 pb-1.5 text-sm text-fg-2">
           <input
@@ -114,9 +84,7 @@ export function RecordsTable({
         </label>
       </div>
       <p className="text-sm text-fg-3" aria-live="polite">
-        {shown.length > limit
-          ? `${limit} of ${shown.length.toLocaleString("en")} rows`
-          : `${shown.length} rows`}
+        {shown.length > limit ? `${limit} of ${shown.length.toLocaleString("en")} rows` : `${shown.length} rows`}
       </p>
       <div className="overflow-x-auto panel">
         <table className="data-table w-full min-w-[600px] text-sm">
@@ -134,18 +102,12 @@ export function RecordsTable({
             {shown.slice(0, limit).map((r, i) => (
               <tr key={`${r.nation}-${r.name}-${i}`}>
                 <td className="px-3 py-1.5 text-right font-display text-base font-semibold tabular text-gold">
-                  {r.kills ?? (
-                    <span className="text-sm font-normal text-fg-3">open</span>
-                  )}
+                  {r.kills ?? <span className="text-sm font-normal text-fg-3">open</span>}
                 </td>
                 <td className="px-3 py-1 font-display">
                   <span className="flex items-center gap-2">
                     {r.id && <Thumb id={r.id} image={r.image} />}
-                    {r.id ? (
-                      <Link href={`/vehicle/${r.id}/`}>{r.name}</Link>
-                    ) : (
-                      r.name
-                    )}
+                    {r.id ? <Link href={`/vehicle/${r.id}/`}>{r.name}</Link> : r.name}
                   </span>
                 </td>
                 <td className="px-3 py-1.5 text-fg-2">
@@ -154,9 +116,7 @@ export function RecordsTable({
                     {nationName(r.nation)}
                   </span>
                 </td>
-                <td className="px-3 py-1.5 text-right font-display tabular">
-                  {r.br}
-                </td>
+                <td className="px-3 py-1.5 text-right font-display tabular">{r.br}</td>
                 <td className="px-3 py-1.5 text-fg-2">{r.player}</td>
                 <td className="px-3 py-1.5 tabular text-fg-3">{r.patch}</td>
               </tr>
@@ -166,13 +126,7 @@ export function RecordsTable({
       </div>
       {shown.length > limit && (
         <div className="text-center">
-          <button
-            type="button"
-            className="btn"
-            onClick={() =>
-              setPaging({ key: filterKey, limit: limit + PAGE * 4 })
-            }
-          >
+          <button type="button" className="btn" onClick={() => setPaging({ key: filterKey, limit: limit + PAGE * 4 })}>
             Show more ({shown.length - limit} left)
           </button>
         </div>
@@ -183,5 +137,4 @@ export function RecordsTable({
 
 const PAGE = 100;
 
-const INPUT =
-  "border border-card-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-link focus:outline-none";
+const INPUT = "border border-card-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-link focus:outline-none";

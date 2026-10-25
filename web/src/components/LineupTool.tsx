@@ -6,31 +6,13 @@ import { Flag } from "./Flag";
 import { ModeToggle } from "./ModeToggle";
 import { UnitCard } from "./UnitCard";
 import { MODE_NAME, formatBr } from "@/lib/br";
-import {
-  BRANCHES,
-  BRANCH_NAME,
-  BRANCH_SHORT,
-  type Branch,
-} from "@/lib/branches";
+import { BRANCHES, BRANCH_NAME, BRANCH_SHORT, type Branch } from "@/lib/branches";
 import { nationName } from "@/lib/nations";
 import { useMode } from "@/lib/useMode";
 import type { UnitStatus } from "@/lib/units";
 
 /** [id, name, nation, branch, type, status index, hidden, ab, rb, sb, image, planned] from /data/lineup.json */
-type Row = [
-  string,
-  string,
-  string,
-  Branch,
-  string,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  Planned,
-];
+type Row = [string, string, string, Branch, string, number, number, number, number, number, number, Planned];
 /** Announced, not yet live: [ab, rb, sb] with null for unchanged modes, or 0 for none. */
 type Planned = (number | null)[] | 0;
 
@@ -73,22 +55,12 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   }, []);
 
   const col = MODE_COL[mode];
-  const pool = useMemo(
-    () => rows.filter((r) => r[3] === branch && !r[6]),
-    [rows, branch],
-  );
-  const ranks = useMemo(
-    () => [...new Set(pool.map((r) => r[col]))].sort((a, b) => a - b),
-    [pool, col],
-  );
-  const nationList = nations[branch].includes(nation)
-    ? nation
-    : nations[branch][0];
+  const pool = useMemo(() => rows.filter((r) => r[3] === branch && !r[6]), [rows, branch]);
+  const ranks = useMemo(() => [...new Set(pool.map((r) => r[col]))].sort((a, b) => a - b), [pool, col]);
+  const nationList = nations[branch].includes(nation) ? nation : nations[branch][0];
   // The chosen BR may not exist in this branch or mode: use the nearest one that does.
   const rank = ranks.length
-    ? ranks.reduce((best, r) =>
-        Math.abs(r - wantRank) < Math.abs(best - wantRank) ? r : best,
-      )
+    ? ranks.reduce((best, r) => (Math.abs(r - wantRank) < Math.abs(best - wantRank) ? r : best))
     : wantRank;
 
   // Keep the URL shareable, with what is actually shown.
@@ -101,21 +73,15 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   }, [branch, nationList, rank]);
 
   const lineup = pool
-    .filter(
-      (r) => r[2] === nationList && r[col] <= rank && r[col] >= rank - SPREAD,
-    )
+    .filter((r) => r[2] === nationList && r[col] <= rank && r[col] >= rank - SPREAD)
     .sort((a, b) => b[col] - a[col] || a[1].localeCompare(b[1]));
-  const steps = Array.from(
-    { length: SPREAD * 2 + 1 },
-    (_, i) => rank - SPREAD + i,
-  );
+  const steps = Array.from({ length: SPREAD * 2 + 1 }, (_, i) => rank - SPREAD + i);
   const counts = steps.map((s) => pool.filter((r) => r[col] === s).length);
   const max = Math.max(1, ...counts);
   const shown = focus ?? rank + SPREAD;
   const facing = pool.filter((r) => r[col] === shown);
   const byNation = new Map<string, Row[]>();
-  for (const r of facing)
-    byNation.set(r[2], [...(byNation.get(r[2]) ?? []), r]);
+  for (const r of facing) byNation.set(r[2], [...(byNation.get(r[2]) ?? []), r]);
 
   return (
     <div className="space-y-6">
@@ -136,11 +102,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
         </div>
         <label className="flex flex-col gap-1 text-xs text-fg-3">
           Nation
-          <select
-            value={nationList}
-            onChange={(e) => setNation(e.target.value)}
-            className={INPUT}
-          >
+          <select value={nationList} onChange={(e) => setNation(e.target.value)} className={INPUT}>
             {nations[branch].map((n) => (
               <option key={n} value={n}>
                 {nationName(n)}
@@ -174,16 +136,13 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
           Your lineup, {formatBr(rank - SPREAD)}–{formatBr(rank)}
         </h2>
         <p className="text-sm text-fg-2">
-          {lineup.length} {nationName(nationList)}{" "}
-          {BRANCH_NAME[branch].toLowerCase()} vehicles you can bring without
-          raising your {MODE_NAME[mode]} BR above {formatBr(rank)}. Unobtainable
-          vehicles are left out.
+          {lineup.length} {nationName(nationList)} {BRANCH_NAME[branch].toLowerCase()} vehicles you can bring without
+          raising your {MODE_NAME[mode]} BR above {formatBr(rank)}. Unobtainable vehicles are left out.
         </p>
         {lineup.some((r) => planned(r, col) !== null) && (
           <p className="callout-gold px-3 py-2 text-sm">
-            {lineup.filter((r) => planned(r, col) !== null).length} of these
-            have a BR change announced by Gaijin that isn&apos;t live yet,
-            marked below.
+            {lineup.filter((r) => planned(r, col) !== null).length} of these have a BR change announced by Gaijin that
+            isn&apos;t live yet, marked below.
           </p>
         )}
         {lineup.length > 0 && <Cards rows={lineup} col={col} />}
@@ -192,15 +151,10 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
       <section className="space-y-3">
         <h2 className="section-title">What you can meet</h2>
         <p className="text-sm text-fg-2">
-          Vehicles from every nation at each BR in your matchmaking range.
-          Select a bar to list them.
+          Vehicles from every nation at each BR in your matchmaking range. Select a bar to list them.
         </p>
         <div className="panel p-4">
-          <div
-            className="flex h-44 items-end gap-[2px]"
-            role="group"
-            aria-label="Vehicles per BR"
-          >
+          <div className="flex h-44 items-end gap-[2px]" role="group" aria-label="Vehicles per BR">
             {steps.map((s, i) => {
               const selected = s === shown;
               return (
@@ -263,8 +217,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
               <div key={n}>
                 <h4 className="mb-2 flex items-center gap-2 text-sm text-fg-2">
                   <Flag nation={n} className="h-3.5" />
-                  {nationName(n)}{" "}
-                  <span className="text-fg-3">{list.length}</span>
+                  {nationName(n)} <span className="text-fg-3">{list.length}</span>
                 </h4>
                 <Cards rows={list} col={col} />
               </div>
@@ -308,5 +261,4 @@ function Cards({ rows, col }: { rows: Row[]; col: number }) {
   );
 }
 
-const INPUT =
-  "border border-card-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-link focus:outline-none";
+const INPUT = "border border-card-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-link focus:outline-none";
