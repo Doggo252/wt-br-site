@@ -53,7 +53,7 @@ export default function RecordsPage() {
                 <p className="font-display text-5xl font-bold leading-none tabular text-gold">{r.kills}</p>
                 <p className="mt-1 text-xs uppercase tracking-wider text-fg-3">kills in one life</p>
                 <p className="mt-3 flex items-center gap-1.5 font-display text-lg text-fg">
-                  <Flag nation={r.nation} className="h-3.5" />
+                  <Flag nation={r.nation} labelled className="h-3.5" />
                   {r.name}
                 </p>
                 <p className="text-sm text-fg-2">

@@ -157,7 +157,9 @@ export function TechTree({ branch, nation, columns, units }: Props) {
         <table className="table-fixed border-separate border-spacing-x-2 border-spacing-y-0">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-[#12161b]/95" />
+              <th scope="col" className="sticky left-0 z-10 bg-[#12161b]/95">
+                <span className="sr-only">Rank</span>
+              </th>
               {headers.map((h, i) => (
                 <th
                   key={i}

@@ -92,7 +92,7 @@ export function OfficialChangeTable({
                 <td className="px-3 py-1.5">
                   <span className="flex items-center gap-2">
                     {id && <Thumb id={id} image={u?.image} />}
-                    {u && <Flag nation={u.nation} className="h-3" />}
+                    {u && <Flag nation={u.nation} labelled className="h-3" />}
                     {id ? (
                       <Link href={`/vehicle/${id}/`} className="font-display">
                         {u?.name ?? c.name}

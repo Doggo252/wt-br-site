@@ -95,7 +95,7 @@ export default function ExplorePage() {
                   <span className="w-6 text-right font-display tabular text-fg-3">{i + 1}</span>
                   <Link href={`/vehicle/${d.id}/`} className="flex min-w-0 flex-1 items-center gap-2 font-display">
                     <Thumb id={d.id} image={d.image} />
-                    <Flag nation={d.nation} className="h-3" />
+                    <Flag nation={d.nation} labelled className="h-3" />
                     <span className="truncate">{d.name}</span>
                   </Link>
                   <span className="w-24 text-right tabular text-fg">{d.changes} changes</span>
@@ -156,7 +156,7 @@ function MoverTable({
               <td className="w-full px-3 py-1">
                 <Link href={`/vehicle/${d.id}/`} className="flex items-center gap-2 font-display">
                   <Thumb id={d.id} image={d.image} />
-                  <Flag nation={d.nation} className="h-3" />
+                  <Flag nation={d.nation} labelled className="h-3" />
                   <span className="min-w-0 truncate">{d.name}</span>
                 </Link>
               </td>
