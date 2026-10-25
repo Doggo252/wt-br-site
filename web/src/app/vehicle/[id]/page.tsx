@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const u = getUnit(id);
   return {
-    title: `${plainName(u.name)} (${nationName(u.nation)}) BR history`,
+    title: `${plainName(u.name)} (${titleQualifier(u)}) BR history`,
     description: `${plainName(u.fullName)} (${nationName(u.nation)}): Battle Rating ${formatBr(u.br.ab)} AB / ${formatBr(u.br.rb)} RB / ${formatBr(u.br.sb)} SB, with stats and night vision.`,
     openGraph: u.image ? { images: [`/img/units/${id}.webp`] } : undefined,
   };
@@ -529,6 +529,15 @@ function AirStatGrid({ u }: { u: UnitDetail }) {
 }
 
 /** Vehicles of the same branch at exactly the same BR in each mode: same nation first, then others. */
+/** Nation, plus what tells this vehicle apart from same-named ones in that nation (event copies, cup editions). */
+function titleQualifier(u: UnitDetail): string {
+  const name = plainName(u.name);
+  const twins = getIndex().filter((o) => o.id !== u.id && o.nation === u.nation && plainName(o.name) === name);
+  if (!twins.length) return nationName(u.nation);
+  const extra = twins.every((o) => o.status !== u.status) && u.status !== "tree" ? STATUS_LABEL[u.status] : u.id;
+  return `${nationName(u.nation)}, ${extra}`;
+}
+
 /** Per other nation, the obtainable vehicle of the same class closest in RB BR (tech tree first on ties). */
 function counterparts(u: UnitDetail, index: UnitSummary[]): UnitSummary[] {
   if (u.type === "other") return [];

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { SearchBox } from "@/components/SearchBox";
+
+export const metadata: Metadata = { title: "Page not found" };
 
 export default function NotFound() {
   return (
