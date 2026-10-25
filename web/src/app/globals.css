@@ -185,6 +185,14 @@
   .data-table tbody tr:hover {
     background: rgb(23 203 252 / 0.06);
   }
+  /* Vehicle names in tables read as text; the row hover and link hover show they're clickable. */
+  .data-table tbody a {
+    color: var(--color-fg);
+  }
+  .data-table tbody tr:hover a,
+  .data-table tbody a:focus-visible {
+    color: var(--color-link);
+  }
   /* Buttons. */
   .btn {
     display: inline-flex;
