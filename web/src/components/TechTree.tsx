@@ -97,7 +97,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-4">
+      <div className="panel mb-4 flex flex-wrap items-center gap-x-5 gap-y-3 px-3 py-2.5">
         <ModeToggle value={mode} onChange={setMode} />
         <label className="flex cursor-pointer items-center gap-2 text-sm text-fg-2">
           <input
@@ -108,17 +108,26 @@ export function TechTree({ branch, nation, columns, units }: Props) {
           />
           Show unobtainable vehicles
         </label>
+        {vIdx === null && (
+          <button
+            type="button"
+            disabled={loading}
+            className="btn sm:ml-auto"
+            onClick={async () => {
+              const h = await loadHistory();
+              if (h) goTo(h.versions.length - 1);
+            }}
+          >
+            <ClockIcon />
+            {loading ? "Loading history…" : "Time machine"}
+          </button>
+        )}
       </div>
 
       <PatchSlider
         branch={branch}
         history={history}
-        loading={loading}
         vIdx={vIdx}
-        onOpen={async () => {
-          const h = await loadHistory();
-          if (h) goTo(h.versions.length - 1);
-        }}
         onChange={goTo}
       />
 
@@ -143,18 +152,20 @@ export function TechTree({ branch, nation, columns, units }: Props) {
       )}
 
       <div className="overflow-x-auto pb-4">
-        <table className="border-separate border-spacing-x-2 border-spacing-y-0">
+        <table className="table-fixed border-separate border-spacing-x-2 border-spacing-y-0">
           <tbody>
             {ranks.map((rank) => (
               <tr key={rank} className="align-top">
                 <th
                   scope="row"
-                  className="sticky left-0 z-10 w-10 border-t border-card-border bg-bg pt-3 text-left font-display text-lg font-bold text-fg-3"
+                  className="sticky left-0 z-10 w-12 border-t border-[#262f35] bg-[#12161b]/95 pt-3 text-center align-top"
                 >
-                  {roman(rank)}
+                  <span className="inline-block min-w-8 border border-[#3a4650] bg-gradient-to-b from-[#2b343c] to-[#20272d] px-1.5 py-0.5 font-display text-base font-bold text-gold shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]">
+                    {roman(rank)}
+                  </span>
                 </th>
                 {view.columns.map((col, ci) => (
-                  <td key={ci} className="w-[150px] min-w-[150px] border-t border-card-border pb-4 pt-3">
+                  <td key={ci} className="w-[156px] min-w-[156px] max-w-[156px] border-t border-[#262f35] pb-4 pt-3">
                     <div className="flex flex-col gap-2">
                       {col
                         .filter((cell) => cell.rank === rank)
@@ -229,32 +240,15 @@ function stateAt(tm: TimeMachine, vIdx: number): { columns: TreeCell[][]; units:
 function PatchSlider({
   branch,
   history,
-  loading,
   vIdx,
-  onOpen,
   onChange,
 }: {
   branch: string;
   history: History | null;
-  loading: boolean;
   vIdx: number | null;
-  onOpen: () => void;
   onChange: (i: number | null) => void;
 }) {
-  if (vIdx === null || !history) {
-    return (
-      <div className="mb-4">
-        <button
-          type="button"
-          onClick={onOpen}
-          disabled={loading}
-          className="border border-card-border bg-panel px-3 py-1.5 font-display text-sm text-fg-2 hover:text-fg disabled:opacity-60"
-        >
-          {loading ? "Loading history…" : "Time machine: view this tree at an older update"}
-        </button>
-      </div>
-    );
-  }
+  if (vIdx === null || !history) return null;
   const max = history.versions.length - 1;
   const v = history.versions[vIdx];
   // Jump between versions that changed something, skipping layout-only ones.
@@ -265,10 +259,10 @@ function PatchSlider({
     }
   };
   return (
-    <div className="mb-4 border border-card-border bg-panel p-3">
+    <div className="panel mb-4 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-3">
-        <span className="font-display text-sm font-semibold text-fg">Time machine</span>
-        <span className="font-display tabular text-link">{v.v}</span>
+        <span className="eyebrow">Time machine</span>
+        <span className="font-display text-lg font-semibold tabular text-fg">{v.v}</span>
         <span className="text-sm tabular text-fg-3">{v.d}</span>
         <span className="ml-auto flex gap-2">
           <button
@@ -276,7 +270,7 @@ function PatchSlider({
             onClick={() => step(-1)}
             disabled={vIdx === 0}
             aria-label="Previous update"
-            className="min-h-9 min-w-9 border border-card-border px-2 text-fg-2 hover:text-fg disabled:opacity-40"
+            className="btn min-h-9 min-w-9 justify-center px-2"
           >
             ←
           </button>
@@ -285,14 +279,14 @@ function PatchSlider({
             onClick={() => step(1)}
             disabled={vIdx === max}
             aria-label="Next update"
-            className="min-h-9 min-w-9 border border-card-border px-2 text-fg-2 hover:text-fg disabled:opacity-40"
+            className="btn min-h-9 min-w-9 justify-center px-2"
           >
             →
           </button>
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="min-h-9 border border-card-border px-3 font-display text-sm text-fg-2 hover:text-fg"
+            className="btn min-h-9"
           >
             Back to now
           </button>
@@ -382,5 +376,14 @@ function FolderCard({
         </span>
       </div>
     </button>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <circle cx="8" cy="8" r="6.2" />
+      <path d="M8 4.5V8l2.4 1.6" />
+    </svg>
   );
 }

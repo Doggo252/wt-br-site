@@ -3,6 +3,8 @@ import Link from "next/link";
 import { TechTree, type TreeUnit } from "@/components/TechTree";
 import { BRANCHES, BRANCH_NAME, BRANCH_SHORT, branchHref, treeHref, type Branch } from "@/lib/branches";
 import { getIndex, getMeta, getTree, nationsOf, unitsInNation } from "@/lib/data";
+import { BranchIcon } from "@/components/BranchIcon";
+import { Flag } from "@/components/Flag";
 import { nationName } from "@/lib/nations";
 
 export function nationParams(branch: Branch) {
@@ -25,7 +27,7 @@ export function nationMetadata(branch: Branch, nation: string): Metadata {
 
 function BranchTabs({ branch, nation }: { branch: Branch; nation?: string }) {
   return (
-    <nav aria-label="Branches" className="mb-3 flex gap-1 border-b border-card-border">
+    <nav aria-label="Branches" className="mb-5 flex gap-1 border-b border-[#2a333b]">
       {BRANCHES.map((b) => {
         const href = nation && nationsOf(b).includes(nation) ? treeHref(b, nation) : branchHref(b);
         const active = b === branch;
@@ -34,8 +36,9 @@ function BranchTabs({ branch, nation }: { branch: Branch; nation?: string }) {
             key={b}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`-mb-px border-b-2 px-3 py-1.5 font-display text-sm no-underline ${active ? "border-link text-fg" : "border-transparent text-fg-2 hover:text-fg"}`}
+            className={`-mb-px inline-flex items-center gap-2 border-b-2 px-4 py-2 font-display text-sm font-semibold uppercase tracking-[0.08em] ${active ? "border-gold text-fg" : "border-transparent text-fg-3 hover:text-fg"}`}
           >
+            <BranchIcon branch={b} />
             {BRANCH_SHORT[b]}
           </Link>
         );
@@ -51,23 +54,42 @@ export function BranchIndexPage({ branch }: { branch: Branch }) {
   return (
     <div>
       <BranchTabs branch={branch} />
-      <h1 className="text-3xl font-bold">{BRANCH_NAME[branch]}</h1>
+      <h1 className="text-3xl font-bold sm:text-4xl">{BRANCH_NAME[branch]}</h1>
       <p className="mt-2 text-fg-2">
         {index.length.toLocaleString("en")} vehicles across {nations.length} nations, as of update{" "}
         <span className="font-display tabular text-fg">{meta.version}</span>.
       </p>
-      <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {nations.map((n) => (
-          <li key={n}>
-            <Link
-              href={treeHref(branch, n)}
-              className="relative block border border-card-border bg-card-bg p-4 no-underline before:absolute before:inset-x-0 before:-top-px before:h-[2px] before:bg-card-top before:content-[''] hover:brightness-125"
-            >
-              <span className="block font-display text-lg font-semibold text-fg">{nationName(n)}</span>
-              <span className="text-sm text-fg-3">{index.filter((u) => u.nation === n).length} vehicles</span>
-            </Link>
-          </li>
-        ))}
+      <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {nations.map((n) => {
+          const units = index.filter((u) => u.nation === n);
+          // Showcase: the nation's highest-BR tech tree vehicle with an image.
+          const star = units
+            .filter((u) => u.image && u.status === "tree")
+            .sort((a, b) => b.rank - a.rank || b.br.rb - a.br.rb)[0];
+          return (
+            <li key={n}>
+              <Link
+                href={treeHref(branch, n)}
+                className="panel group relative flex h-28 items-center overflow-hidden px-4 transition hover:-translate-y-px hover:border-[#3d4a54]"
+              >
+                {star && (
+                  // eslint-disable-next-line @next/next/no-img-element -- static export
+                  <img
+                    src={`/img/units/${star.id}.webp`}
+                    alt=""
+                    loading="lazy"
+                    className="pointer-events-none absolute -right-6 top-1/2 h-[130%] w-auto -translate-y-1/2 opacity-70 drop-shadow-[0_6px_10px_rgb(0_0_0/0.6)] transition duration-300 [mask-image:linear-gradient(90deg,transparent,black_35%)] group-hover:scale-105 group-hover:opacity-90"
+                  />
+                )}
+                <div className="relative">
+                  <Flag nation={n} className="mb-2 h-6" />
+                  <span className="block font-display text-xl font-semibold text-fg">{nationName(n)}</span>
+                  <span className="text-sm text-fg-3">{units.length} vehicles</span>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -83,25 +105,33 @@ export function NationTreePage({ branch, nation }: { branch: Branch; nation: str
   return (
     <div>
       <BranchTabs branch={branch} nation={nation} />
-      <nav aria-label="Nations" className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-        {nationsOf(branch).map((n) =>
-          n === nation ? (
-            <span key={n} aria-current="page" className="font-display font-semibold text-fg">
-              {nationName(n)}
-            </span>
-          ) : (
-            <Link key={n} href={treeHref(branch, n)} className="font-display text-fg-2 no-underline hover:text-fg">
-              {nationName(n)}
-            </Link>
-          ),
-        )}
+      <nav aria-label="Nations" className="mb-6 flex flex-wrap gap-1.5">
+        {nationsOf(branch).map((n) => (
+          <Link
+            key={n}
+            href={treeHref(branch, n)}
+            aria-current={n === nation ? "page" : undefined}
+            className={`inline-flex items-center gap-1.5 border px-2 py-1 font-display text-sm transition-colors ${
+              n === nation
+                ? "border-gold/60 bg-gold/10 text-fg"
+                : "border-[#2a333b] bg-[#181e23] text-fg-2 hover:border-[#3d4a54] hover:text-fg"
+            }`}
+          >
+            <Flag nation={n} className="h-3" />
+            {nationName(n)}
+          </Link>
+        ))}
       </nav>
-      <h1 className="mb-1 text-3xl font-bold">
-        {nationName(nation)} <span className="text-fg-3">· {BRANCH_SHORT[branch]}</span>
-      </h1>
-      <p className="mb-5 text-sm text-fg-3">
-        {Object.keys(units).length} vehicles · update <span className="tabular">{meta.version}</span>
-      </p>
+      <header className="mb-6 flex items-center gap-4">
+        <Flag nation={nation} className="h-12 sm:h-14" />
+        <div>
+          <p className="eyebrow">{BRANCH_NAME[branch]}</p>
+          <h1 className="text-3xl font-bold sm:text-4xl">{nationName(nation)}</h1>
+          <p className="text-sm text-fg-3">
+            {Object.keys(units).length} vehicles · update <span className="tabular">{meta.version}</span>
+          </p>
+        </div>
+      </header>
       {/* Break out of the page column so wide trees can use the whole window. */}
       <div className="relative left-1/2 w-[calc(100vw-2rem)] max-w-[1400px] -translate-x-1/2">
         <TechTree branch={branch} nation={nation} columns={tree.columns} units={units} />

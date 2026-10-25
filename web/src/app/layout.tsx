@@ -8,6 +8,8 @@ import "@fontsource/pt-sans/400.css";
 import "@fontsource/pt-sans/700.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
+import { Logo } from "@/components/Logo";
+import { NavLinks } from "@/components/NavLinks";
 import { SearchBox } from "@/components/SearchBox";
 
 export const metadata: Metadata = {
@@ -16,57 +18,53 @@ export const metadata: Metadata = {
   description: "Battle Rating history for every War Thunder vehicle, patch by patch.",
 };
 
-const NAV = [
-  { href: "/ground/", label: "Ground", ready: true },
-  { href: "/air/", label: "Air", ready: true },
-  { href: "/helicopters/", label: "Helis", ready: true },
-  { href: "/updates/", label: "Updates", ready: true },
-  { href: "/announcements/", label: "Planned", ready: true },
-  { href: "/records/", label: "Records", ready: true },
-  { href: "/explore/", label: "Explore", ready: true },
-  { href: "/about/", label: "About", ready: true },
-];
-
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body className="flex min-h-dvh flex-col overflow-x-clip">
-        <header className="border-b border-card-border bg-header">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 sm:h-12 sm:flex-nowrap sm:py-0">
-            <Link href="/" className="font-display text-lg font-bold tracking-wide text-fg no-underline hover:text-fg">
-              UPTIER
+        <header className="sticky top-0 z-40 border-b border-[#2a333b] bg-[#161b21]/90 backdrop-blur supports-[backdrop-filter]:bg-[#161b21]/75">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 pb-2 sm:flex-nowrap sm:pb-0">
+            <Link href="/" className="py-2.5" aria-label="Uptier home">
+              <Logo />
             </Link>
-            <nav aria-label="Main" className="flex min-w-0 flex-1 gap-4 overflow-x-auto sm:flex-none">
-              {NAV.map((item) =>
-                item.ready ? (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="font-display text-sm font-medium text-fg-2 no-underline hover:text-fg"
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <span
-                    key={item.href}
-                    title="Coming soon"
-                    className="cursor-default font-display text-sm font-medium text-fg-3"
-                  >
-                    {item.label}
-                  </span>
-                ),
-              )}
-            </nav>
-            <SearchBox className="order-last w-full sm:order-none sm:ml-auto sm:w-56" />
+            <NavLinks />
+            <SearchBox className="order-last w-full sm:order-none sm:ml-auto sm:w-60" />
           </div>
+          {/* Thin gold rule, brightest in the middle. */}
+          <div
+            aria-hidden
+            className="h-px bg-[linear-gradient(90deg,transparent,rgb(249_219_120/0.35),transparent)]"
+          />
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-        <footer className="border-t border-card-border bg-panel">
-          <div className="mx-auto max-w-6xl px-4 py-4 text-xs text-fg-3">
-            Uptier is a fan site and is not affiliated with or endorsed by Gaijin Entertainment. War Thunder and
-            related names are trademarks of Gaijin. Game data from the{" "}
-            <a href="https://github.com/gszabi99/War-Thunder-Datamine">War Thunder Datamine</a>.{" "}
-            <Link href="/about/">About</Link> · <Link href="/design/">Style guide</Link>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:py-10">{children}</main>
+        <footer className="mt-12 border-t border-[#2a333b] bg-[#14181d]">
+          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 text-sm sm:grid-cols-[2fr_1fr_1fr]">
+            <div className="space-y-2">
+              <Logo />
+              <p className="max-w-sm text-fg-3">
+                Battle Rating history for every War Thunder vehicle, patch by patch, rebuilt daily from the game files.
+              </p>
+            </div>
+            <nav aria-label="Footer" className="grid content-start gap-1.5">
+              <span className="eyebrow mb-1 text-fg-3">Browse</span>
+              <Link href="/updates/">Updates</Link>
+              <Link href="/announcements/">Planned changes</Link>
+              <Link href="/compare/">Compare</Link>
+              <Link href="/explore/">Explore</Link>
+            </nav>
+            <nav aria-label="About" className="grid content-start gap-1.5">
+              <span className="eyebrow mb-1 text-fg-3">Site</span>
+              <Link href="/about/">About and sources</Link>
+              <Link href="/design/">Style guide</Link>
+              <a href="https://github.com/Doggo252/wt-br-site">Source code</a>
+            </nav>
+          </div>
+          <div className="border-t border-[#22292f]">
+            <p className="mx-auto max-w-6xl px-4 py-4 text-xs text-fg-3">
+              Uptier is a fan site and is not affiliated with or endorsed by Gaijin Entertainment. War Thunder and
+              related names and images are trademarks of Gaijin. Game data from the{" "}
+              <a href="https://github.com/gszabi99/War-Thunder-Datamine">War Thunder Datamine</a>.
+            </p>
           </div>
         </footer>
       </body>

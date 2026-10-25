@@ -17,9 +17,10 @@ UNITTAGS = "char.vromfs.bin_u/config/unittags.blkx"
 UNITS_CSV = "lang.vromfs.bin_u/lang/units.csv"
 WEAPONRY_CSV = "lang.vromfs.bin_u/lang/units_weaponry.csv"
 TANKMODELS = "aces.vromfs.bin_u/gamedata/units/tankmodels"
+COUNTRY_ICONS = "atlases.vromfs.bin_u/gameuiskin"
 VERSION = "version"
 
-SPARSE_PATHS = [VERSION, WPCOST, SHOP, UNITTAGS, UNITS_CSV, WEAPONRY_CSV, f"{TANKMODELS}/*"]
+SPARSE_PATHS = [VERSION, WPCOST, SHOP, UNITTAGS, UNITS_CSV, WEAPONRY_CSV, f"{TANKMODELS}/*", f"{COUNTRY_ICONS}/country_*.svg"]
 
 
 def _git(repo: Path, *args: str) -> str:

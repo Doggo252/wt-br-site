@@ -56,40 +56,40 @@ export function UnitCard({
 
   const body = (
     <>
-      <div className="relative aspect-[2/1] w-full overflow-hidden">
+      <div className="relative aspect-[2/1] w-full overflow-hidden bg-[radial-gradient(ellipse_70%_60%_at_50%_60%,rgb(255_255_255/0.07),transparent_70%)]">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element -- static export, images are pre-sized
           <img
             src={image}
             alt=""
             loading="lazy"
-            className={`h-full w-full object-contain ${inactive ? "opacity-50 grayscale" : ""}`}
+            className={`h-full w-full object-contain drop-shadow-[0_4px_6px_rgb(0_0_0/0.5)] transition-transform duration-200 group-hover:scale-[1.04] ${inactive ? "opacity-45 grayscale" : ""}`}
           />
         ) : (
           <TankSilhouette />
         )}
         {tag && (
-          <span className="absolute left-1 top-1 rounded-sm bg-bg/80 px-1 font-display text-[10px] uppercase tracking-wide text-fg-2">
+          <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1 font-display text-[10px] uppercase tracking-wide text-fg-2">
             {tag}
           </span>
         )}
         {dir && previousRank !== undefined && (
           <span
-            className={`absolute right-1 top-1 inline-flex items-center gap-0.5 rounded-sm bg-bg/80 px-1 font-display text-[11px] tabular ${dir === "up" ? "text-bad" : "text-good"}`}
+            className={`absolute right-1 top-1 inline-flex items-center gap-0.5 rounded-sm bg-black/60 px-1 font-display text-[11px] font-semibold tabular ${dir === "up" ? "text-bad" : "text-good"}`}
           >
             <Arrow dir={dir} />
             {formatBrDelta(previousRank, rank)}
           </span>
         )}
       </div>
-      <div className="flex items-baseline justify-between gap-2 px-1.5 pb-1 pt-0.5">
+      <div className="flex items-center justify-between gap-1.5 border-t border-black/30 bg-black/20 px-1.5 py-1">
         <span
           className={`min-w-0 truncate font-display text-[13px] leading-tight ${inactive ? "text-fg-3" : NAME_COLOR[status]}`}
           title={name}
         >
           {name}
         </span>
-        <span className="shrink-0 font-display text-[13px] font-semibold tabular text-fg-2">
+        <span className="shrink-0 rounded-sm bg-black/35 px-1 font-display text-[12px] font-semibold leading-[1.3] tabular text-fg">
           {formatBr(rank)}
         </span>
       </div>
@@ -97,11 +97,14 @@ export function UnitCard({
   );
 
   const className = [
-    "group relative block w-full min-w-[120px] max-w-[180px] border",
-    "before:absolute before:inset-x-0 before:-top-px before:h-[2px] before:content-['']",
+    "group relative block w-full min-w-[120px] max-w-[180px] overflow-hidden border",
+    "before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-[2px] before:content-['']",
     PALETTE[inactive ? "disabled" : status],
+    "bg-[image:linear-gradient(180deg,rgb(255_255_255/0.05),transparent_45%)] shadow-[0_6px_16px_-10px_rgb(0_0_0/0.9)]",
     selected ? "outline outline-1 outline-fg" : "",
-    href ? "transition-[filter] hover:brightness-125 focus-visible:brightness-125" : "",
+    href
+      ? "transition duration-150 hover:-translate-y-px hover:brightness-125 hover:shadow-[0_8px_22px_-10px_rgb(23_203_252/0.35)] focus-visible:brightness-125"
+      : "",
   ].join(" ");
 
   const label = `${name}, BR ${formatBr(rank)}${tag ? `, ${tag}` : ""}${

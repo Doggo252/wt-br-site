@@ -39,3 +39,18 @@ def mirror(ids: list[str], dest: Path, workers: int = 8) -> dict[str, list[str]]
         for uid, res in zip(ids, pool.map(lambda u: _fetch(u, dest), ids), strict=True):
             results.setdefault(res, []).append(uid)
     return results
+
+
+def copy_flags(datamine_dir: Path, icons_rel: str, dest: Path) -> int:
+    """The game's country icons (gameuiskin/country_<nation>.svg) -> img/flags/<nation>.svg."""
+    import re
+    import shutil
+
+    dest.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for f in (datamine_dir / icons_rel).glob("country_*.svg"):
+        m = re.fullmatch(r"country_([a-z_]+)\.svg", f.name)
+        if m and not m.group(1).endswith(("_round", "_modern")):
+            shutil.copyfile(f, dest / f"{m.group(1)}.svg")
+            n += 1
+    return n

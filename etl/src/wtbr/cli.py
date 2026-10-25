@@ -5,7 +5,7 @@ import json
 
 from . import images, official, paths, records
 from .build import build_current
-from .datamine import SHOP, WPCOST, Datamine
+from .datamine import COUNTRY_ICONS, SHOP, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
 from .history_build import build_history, diff_states, state_at
 from .models import (
@@ -68,6 +68,7 @@ def main(argv: list[str] | None = None) -> int:
                 if u in unit_ranks(wpcost, move_types)
             }
         )
+        print(f"flags: {images.copy_flags(dm.path, COUNTRY_ICONS, paths.FLAGS)} country icons")
         res = images.mirror(ids, paths.UNIT_IMAGES)
         print("images:", {k: len(v) for k, v in res.items()})
         if res.get("missing"):
