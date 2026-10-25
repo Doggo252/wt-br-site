@@ -4,6 +4,14 @@ Battle Rating history for every War Thunder tank, aircraft and helicopter, patch
 
 The plan, decisions and progress are in [PLAN.md](PLAN.md).
 
+## Features
+
+- Tech trees for every nation and branch, with a time machine back to March 2020, a preview of Gaijin's planned changes and a "lineup at BR" highlight.
+- Vehicle pages: BR history in every mode, stats, night vision, its tree line, counterparts from other nations, kill record and official announcements.
+- Update pages with nation and watchlist filters; an Atom feed at `/feed.xml`.
+- Lineup planner (`/lineup`), watchlist (`/watchlist`, stored in the browser), compare (`/compare`), explore, kill records, dev-server preview.
+- Search by name or by nation and BR ("germany 6.7"); press `/` anywhere.
+
 ## What's here
 
 | Path | What |
@@ -28,6 +36,8 @@ cd ../web
 pnpm install
 pnpm dev               # http://localhost:3000
 ```
+
+The share card `web/public/og.png` is rendered from the built site by `node scripts/make_og.mjs` (needs a static server on `web/out`, see the script). The zero-width glyph fallback font `web/public/fonts/wt-blank.woff2` comes from `python3 scripts/make_blank_glyphs.py` (needs fonttools and brotli).
 
 Individual ETL stages: `uv run wtbr history | fetch | images | records | build | schema`. `wtbr build --no-history` is a fast current-version-only build.
 

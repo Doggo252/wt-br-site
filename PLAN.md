@@ -373,14 +373,20 @@ The daily job's status, plus an uptime check.
   - Use air-specific stats instead of thermals.
 - **Done when:** the same acceptance checks as step 2 pass for air.
 
+### Step 6: Polish and player tools (done)
+- Visual pass: panels, section titles, flags and branch icons, hero art, styled 404, share card and favicon.
+- Player tools: lineup planner, watchlist, smart search ("germany 6.7", `/` shortcut), Atom feed, planned-BR preview and lineup highlight in trees, counterparts and tree line on vehicle pages, update filters, "since your last visit".
+- Explore: uptiers by nation, longest unchanged BRs. Records: most records held, per-nation averages.
+- Smoke test now also fails any page wider than a 390 px phone viewport.
+
 ### Launch checklist (between 4 and 5)
 - About page and disclaimer.
 - Licensing decisions made (§2).
 - Records maintainers' OK.
 - Analytics.
-- 404 page.
-- Sitemap.
-- OG images.
+- 404 page. (done)
+- Sitemap. (done)
+- OG images. (done: site card; vehicle pages use the vehicle image)
 - Lighthouse score of at least 90 on mobile.
 
 ---
