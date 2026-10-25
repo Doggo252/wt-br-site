@@ -6,7 +6,7 @@ import { useWatchlist } from "@/lib/watchlist";
 
 /**
  * Filters the server-rendered update page with a generated stylesheet: sections carry
- * data-branch, nation blocks data-nation and rows data-unit.
+ * data-branch, nation blocks data-nation and rows data-unit (added/removed cards carry both).
  */
 export function UpdateFilter({ nations, ids }: { nations: string[]; ids: string[] }) {
   const [nation, setNation] = useState("");
@@ -19,10 +19,11 @@ export function UpdateFilter({ nations, ids }: { nations: string[]; ids: string[
     const sel = `[data-nation="${CSS.escape(nation)}"]`;
     rules.push(`[data-nation]:not(${sel}), [data-branch]:not(:has(${sel})) { display: none }`);
   }
-  if (watchedOnly) {
-    const sel = watched.map((id) => `[data-unit="${CSS.escape(id)}"]`).join(",") || "[data-none]";
+  // Only while something on this page is watched (the list can empty from another tab).
+  if (watchedOnly && watched.length) {
+    const sel = watched.map((id) => `[data-unit="${CSS.escape(id)}"]`).join(",");
     rules.push(
-      `tr[data-unit]:not(${sel}), [data-nation]:not(:has(${sel})), [data-branch]:not(:has(${sel})) { display: none }`,
+      `[data-unit]:not(${sel}), [data-nation]:not(:has(${sel})):not(${sel}), [data-branch]:not(:has(${sel})) { display: none }`,
     );
   }
 

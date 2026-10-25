@@ -304,6 +304,8 @@ function NationTable({ rows }: { rows: NationRow[] }) {
   // Centre the bars only when there are moves both ways.
   const diverging = rows.some((r) => r.net < 0) && rows.some((r) => r.net > 0);
   const half = diverging ? 50 : 100;
+  // Without both directions the baseline sits on the side the bars grow from.
+  const base = diverging ? "left-1/2" : rows.every((r) => r.net <= 0) ? "right-0" : "left-0";
   return (
     <div className="overflow-x-auto panel">
       <table className="data-table w-full min-w-[560px] text-sm">
@@ -348,12 +350,12 @@ function NationTable({ rows }: { rows: NationRow[] }) {
               <td className="px-3 py-1.5" aria-hidden>
                 {/* Up to the right, down to the left of the baseline (centred when both occur). */}
                 <span className="relative block h-2.5">
-                  <span className={`absolute inset-y-[-3px] w-px bg-fg-3/50 ${diverging ? "left-1/2" : "left-0"}`} />
+                  <span className={`absolute inset-y-[-3px] w-px bg-fg-3/50 ${base}`} />
                   <span
                     className={`absolute inset-y-0 ${
                       r.net >= 0
                         ? `${diverging ? "left-1/2" : "left-0"} rounded-r-[4px] bg-bad/80`
-                        : "right-1/2 rounded-l-[4px] bg-good/80"
+                        : `${diverging ? "right-1/2" : "right-0"} rounded-l-[4px] bg-good/80`
                     }`}
                     style={{ width: `${(Math.abs(avg(r)) / max) * half}%` }}
                   />

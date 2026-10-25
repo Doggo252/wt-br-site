@@ -50,14 +50,23 @@ export function parseQuery(q: string): { text: string; nation?: string; rank?: n
   for (const word of q.trim().split(/\s+/)) {
     const lower = word.toLowerCase();
     if (!nation && NATION_ALIASES[lower]) nation = NATION_ALIASES[lower];
-    else if (rank === undefined && /^\d{1,2}\.\d$/.test(word)) rank = Math.round((Number(word) - 1) * 3);
+    else if (rank === undefined && /^\d{1,2}\.\d$/.test(word) && formatBr(Math.round((Number(word) - 1) * 3)) === word)
+      // Only real BR steps ("6.7", not "6.5"), so it can't silently match a neighbour.
+      rank = Math.round((Number(word) - 1) * 3);
     else rest.push(word);
   }
   return { text: rest.join(" "), nation, rank };
 }
 
 function search(rows: Row[], q: string, limit = 8): Row[] {
-  const { text, nation, rank } = parseQuery(q);
+  const parsed = parseQuery(q);
+  const found = searchParsed(rows, parsed, limit);
+  // "QF 3.7 Ram": a name with a number in it. If the filters find nothing, search the words as text.
+  if (!found.length && (parsed.nation || parsed.rank !== undefined)) return searchParsed(rows, { text: q }, limit);
+  return found;
+}
+
+function searchParsed(rows: Row[], { text, nation, rank }: ReturnType<typeof parseQuery>, limit: number): Row[] {
   const nq = norm(text);
   if (!nq && nation === undefined && rank === undefined) return [];
   const scored: [number, Row][] = [];
@@ -143,8 +152,13 @@ export function SearchBox({
         onFocus={() => loadIndex().then((data) => setRows(data))}
         onChange={(e) => {
           const value = e.target.value;
-          if (rows.length) update(value);
-          else loadIndex().then((data) => (setRows(data), update(value, data)));
+          if (rows.length) return update(value);
+          // Keep what's typed while the index loads, then search the latest text.
+          setQ(value);
+          loadIndex().then((data) => {
+            setRows(data);
+            update(input.current?.value ?? value, data);
+          });
         }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={(e) => {

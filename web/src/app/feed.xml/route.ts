@@ -1,4 +1,4 @@
-import { formatBr } from "@/lib/br";
+import { MODES, MODE_LABEL, formatBr } from "@/lib/br";
 import { getUnitMap, getUpdate, getVersions } from "@/lib/data";
 import { plainName, plural } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
@@ -28,9 +28,11 @@ export function GET() {
     if (v.changes) parts.push(plural(v.changes, "BR change"));
     if (v.added) parts.push(`${plural(v.added, "vehicle")} added`);
     const rows = u.changes.slice(0, LISTED).map((c) => {
-      const [a, b] = [c.before.rb, c.after.rb];
-      const rb = a === b ? formatBr(b) : `${formatBr(a)} → ${formatBr(b)}`;
-      return `<li>${esc(name(c.id))}: Realistic ${rb}</li>`;
+      // Every mode that moved: an AB-only change must not read as "no change".
+      const moves = MODES.filter((m) => c.before[m] !== c.after[m])
+        .map((m) => `${MODE_LABEL[m]} ${formatBr(c.before[m])} → ${formatBr(c.after[m])}`)
+        .join(", ");
+      return `<li>${esc(name(c.id))}: ${moves}</li>`;
     });
     if (u.changes.length > LISTED) rows.push(`<li>…and ${u.changes.length - LISTED} more</li>`);
     if (u.added.length) rows.push(`<li>Added: ${esc(u.added.slice(0, LISTED).map(name).join(", "))}</li>`);

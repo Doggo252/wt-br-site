@@ -42,7 +42,8 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   const [branch, setBranch] = useState<Branch>("ground");
   const [nation, setNation] = useState("usa");
   const [wantRank, setRank] = useState(17);
-  const [focus, setFocus] = useState<number | null>(null);
+  // Selected bar as an offset from your BR, so it survives branch/nation/mode changes.
+  const [focusOffset, setFocusOffset] = useState<number | null>(null);
 
   useEffect(() => {
     const p = readParams();
@@ -63,6 +64,8 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
     ? ranks.reduce((best, r) => (Math.abs(r - wantRank) < Math.abs(best - wantRank) ? r : best))
     : wantRank;
 
+  const low = Math.max(0, rank - SPREAD);
+
   // Keep the URL shareable, with what is actually shown.
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -73,12 +76,13 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   }, [branch, nationList, rank]);
 
   const lineup = pool
-    .filter((r) => r[2] === nationList && r[col] <= rank && r[col] >= rank - SPREAD)
+    .filter((r) => r[2] === nationList && r[col] <= rank && r[col] >= low)
     .sort((a, b) => b[col] - a[col] || a[1].localeCompare(b[1]));
-  const steps = Array.from({ length: SPREAD * 2 + 1 }, (_, i) => rank - SPREAD + i);
+  // Nothing sits below BR 1.0 (rank 0).
+  const steps = Array.from({ length: SPREAD * 2 + 1 }, (_, i) => rank - SPREAD + i).filter((s) => s >= 0);
   const counts = steps.map((s) => pool.filter((r) => r[col] === s).length);
   const max = Math.max(1, ...counts);
-  const shown = focus ?? rank + SPREAD;
+  const shown = Math.max(0, rank + (focusOffset ?? SPREAD));
   const facing = pool.filter((r) => r[col] === shown);
   const byNation = new Map<string, Row[]>();
   for (const r of facing) byNation.set(r[2], [...(byNation.get(r[2]) ?? []), r]);
@@ -116,7 +120,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
             value={rank}
             onChange={(e) => {
               setRank(Number(e.target.value));
-              setFocus(null);
+              setFocusOffset(null);
             }}
             className={`${INPUT} tabular`}
           >
@@ -133,7 +137,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
       <section className="space-y-3">
         <h2 className="section-title">
           <Flag nation={nationList} className="h-4" />
-          Your lineup, {formatBr(rank - SPREAD)}–{formatBr(rank)}
+          Your lineup, {formatBr(low)}–{formatBr(rank)}
         </h2>
         <p className="text-sm text-fg-2">
           {lineup.length} {nationName(nationList)} {BRANCH_NAME[branch].toLowerCase()} vehicles you can bring without
@@ -164,7 +168,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
                   aria-pressed={selected}
                   title={`${formatBr(s)}: ${counts[i]} vehicles`}
                   aria-label={`BR ${formatBr(s)}: ${counts[i]} vehicles`}
-                  onClick={() => setFocus(s)}
+                  onClick={() => setFocusOffset(s - rank)}
                   className="group flex h-full flex-1 flex-col items-center justify-end gap-1"
                 >
                   <span className="text-xs tabular text-fg-2">{counts[i]}</span>
@@ -193,7 +197,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
                     ? "You"
                     : s === rank + SPREAD
                       ? "Full uptier"
-                      : s === rank - SPREAD
+                      : s === rank - SPREAD && s >= 0
                         ? "Full downtier"
                         : " "}
                 </span>

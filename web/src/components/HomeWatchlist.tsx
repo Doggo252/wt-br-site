@@ -34,6 +34,8 @@ export function HomeWatchlist() {
     .sort((a, b) => Number(b.r[col] !== b.w.br[mode]) - Number(a.r[col] !== a.w.br[mode]))
     .slice(0, MAX);
 
+  // Everything starred may have left the game; then there is nothing to show.
+  if (!items.length) return null;
   return (
     <section className="panel p-4 sm:p-5">
       <div className="mb-3 flex items-baseline justify-between gap-3">

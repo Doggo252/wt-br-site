@@ -97,7 +97,10 @@ export default async function UpdatePage({ params }: Params) {
       </header>
 
       {groups.length > 1 && (
-        <UpdateFilter nations={[...new Set(groups.map((g) => g.nation))]} ids={u.changes.map((c) => c.id)} />
+        <UpdateFilter
+          nations={[...new Set(groups.map((g) => g.nation))]}
+          ids={[...u.changes.map((c) => c.id), ...u.added, ...u.removed]}
+        />
       )}
 
       {BRANCHES.filter((b) => groups.some((g) => g.branch === b)).map((b) => (
@@ -199,14 +202,14 @@ function UnitGrid({
   removed?: boolean;
 }) {
   return (
-    <section>
+    <section data-branch={title.toLowerCase()}>
       <h2 className="section-title mb-3">{title}</h2>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
         {ids.map((id) => {
           const u = units.get(id);
           if (!u) return null;
           return (
-            <li key={id}>
+            <li key={id} data-nation={units.get(id)?.nation} data-unit={id}>
               <UnitCard
                 name={u.name}
                 rank={u.br.rb}
