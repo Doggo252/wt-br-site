@@ -402,6 +402,8 @@ The daily job's status, plus an uptime check.
 | ControlNet IDs don't match | Manual alias file. Show the pre-2020 period as "approximate" if needed. |
 | Hosting bandwidth (Firebase Spark limits) | Serve WebP at fixed sizes, cache for long periods, move to Blaze at launch. |
 | Scope creep (air, naval, stats depth) | Strict build order. Air waits for step 5. |
+| Build output is about 1 GB, mostly ~400 KB per vehicle page (HTML plus Next's RSC payload, written twice). Every page shows the data version, so each daily deploy re-uploads all of them | Pages compress to ~17 KB. If deploys get slow, drop the version line from vehicle pages so unchanged vehicles keep their hash, or trim the payload. |
+| The October 2026 announcement page is 2.7 MB of HTML (620 rows) | 68 KB gzipped, so acceptable for now. Split by branch tab or paginate if mobile parsing feels slow. |
 
 ---
 
