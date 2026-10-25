@@ -533,7 +533,8 @@ function AirStatGrid({ u }: { u: UnitDetail }) {
 function titleQualifier(u: UnitDetail): string {
   const name = plainName(u.name);
   const twins = getIndex().filter((o) => o.id !== u.id && o.nation === u.nation && plainName(o.name) === name);
-  if (!twins.length) return nationName(u.nation);
+  // The one tech tree vehicle among same-named copies keeps the plain title.
+  if (!twins.length || (u.status === "tree" && twins.every((o) => o.status !== "tree"))) return nationName(u.nation);
   const extra = twins.every((o) => o.status !== u.status) && u.status !== "tree" ? STATUS_LABEL[u.status] : u.id;
   return `${nationName(u.nation)}, ${extra}`;
 }
