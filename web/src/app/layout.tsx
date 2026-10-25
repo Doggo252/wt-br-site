@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: "Uptier — War Thunder BR history", template: "%s · Uptier" },
   description: "Battle Rating history for every War Thunder vehicle, patch by patch.",
+  openGraph: {
+    siteName: "Uptier",
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Uptier: every BR change, patch by patch." }],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
