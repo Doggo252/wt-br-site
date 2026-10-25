@@ -23,7 +23,7 @@ export default function UpdatesPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Updates</h1>
+      <h1 className="text-4xl font-bold">Updates</h1>
       <p className="mt-2 max-w-2xl text-fg-2">
         Every game version since March 2020 that changed a Battle Rating, or added or removed a vehicle. Counts are
         Realistic Battles uptiers and downtiers. Dates are when the version appeared in the datamine.
@@ -31,17 +31,17 @@ export default function UpdatesPage() {
       <div className="mt-8 space-y-8">
         {[...byMajor.entries()].map(([major, list]) => (
           <section key={major} aria-labelledby={`m-${major}`}>
-            <h2 id={`m-${major}`} className="mb-2 font-display text-lg font-semibold text-fg-2">
+            <h2 id={`m-${major}`} className="section-title mb-3">
               Update {major}
             </h2>
-            <ul className="divide-y divide-card-border border border-card-border bg-panel">
+            <ul className="divide-y divide-card-border panel">
               {list.map((v) => (
                 <li key={v.v}>
                   <Link
                     href={`/updates/${v.v}/`}
                     className="flex flex-wrap items-baseline gap-x-6 gap-y-1 px-3 py-2 no-underline hover:bg-header"
                   >
-                    <span className="w-28 font-display tabular text-link">{v.v}</span>
+                    <span className="w-28 font-display font-semibold tabular text-fg">{v.v}</span>
                     <span className="w-24 text-sm tabular text-fg-3">{v.d}</span>
                     <span className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
                       {BRANCHES.filter((b) => {

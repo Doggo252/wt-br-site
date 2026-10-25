@@ -113,7 +113,7 @@ export function SearchBox({
         <ul
           id={listId}
           role="listbox"
-          className="absolute right-0 z-50 mt-1 w-full min-w-72 border border-card-border bg-panel shadow-xl"
+          className="absolute right-0 z-50 mt-1 w-full min-w-72 panel shadow-xl"
         >
           {results.map((r, i) => (
             <li

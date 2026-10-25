@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BrBadge } from "@/components/BrBadge";
 import { BrStepChart } from "@/components/BrStepChart";
 import { ChangeLog } from "@/components/ChangeLog";
 import { ChangeCell, OutcomeChip, rowOutcome } from "@/components/OfficialChanges";
@@ -10,6 +9,7 @@ import { ThermalChip } from "@/components/ThermalChip";
 import { MODES, MODE_LABEL, MODE_NAME, formatBr, type Mode } from "@/lib/br";
 import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getUnit } from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
+import { Flag } from "@/components/Flag";
 import { treeHref } from "@/lib/branches";
 import { plural } from "@/lib/format";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
@@ -40,11 +40,11 @@ const STATUS_LABEL: Record<UnitDetail["status"], string> = {
   event: "Event",
 };
 
-const STATUS_COLOR: Record<UnitDetail["status"], string> = {
-  tree: "text-fg-2",
-  premium: "text-premium",
-  squadron: "text-squadron",
-  event: "text-premium",
+const STATUS_CHIP: Record<UnitDetail["status"], string> = {
+  tree: "border-[#3a4650] text-fg-2",
+  premium: "border-premium/60 text-premium",
+  squadron: "border-squadron/60 text-squadron",
+  event: "border-premium/60 text-premium",
 };
 
 const CREWS: CrewRole[] = ["commander", "gunner", "driver"];
@@ -74,60 +74,98 @@ export default async function VehiclePage({ params }: Params) {
 
   return (
     <article className="space-y-10">
-      <header className="grid gap-6 md:grid-cols-[minmax(0,512px)_1fr] md:items-center">
-        <div className="relative aspect-[2/1] w-full border border-card-border bg-panel">
-          {u.image && (
-            // eslint-disable-next-line @next/next/no-img-element -- static export
-            <img src={`/img/units/${id}.webp`} alt={u.name} className="h-full w-full object-contain" />
-          )}
+      <header className="relative left-1/2 -mt-8 w-screen -translate-x-1/2 overflow-hidden border-b border-[#232b31] sm:-mt-10">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {/* The nation's flag, huge and faint, behind everything. */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- static export */}
+          <img
+            src={`/img/flags/${u.nation}.svg`}
+            alt=""
+            className="absolute -left-[8%] top-1/2 h-[160%] w-auto -translate-y-1/2 opacity-[0.06] blur-[2px] [mask-image:linear-gradient(90deg,black,transparent_70%)]"
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_70%_at_28%_55%,rgb(255_255_255/0.07),transparent_70%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--color-bg)] to-transparent" />
         </div>
-        <div>
-          <p className="text-sm text-fg-3">
-            <Link href={treeHref(u.branch, u.nation)} className="text-fg-2 hover:text-fg">
-              {nationName(u.nation)}
-            </Link>
-            {u.operator && <> · {nationName(u.operator)}</>} · Rank {roman(u.rank)} · {TYPE_NAME[u.type]}
-          </p>
-          <h1 className="mt-1 text-4xl font-bold leading-tight">{u.name}</h1>
-          {u.fullName !== u.name && <p className="mt-1 text-fg-2">{u.fullName}</p>}
-          <p className="mt-2 text-sm">
-            <span className={STATUS_COLOR[u.status]}>{STATUS_LABEL[u.status]}</span>
-            {u.removedIn ? (
-              <span className="text-bad"> · removed in update {u.removedIn}</span>
-            ) : (
-              u.hidden && <span className="text-fg-3"> · not currently obtainable</span>
+        <div className="relative mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[minmax(0,1.1fr)_1fr] md:items-center md:py-12">
+          <div className="relative aspect-[2/1] w-full">
+            {u.image && (
+              // eslint-disable-next-line @next/next/no-img-element -- static export
+              <img
+                src={`/img/units/${id}.webp`}
+                alt={u.name}
+                className={`h-full w-full object-contain drop-shadow-[0_20px_24px_rgb(0_0_0/0.75)] ${u.removedIn ? "grayscale" : ""}`}
+              />
             )}
-          </p>
-          <dl className="mt-5 grid max-w-sm grid-cols-3 border border-card-border bg-panel">
-            {MODES.map((m) => (
-              <div key={m} className="border-r border-card-border px-3 py-2 last:border-r-0">
-                <dt className="text-xs text-fg-3">{MODE_NAME[m]}</dt>
-                <dd>
-                  <BrBadge rank={u.br[m]} size="lg" />
-                </dd>
-              </div>
-            ))}
-          </dl>
-          {u.groundBattleRb != null && (u.groundBattleRb !== u.br.rb || (u.groundBattleSb ?? u.br.sb) !== u.br.sb) && (
-            <p className="mt-2 text-sm text-fg-2">
-              In ground battles: RB <span className="font-display tabular text-fg">{formatBr(u.groundBattleRb)}</span>
-              {u.groundBattleSb != null && (
-                <>
-                  {" "}
-                  · SB <span className="font-display tabular text-fg">{formatBr(u.groundBattleSb)}</span>
-                </>
+            {/* Floor shadow. */}
+            <div aria-hidden className="absolute inset-x-[12%] bottom-[6%] h-[10%] rounded-[50%] bg-black/50 blur-xl" />
+          </div>
+          <div>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-fg-3">
+              <Link href={treeHref(u.branch, u.nation)} className="inline-flex items-center gap-1.5 text-fg-2 hover:text-fg">
+                <Flag nation={u.nation} className="h-3.5" />
+                {nationName(u.nation)}
+              </Link>
+              {u.operator && (
+                <span className="inline-flex items-center gap-1.5">
+                  · <Flag nation={u.operator} className="h-3" /> {nationName(u.operator)}
+                </span>
+              )}
+              <span>· Rank {roman(u.rank)}</span>
+              <span>· {TYPE_NAME[u.type]}</span>
+            </p>
+            <h1 className="mt-2 text-4xl font-bold leading-none sm:text-5xl">{u.name}</h1>
+            {u.fullName !== u.name && <p className="mt-2 text-fg-2">{u.fullName}</p>}
+            <p className="mt-3 flex flex-wrap gap-2 text-xs">
+              <span className={`border px-2 py-0.5 font-display uppercase tracking-wider ${STATUS_CHIP[u.status]}`}>
+                {STATUS_LABEL[u.status]}
+              </span>
+              {u.removedIn ? (
+                <span className="border border-bad/50 px-2 py-0.5 font-display uppercase tracking-wider text-bad">
+                  Removed in {u.removedIn}
+                </span>
+              ) : (
+                u.hidden && (
+                  <span className="border border-[#3a4650] px-2 py-0.5 font-display uppercase tracking-wider text-fg-3">
+                    Not obtainable
+                  </span>
+                )
               )}
             </p>
-          )}
+            <dl className="mt-6 grid max-w-md grid-cols-3 gap-2">
+              {MODES.map((m) => (
+                <div
+                  key={m}
+                  className="border border-[#2f3a42] bg-black/30 px-3 pb-2 pt-1.5 shadow-[inset_0_2px_0_var(--mode-color)]"
+                  style={{ ["--mode-color" as string]: `var(--color-mode-${m})` }}
+                >
+                  <dt className="font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-3">
+                    {MODE_NAME[m]}
+                  </dt>
+                  <dd className="font-display text-3xl font-bold tabular text-fg">{formatBr(u.br[m])}</dd>
+                </div>
+              ))}
+            </dl>
+            {u.groundBattleRb != null && (u.groundBattleRb !== u.br.rb || (u.groundBattleSb ?? u.br.sb) !== u.br.sb) && (
+              <p className="mt-3 text-sm text-fg-2">
+                In ground battles: RB <span className="font-display tabular text-fg">{formatBr(u.groundBattleRb)}</span>
+                {u.groundBattleSb != null && (
+                  <>
+                    {" "}
+                    · SB <span className="font-display tabular text-fg">{formatBr(u.groundBattleSb)}</span>
+                  </>
+                )}
+              </p>
+            )}
+          </div>
         </div>
       </header>
 
       {devChange && (
         <Link
           href="/dev/"
-          className="block border border-card-premium-border bg-card-premium-bg px-4 py-3 text-sm no-underline hover:brightness-110"
+          className="callout-gold block px-4 py-3 text-sm hover:brightness-110"
         >
-          <span className="font-display uppercase tracking-wide text-gold">Dev server {devVersion}</span>{" "}
+          <span className="eyebrow">Dev server {devVersion}</span>{" "}
           <span className="text-fg">
             {MODES.filter((m) => devChange.before[m] !== devChange.after[m])
               .map((m) => `${MODE_NAME[m]} ${formatBr(devChange.before[m])} → ${formatBr(devChange.after[m])}`)
@@ -140,9 +178,9 @@ export default async function VehiclePage({ params }: Params) {
       {plannedNow && (
         <Link
           href={`/announcements/${plannedNow.a.id}/`}
-          className="block border border-card-premium-border bg-card-premium-bg px-4 py-3 text-sm no-underline hover:brightness-110"
+          className="callout-gold block px-4 py-3 text-sm hover:brightness-110"
         >
-          <span className="font-display uppercase tracking-wide text-gold">Planned by Gaijin</span>{" "}
+          <span className="eyebrow">Planned by Gaijin</span>{" "}
           <span className="text-fg">
             {(["ab", "rb", "sb"] as const)
               .filter((m) => plannedNow.change.outcome?.[m] === "pending" && plannedNow.change[m])
@@ -195,7 +233,7 @@ export default async function VehiclePage({ params }: Params) {
 
       {announced.length > 0 && (
         <Section title="Official announcements">
-          <ul className="divide-y divide-card-border border border-card-border bg-panel text-sm">
+          <ul className="divide-y divide-card-border panel text-sm">
             {announced.map(({ a, change }) => {
               const o = rowOutcome(change);
               return (
@@ -271,7 +309,7 @@ function HistorySummary({ u }: { u: UnitDetail }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-3 text-xl font-semibold">{title}</h2>
+      <h2 className="section-title mb-4">{title}</h2>
       {children}
     </section>
   );
@@ -343,7 +381,7 @@ function StatGrid({ u }: { u: UnitDetail }) {
   ];
   return (
     <>
-      <dl className="divide-y divide-card-border border border-card-border bg-panel">
+      <dl className="divide-y divide-card-border panel">
         {rows
           .filter((r): r is [string, string] => r[1] !== null)
           .map(([k, v]) => (
@@ -371,7 +409,7 @@ function AirStatGrid({ u }: { u: UnitDetail }) {
     ["Crew", s.crew != null ? String(s.crew) : null],
   ];
   return (
-    <dl className="divide-y divide-card-border border border-card-border bg-panel">
+    <dl className="divide-y divide-card-border panel">
       {rows
         .filter((r): r is [string, string] => r[1] !== null)
         .map(([k, v]) => (

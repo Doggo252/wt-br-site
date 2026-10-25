@@ -18,7 +18,7 @@ const PAGES = [
   ["/vehicle/germ_pzkpfw_VI_ausf_h1_tiger/", "Battle Rating history"],
   ["/vehicle/p-51d-5/", "Flight performance"],
   ["/updates/", "Updates"],
-  ["/records/", "RB kill records"],
+  ["/records/", "Kill records"],
   ["/explore/", "Biggest moves"],
   ["/dev/", "Dev server"],
   ["/about/", "About Uptier"],

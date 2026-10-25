@@ -81,7 +81,7 @@ export function BrStepChart({ history, asOf, planned }: Props) {
   }
 
   return (
-    <figure className="border border-card-border bg-panel p-3 sm:p-4">
+    <figure className="panel p-3 sm:p-4">
       <figcaption className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         {MODES.map((m) => (
           <button

@@ -37,7 +37,7 @@ export default async function AnnouncementPage({ params }: Params) {
         <p className="mb-2 text-sm">
           <Link href="/announcements/">All announcements</Link>
         </p>
-        <h1 className="text-3xl font-bold">{a.title}</h1>
+        <h1 className="text-4xl font-bold">{a.title}</h1>
         <p className="mt-1 text-fg-2">
           Posted {a.date} · {plural(changes.length, "vehicle")} ·{" "}
           <a href={a.url} rel="noopener">
@@ -53,7 +53,7 @@ export default async function AnnouncementPage({ params }: Params) {
         if (!rows.length) return null;
         return (
           <section key={b}>
-            <h2 className="mb-2 text-xl font-semibold">
+            <h2 className="section-title mb-2">
               {BRANCH_NAME[b]} <span className="text-fg-3">· {rows.length}</span>
             </h2>
             <OfficialChangeTable

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { nationName } from "@/lib/nations";
+import { Flag } from "./Flag";
+import { Thumb } from "./Thumb";
 
 export type RecordItem = {
   id?: string | null;
@@ -12,6 +14,7 @@ export type RecordItem = {
   player?: string | null;
   br?: string | null;
   patch?: string | null;
+  image?: boolean;
 };
 
 type Sort = "kills" | "br" | "name";
@@ -42,7 +45,7 @@ export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: s
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-4 border border-card-border bg-panel p-3">
+      <div className="flex flex-wrap items-end gap-4 panel p-3">
         <label className="flex flex-col gap-1 text-xs text-fg-3">
           Nation
           <select value={nation} onChange={(e) => setNation(e.target.value)} className={INPUT}>
@@ -74,9 +77,9 @@ export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: s
       <p className="text-sm text-fg-3" aria-live="polite">
         {shown.length} rows
       </p>
-      <div className="overflow-x-auto border border-card-border bg-panel">
-        <table className="w-full min-w-[600px] text-sm">
-          <thead className="bg-header text-left font-display text-xs uppercase tracking-wide text-fg-3">
+      <div className="overflow-x-auto panel">
+        <table className="data-table w-full min-w-[600px] text-sm">
+          <thead>
             <tr>
               <th className="px-3 py-2 text-right font-semibold">Kills</th>
               <th className="px-3 py-2 font-semibold">Vehicle</th>
@@ -92,10 +95,18 @@ export function RecordsTable({ rows, nations }: { rows: RecordItem[]; nations: s
                 <td className="px-3 py-1.5 text-right font-display text-base font-semibold tabular text-gold">
                   {r.kills ?? <span className="text-sm font-normal text-fg-3">open</span>}
                 </td>
-                <td className="px-3 py-1.5 font-display">
-                  {r.id ? <Link href={`/vehicle/${r.id}/`}>{r.name}</Link> : r.name}
+                <td className="px-3 py-1 font-display">
+                  <span className="flex items-center gap-2">
+                    {r.id && <Thumb id={r.id} image={r.image} />}
+                    {r.id ? <Link href={`/vehicle/${r.id}/`}>{r.name}</Link> : r.name}
+                  </span>
                 </td>
-                <td className="px-3 py-1.5 text-fg-2">{nationName(r.nation)}</td>
+                <td className="px-3 py-1.5 text-fg-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Flag nation={r.nation} className="h-3" />
+                    {nationName(r.nation)}
+                  </span>
+                </td>
                 <td className="px-3 py-1.5 text-right font-display tabular">{r.br}</td>
                 <td className="px-3 py-1.5 text-fg-2">{r.player}</td>
                 <td className="px-3 py-1.5 tabular text-fg-3">{r.patch}</td>

@@ -93,7 +93,7 @@ export default function DesignPage() {
   return (
     <div className="space-y-14">
       <header>
-        <h1 className="text-3xl font-bold">Design system</h1>
+        <h1 className="text-4xl font-bold">Design system</h1>
         <p className="mt-2 max-w-2xl text-fg-2">
           Uptier copies War Thunder&apos;s own UI. Colors come from <code>gui/const/colors.css</code> and{" "}
           <code>gui/csselems/unitcard.css</code> in the datamine. The site is dark only.
@@ -116,7 +116,7 @@ export default function DesignPage() {
       </Section>
 
       <Section title="Typography" note="Fira Sans Condensed for headings, cards and numbers. PT Sans for body text.">
-        <div className="space-y-4 border border-card-border bg-panel p-5">
+        <div className="space-y-4 panel p-5">
           <p className="font-display text-4xl font-bold">Fira Sans Condensed 700</p>
           <p className="font-display text-2xl font-semibold">Fira Sans Condensed 600: Tiger H1 → 6.7</p>
           <p className="font-display text-lg">
@@ -137,7 +137,7 @@ export default function DesignPage() {
       >
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {CARD_STATES.map((s) => (
-            <div key={s.name} className="border border-card-border bg-panel p-3 text-xs">
+            <div key={s.name} className="panel p-3 text-xs">
               <div className="mb-2 font-display text-sm font-semibold">{s.name}</div>
               {(["bg", "border", "top"] as const).map((k) => (
                 <div key={k} className="flex items-center gap-2 font-mono text-fg-2">
@@ -164,7 +164,7 @@ export default function DesignPage() {
       </Section>
 
       <Section title="BR badge" note="Takes the raw economic rank. BR = rank / 3 + 1.">
-        <div className="flex flex-wrap items-baseline gap-8 border border-card-border bg-panel p-5">
+        <div className="flex flex-wrap items-baseline gap-8 panel p-5">
           <BrBadge rank={15} size="lg" />
           <BrBadge rank={15} mode="rb" />
           <BrBadge rank={16} mode="rb" fromRank={15} />
@@ -174,7 +174,7 @@ export default function DesignPage() {
       </Section>
 
       <Section title="Mode toggle" note="Keyboard: Tab to focus, arrow keys to switch.">
-        <div className="border border-card-border bg-panel p-5">
+        <div className="panel p-5">
           <ModeToggleDemo />
         </div>
       </Section>
@@ -183,7 +183,7 @@ export default function DesignPage() {
         title="Thermal chips"
         note="One per crew position. 500×300 = Gen 1, 800×600 = Gen 2, 1200×800 = Gen 3. Unmapped resolutions show raw."
       >
-        <div className="space-y-3 border border-card-border bg-panel p-5">
+        <div className="space-y-3 panel p-5">
           <div className="flex flex-wrap gap-2">
             <ThermalChip crew="commander" sight={{ kind: "thermal", gen: 3, resolution: [1200, 800] }} />
             <ThermalChip crew="gunner" sight={{ kind: "thermal", gen: 2, resolution: [800, 600] }} />
@@ -201,7 +201,7 @@ export default function DesignPage() {
         title="Name glyphs"
         note={'The game draws these from symbols_skyquake.ttf, loaded here as "WTSymbols" with a unicode-range.'}
       >
-        <div className="space-y-4 border border-card-border bg-panel p-5">
+        <div className="space-y-4 panel p-5">
           <GlyphFontStatus />
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2">
             {GLYPHS.map((g) => (
@@ -235,7 +235,7 @@ function Section({ title, note, children }: { title: string; note?: string; chil
   const id = title.toLowerCase().replace(/\s+/g, "-");
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-16">
-      <h2 id={`${id}-h`} className="text-xl font-semibold">
+      <h2 id={`${id}-h`} className="section-title">
         {title}
       </h2>
       {note && <p className="mb-4 mt-1 text-sm text-fg-2">{note}</p>}
@@ -257,7 +257,7 @@ function Swatch({
 }) {
   const ratio = contrastRatio(value, "#11141A");
   return (
-    <div className="border border-card-border bg-panel">
+    <div className="panel">
       <div className="h-14 border-b border-card-border" style={{ background: value }} />
       <div className="space-y-0.5 p-2 text-xs">
         <div className="font-display text-sm font-semibold">{name}</div>

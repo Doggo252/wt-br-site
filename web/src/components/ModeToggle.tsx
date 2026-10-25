@@ -33,7 +33,7 @@ export function ModeToggle({ value, onChange }: Props) {
       role="radiogroup"
       aria-label="Game mode"
       onKeyDown={onKeyDown}
-      className="inline-flex border border-card-border bg-panel p-0.5"
+      className="inline-flex panel p-0.5"
     >
       {MODES.map((mode, i) => {
         const active = mode === value;

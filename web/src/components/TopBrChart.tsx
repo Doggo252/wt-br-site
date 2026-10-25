@@ -13,7 +13,7 @@ export function TopBrChart({ data }: { data: TopBrPoint[] }) {
     years.push(Date.UTC(y, 0, 1));
   }
   return (
-    <figure className="border border-card-border bg-panel p-3 sm:p-4">
+    <figure className="panel p-3 sm:p-4">
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>

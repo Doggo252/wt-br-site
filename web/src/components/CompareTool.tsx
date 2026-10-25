@@ -106,7 +106,7 @@ export function CompareTool() {
           {ids.map((id, i) => (
             <li
               key={id}
-              className="inline-flex items-center gap-2 border border-card-border bg-panel py-1 pl-2 pr-1 text-sm"
+              className="inline-flex items-center gap-2 panel py-1 pl-2 pr-1 text-sm"
             >
               <svg width="22" height="8" aria-hidden="true">
                 <line x1="0" x2="22" y1="4" y2="4" stroke={SERIES[i].color} strokeWidth="2.5" strokeDasharray={SERIES[i].dash} />
@@ -137,7 +137,7 @@ export function CompareTool() {
           Add vehicles above to see their {MODE_NAME[mode]} BR history on one chart.
         </p>
       ) : (
-        <figure className="border border-card-border bg-panel p-3 sm:p-4">
+        <figure className="panel p-3 sm:p-4">
           <figcaption className="sr-only">{MODE_NAME[mode]} BR over time</figcaption>
           <div className="h-72 sm:h-96">
             <ResponsiveContainer width="100%" height="100%">
@@ -215,8 +215,8 @@ export function CompareTool() {
       )}
 
       {shown.length > 0 && (
-        <table className="w-full border border-card-border bg-panel text-sm">
-          <thead className="bg-header text-left font-display text-xs uppercase tracking-wide text-fg-3">
+        <table className="data-table w-full panel text-sm">
+          <thead>
             <tr>
               <th className="px-3 py-2 font-semibold">Vehicle</th>
               <th className="px-3 py-2 text-right font-semibold">First {mode.toUpperCase()}</th>

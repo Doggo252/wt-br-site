@@ -18,7 +18,7 @@ export default function DevPage() {
   if (!dev) {
     return (
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-bold">Dev server preview</h1>
+        <h1 className="text-4xl font-bold">Dev server preview</h1>
         <p className="mt-3 text-fg-2">
           There is no dev-server build in the datamine right now. Before a major update, Gaijin opens a dev server with
           the new version; while it is up, this page lists the BR changes and new vehicles it contains compared with the
@@ -36,7 +36,7 @@ export default function DevPage() {
     <div className="space-y-8">
       <header>
         <p className="font-display text-sm uppercase tracking-wide text-gold">Not live yet</p>
-        <h1 className="text-3xl font-bold">Dev server {dev.v}</h1>
+        <h1 className="text-4xl font-bold">Dev server {dev.v}</h1>
         <p className="mt-2 max-w-2xl text-fg-2">
           Compared with live update <span className="tabular">{dev.base}</span>, seen in the datamine on {dev.d}.
           Dev-server values often change again before release.
@@ -47,12 +47,12 @@ export default function DevPage() {
         if (!rows.length) return null;
         return (
           <section key={b}>
-            <h2 className="mb-2 text-xl font-semibold">
+            <h2 className="section-title mb-2">
               {BRANCH_NAME[b]} <span className="text-fg-3">· {plural(rows.length, "BR change")}</span>
             </h2>
-            <div className="overflow-x-auto border border-card-border bg-panel">
-              <table className="w-full min-w-[560px] text-sm">
-                <thead className="bg-header text-left font-display text-xs uppercase tracking-wide text-fg-3">
+            <div className="overflow-x-auto panel">
+              <table className="data-table w-full min-w-[560px] text-sm">
+                <thead>
                   <tr>
                     <th className="px-3 py-2 font-semibold">Vehicle</th>
                     {MODES.map((m) => (
@@ -100,10 +100,10 @@ export default function DevPage() {
       })}
       {added.length > 0 && (
         <section>
-          <h2 className="mb-2 text-xl font-semibold">New vehicles ({added.length})</h2>
+          <h2 className="section-title mb-2">New vehicles ({added.length})</h2>
           <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
             {added.map(([id, u]) => (
-              <li key={id} className="flex justify-between gap-3 border border-card-border bg-panel px-3 py-1.5 text-sm">
+              <li key={id} className="flex justify-between gap-3 panel px-3 py-1.5 text-sm">
                 <span className="font-display">{u.name}</span>
                 <span className="text-fg-3">
                   {nationName(u.nation)} · <span className="tabular text-fg-2">{formatBr(u.br.rb)}</span>

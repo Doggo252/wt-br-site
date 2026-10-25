@@ -7,6 +7,10 @@ import { BRANCHES, BRANCH_NAME, type Branch } from "@/lib/branches";
 import { getUnitMap, getUpdate, getVersions, nationsOf } from "@/lib/data";
 import type { BrChange, UnitSummary } from "@/lib/data.gen";
 import { nationName } from "@/lib/nations";
+import { BranchIcon } from "@/components/BranchIcon";
+import { Flag } from "@/components/Flag";
+import { Thumb } from "@/components/Thumb";
+import { plural } from "@/lib/format";
 
 export const dynamicParams = false;
 
@@ -43,37 +47,67 @@ export default async function UpdatePage({ params }: Params) {
 
   return (
     <div className="space-y-8">
-      <header>
-        <nav className="mb-2 flex justify-between text-sm">
-          {u.prev ? <Link href={`/updates/${u.prev}/`}>← {u.prev}</Link> : <span />}
-          <Link href="/updates/">All updates</Link>
-          {u.next ? <Link href={`/updates/${u.next}/`}>{u.next} →</Link> : <span />}
-        </nav>
-        <h1 className="text-3xl font-bold">Update {version}</h1>
-        <p className="mt-1 text-fg-2">
-          {u.d} · {u.changes.length} BR change{u.changes.length === 1 ? "" : "s"}
-          {u.changes.length > 0 && (
-            <>
-              {" "}
-              (RB: <span className="text-bad">{up} up</span>, <span className="text-good">{down} down</span>)
-            </>
+      <header className="space-y-4">
+        <nav className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          {u.prev ? (
+            <Link href={`/updates/${u.prev}/`} className="btn">
+              ← {u.prev}
+            </Link>
+          ) : (
+            <span />
           )}
-          {u.added.length > 0 && <> · {u.added.length} added</>}
-          {u.removed.length > 0 && <> · {u.removed.length} removed</>}
-        </p>
-        {!u.prev && (
-          <p className="mt-2 text-sm text-fg-3">This is the first version in the datamine, used as the baseline.</p>
-        )}
+          <Link href="/updates/" className="text-fg-3 hover:text-fg">
+            All updates
+          </Link>
+          {u.next ? (
+            <Link href={`/updates/${u.next}/`} className="btn">
+              {u.next} →
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+        <div>
+          <p className="eyebrow">Game version · {u.d}</p>
+          <h1 className="mt-1 text-4xl font-bold sm:text-5xl">Update {version}</h1>
+        </div>
+        <div className="flex flex-wrap gap-2 font-display text-sm font-semibold">
+          <span className="border border-[#2f3a42] bg-black/25 px-2.5 py-1 tabular">{plural(u.changes.length, "BR change")}</span>
+          {up > 0 && (
+            <span className="inline-flex items-center gap-1 border border-[#2f3a42] bg-black/25 px-2.5 py-1 tabular text-bad">
+              <Arrow dir="up" /> {up} RB up
+            </span>
+          )}
+          {down > 0 && (
+            <span className="inline-flex items-center gap-1 border border-[#2f3a42] bg-black/25 px-2.5 py-1 tabular text-good">
+              <Arrow dir="down" /> {down} RB down
+            </span>
+          )}
+          {u.added.length > 0 && (
+            <span className="border border-[#2f3a42] bg-black/25 px-2.5 py-1 tabular text-fg-2">+{u.added.length} added</span>
+          )}
+          {u.removed.length > 0 && (
+            <span className="border border-[#2f3a42] bg-black/25 px-2.5 py-1 tabular text-fg-3">{u.removed.length} removed</span>
+          )}
+        </div>
+        {!u.prev && <p className="text-sm text-fg-3">This is the first version in the datamine, used as the baseline.</p>}
       </header>
 
       {BRANCHES.filter((b) => groups.some((g) => g.branch === b)).map((b) => (
         <section key={b} className="space-y-6">
-          <h2 className="border-b border-card-border pb-1 text-2xl font-semibold">{BRANCH_NAME[b]}</h2>
+          <h2 className="section-title">
+            <BranchIcon branch={b} className="h-5 w-5 text-fg-3" />
+            {BRANCH_NAME[b]}
+          </h2>
           {groups
             .filter((g) => g.branch === b)
             .map((g) => (
               <div key={g.nation}>
-                <h3 className="mb-2 text-lg font-semibold">{nationName(g.nation)}</h3>
+                <h3 className="mb-2 flex items-center gap-2 font-display text-lg font-semibold">
+                  <Flag nation={g.nation} className="h-4" />
+                  {nationName(g.nation)}
+                  <span className="text-sm font-normal text-fg-3">{g.changes.length}</span>
+                </h3>
                 <DiffTable changes={g.changes} units={units} />
               </div>
             ))}
@@ -93,9 +127,9 @@ export default async function UpdatePage({ params }: Params) {
 function DiffTable({ changes, units }: { changes: BrChange[]; units: Map<string, UnitSummary> }) {
   const sorted = [...changes].sort((a, b) => a.after.rb - b.after.rb);
   return (
-    <div className="overflow-x-auto border border-card-border bg-panel">
-      <table className="w-full min-w-[560px] text-sm">
-        <thead className="bg-header text-left font-display text-xs uppercase tracking-wide text-fg-3">
+    <div className="overflow-x-auto panel">
+      <table className="data-table w-full min-w-[560px] text-sm">
+        <thead>
           <tr>
             <th className="px-3 py-2 font-semibold">Vehicle</th>
             {MODES.map((m) => (
@@ -110,8 +144,9 @@ function DiffTable({ changes, units }: { changes: BrChange[]; units: Map<string,
             const unit = units.get(c.id);
             return (
               <tr key={c.id}>
-                <td className="px-3 py-1.5">
-                  <Link href={`/vehicle/${c.id}/`} className="font-display">
+                <td className="px-3 py-1">
+                  <Link href={`/vehicle/${c.id}/`} className="flex items-center gap-2 font-display">
+                    <Thumb id={c.id} image={unit?.image} />
                     {unit?.name ?? c.id}
                   </Link>
                 </td>
@@ -158,7 +193,7 @@ function UnitGrid({
 }) {
   return (
     <section>
-      <h2 className="mb-3 text-xl font-semibold">{title}</h2>
+      <h2 className="section-title mb-3">{title}</h2>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
         {ids.map((id) => {
           const u = units.get(id);

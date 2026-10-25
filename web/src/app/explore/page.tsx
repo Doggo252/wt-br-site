@@ -9,7 +9,8 @@ import { UpDownChart, type UpDownRow } from "@/components/UpDownChart";
 import { formatBr, formatBrDelta, rankToBr } from "@/lib/br";
 import { getIndex, getUnit, getVersions, nationsOf, type Version } from "@/lib/data";
 import type { UnitDetail } from "@/lib/data.gen";
-import { nationName } from "@/lib/nations";
+import { Flag } from "@/components/Flag";
+import { Thumb } from "@/components/Thumb";
 
 export const metadata: Metadata = {
   title: "Explore",
@@ -56,22 +57,22 @@ export default function ExplorePage() {
   return (
     <div className="space-y-14">
       <header>
-        <h1 className="text-3xl font-bold">Explore</h1>
+        <h1 className="text-4xl font-bold">Explore</h1>
         <p className="mt-2 max-w-2xl text-fg-2">
           Realistic Battles BR moves since March 2020 (or since a vehicle was added), and tools for finding vehicles.
         </p>
-        <nav className="mt-3 flex flex-wrap gap-x-4 text-sm">
-          <a href="#movers">Biggest moves</a>
-          <a href="#most-changed">Most changed</a>
-          <a href="#thermals">Thermal finder</a>
-          <a href="#by-year">By year</a>
-          <a href="#top-br">Top BR over time</a>
-          <Link href="/compare/">Compare vehicles</Link>
+        <nav className="mt-4 flex flex-wrap gap-2 text-sm">
+          <a className="btn" href="#movers">Biggest moves</a>
+          <a className="btn" href="#most-changed">Most changed</a>
+          <a className="btn" href="#thermals">Thermal finder</a>
+          <a className="btn" href="#by-year">By year</a>
+          <a className="btn" href="#top-br">Top BR over time</a>
+          <Link className="btn" href="/compare/">Compare vehicles</Link>
         </nav>
       </header>
 
       <section id="movers" className="scroll-mt-16">
-        <h2 className="mb-1 text-xl font-semibold">Biggest moves</h2>
+        <h2 className="section-title mb-1">Biggest moves</h2>
         <p className="mb-4 text-sm text-fg-3">Net RB change from the first recorded BR to today.</p>
         <Tabs labels={labels}>
           {byBranch.map((x) => (
@@ -84,18 +85,19 @@ export default function ExplorePage() {
       </section>
 
       <section id="most-changed" className="scroll-mt-16">
-        <h2 className="mb-1 text-xl font-semibold">Most changed</h2>
+        <h2 className="section-title mb-1">Most changed</h2>
         <p className="mb-4 text-sm text-fg-3">Updates that changed a vehicle&apos;s BR in any mode.</p>
         <Tabs labels={labels}>
           {byBranch.map((x) => (
-            <ol key={x.branch} className="divide-y divide-card-border border border-card-border bg-panel">
+            <ol key={x.branch} className="divide-y divide-card-border panel">
               {x.most.map((d, i) => (
-                <li key={d.id} className="flex items-baseline gap-3 px-3 py-1.5 text-sm">
-                  <span className="w-6 text-right tabular text-fg-3">{i + 1}</span>
-                  <Link href={`/vehicle/${d.id}/`} className="min-w-0 flex-1 truncate font-display">
-                    {d.name}
+                <li key={d.id} className="flex items-center gap-3 px-3 py-1 text-sm">
+                  <span className="w-6 text-right font-display tabular text-fg-3">{i + 1}</span>
+                  <Link href={`/vehicle/${d.id}/`} className="flex min-w-0 flex-1 items-center gap-2 font-display">
+                    <Thumb id={d.id} image={d.image} />
+                    <Flag nation={d.nation} className="h-3" />
+                    <span className="truncate">{d.name}</span>
                   </Link>
-                  <span className="text-fg-3">{nationName(d.nation)}</span>
                   <span className="w-24 text-right tabular text-fg">{d.changes} changes</span>
                 </li>
               ))}
@@ -105,7 +107,7 @@ export default function ExplorePage() {
       </section>
 
       <section id="thermals" className="scroll-mt-16">
-        <h2 className="mb-1 text-xl font-semibold">Thermal finder</h2>
+        <h2 className="section-title mb-1">Thermal finder</h2>
         <p className="mb-4 text-sm text-fg-3">
           Best thermal sight per crew position, including ones that need a modification. Sorted from the lowest BR.
         </p>
@@ -113,7 +115,7 @@ export default function ExplorePage() {
       </section>
 
       <section id="by-year" className="scroll-mt-16">
-        <h2 className="mb-1 text-xl font-semibold">Uptiers and downtiers by year</h2>
+        <h2 className="section-title mb-1">Uptiers and downtiers by year</h2>
         <p className="mb-4 text-sm text-fg-3">
           Realistic Battles BR changes per calendar year. 2020 starts in March, when tracking began.
         </p>
@@ -125,7 +127,7 @@ export default function ExplorePage() {
       </section>
 
       <section id="top-br" className="scroll-mt-16">
-        <h2 className="mb-1 text-xl font-semibold">Top BR over time</h2>
+        <h2 className="section-title mb-1">Top BR over time</h2>
         <p className="mb-4 text-sm text-fg-3">The highest Realistic Battles BR in each branch at each update.</p>
         <Tabs labels={labels}>
           {byBranch.map((x) => (
@@ -147,15 +149,16 @@ function MoverTable({
   return (
     <div>
       <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-fg-3">{title}</h3>
-      <table className="w-full border border-card-border bg-panel text-sm">
+      <table className="data-table w-full panel text-sm">
         <tbody className="divide-y divide-card-border">
           {rows.map(({ d, first, delta }) => (
             <tr key={d.id}>
-              <td className="w-full px-3 py-1.5">
-                <Link href={`/vehicle/${d.id}/`} className="font-display">
-                  {d.name}
+              <td className="w-full px-3 py-1">
+                <Link href={`/vehicle/${d.id}/`} className="flex items-center gap-2 font-display">
+                  <Thumb id={d.id} image={d.image} />
+                  <Flag nation={d.nation} className="h-3" />
+                  <span className="min-w-0 truncate">{d.name}</span>
                 </Link>
-                <span className="block text-xs text-fg-3">{nationName(d.nation)}</span>
               </td>
               <td className="whitespace-nowrap px-3 py-1.5 text-right font-display tabular">
                 <span className="text-fg-3">{formatBr(first)}</span>

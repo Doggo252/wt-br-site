@@ -18,7 +18,7 @@ export function UpDownChart({ data }: { data: UpDownRow[] }) {
   const ticks: number[] = [];
   for (let t = -max; t <= max; t += step) ticks.push(t);
   return (
-    <figure className="border border-card-border bg-panel p-3 sm:p-4">
+    <figure className="panel p-3 sm:p-4">
       <figcaption className="mb-2 flex gap-4 text-sm text-fg-2">
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-sm bg-bad" aria-hidden />

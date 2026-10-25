@@ -49,7 +49,7 @@ export function ThermalFinder({ units, nations }: { units: ThermalUnit[]; nation
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-4 border border-card-border bg-panel p-3">
+      <div className="flex flex-wrap items-end gap-4 panel p-3">
         <Field label="Crew position">
           <select value={crew} onChange={(e) => setCrew(e.target.value as Crew)} className={SELECT}>
             {CREW_OPTIONS.map((o) => (

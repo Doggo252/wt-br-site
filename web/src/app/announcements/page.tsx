@@ -24,7 +24,7 @@ export default function AnnouncementsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-bold">Gaijin&apos;s BR announcements</h1>
+        <h1 className="text-4xl font-bold">Gaijin&apos;s BR announcements</h1>
         <p className="mt-2 max-w-2xl text-fg-2">
           Official Battle Rating change tables posted on the War Thunder forum. Planned changes are checked against what
           the game files actually did in the 45 days after the post.
@@ -50,7 +50,7 @@ export default function AnnouncementsPage() {
         </Link>
       )}
 
-      <ul className="divide-y divide-card-border border border-card-border bg-panel">
+      <ul className="divide-y divide-card-border panel">
         {all.map((a) => {
           const rows = a.changes ?? [];
           const outs = settled(a) ? rows.map(rowOutcome) : [];

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Arrow } from "./Arrow";
 import { MODES, MODE_LABEL, formatBr, formatBrDelta, type Mode } from "@/lib/br";
 import type { OfficialChange, UnitSummary } from "@/lib/data.gen";
-import { nationName } from "@/lib/nations";
+import { Flag } from "./Flag";
+import { Thumb } from "./Thumb";
 
 type Outcome = "pending" | "applied" | "different" | "not_applied";
 
@@ -68,9 +69,9 @@ export function OfficialChangeTable({
 }) {
   const modes: (Mode | "grb")[] = [...MODES, ...(showGroundBattle ? (["grb"] as const) : [])];
   return (
-    <div className="overflow-x-auto border border-card-border bg-panel">
-      <table className="w-full min-w-[640px] text-sm">
-        <thead className="bg-header text-left font-display text-xs uppercase tracking-wide text-fg-3">
+    <div className="overflow-x-auto panel">
+      <table className="data-table w-full min-w-[640px] text-sm">
+        <thead>
           <tr>
             <th className="px-3 py-2 font-semibold">Vehicle</th>
             {modes.map((m) => (
@@ -89,14 +90,17 @@ export function OfficialChangeTable({
             return (
               <tr key={i}>
                 <td className="px-3 py-1.5">
-                  {id ? (
-                    <Link href={`/vehicle/${id}/`} className="font-display">
-                      {u?.name ?? c.name}
-                    </Link>
-                  ) : (
-                    <span className="font-display">{c.name}</span>
-                  )}
-                  {u && <span className="ml-2 text-xs text-fg-3">{nationName(u.nation)}</span>}
+                  <span className="flex items-center gap-2">
+                    {id && <Thumb id={id} image={u?.image} />}
+                    {u && <Flag nation={u.nation} className="h-3" />}
+                    {id ? (
+                      <Link href={`/vehicle/${id}/`} className="font-display">
+                        {u?.name ?? c.name}
+                      </Link>
+                    ) : (
+                      <span className="font-display">{c.name}</span>
+                    )}
+                  </span>
                   {c.comment && <span className="block text-xs text-fg-3">{c.comment}</span>}
                 </td>
                 {modes.map((m) => (

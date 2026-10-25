@@ -36,9 +36,9 @@ export function ChangeLog({
 
   const first = history[0];
   return (
-    <div className="overflow-x-auto border border-card-border bg-panel">
-      <table className="w-full min-w-[520px] text-sm">
-        <thead className="bg-header text-left font-display text-xs uppercase tracking-wide text-fg-3">
+    <div className="overflow-x-auto panel">
+      <table className="data-table w-full min-w-[520px] text-sm">
+        <thead>
           <tr>
             <th className="px-3 py-2 font-semibold">Update</th>
             <th className="px-3 py-2 font-semibold">Date</th>
