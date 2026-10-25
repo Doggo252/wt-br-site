@@ -57,6 +57,7 @@ export default async function VehiclePage({ params }: Params) {
   const meta = getMeta();
   const same = sameBr(u, getIndex());
   const line = treeLine(u);
+  const rivals = counterparts(u, getIndex());
   const dev = getDev();
   const devChange = dev?.changes?.find((c) => c.id === id);
   const devVersion = dev?.v;
@@ -306,6 +307,40 @@ export default async function VehiclePage({ params }: Params) {
         </Section>
       )}
 
+      {rivals.length > 0 && (
+        <Section title="Counterparts">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-fg-2">
+              The closest {TYPE_NAME[u.type].toLowerCase()} by Realistic BR in each other nation.
+            </p>
+            <Link
+              href={`/compare/?ids=${[u.id, ...rivals.slice(0, 4).map((o) => o.id)].join(",")}`}
+              className="btn"
+            >
+              Compare BR history →
+            </Link>
+          </div>
+          <ul className="flex snap-x gap-2 overflow-x-auto pb-3">
+            {rivals.map((o) => (
+              <li key={o.id} className="w-[140px] shrink-0 snap-start">
+                <p className="mb-1 flex items-center gap-1.5 text-xs text-fg-3">
+                  <Flag nation={o.nation} className="h-3" />
+                  {nationName(o.nation)}
+                </p>
+                <UnitCard
+                  name={o.name}
+                  rank={o.br.rb}
+                  status={o.status}
+                  image={o.image ? `/img/units/${o.id}.webp` : undefined}
+                  href={`/vehicle/${o.id}/`}
+                  type={o.type}
+                />
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
       <Section title="Same Battle Rating">
         <SameBrStrip byMode={same.byMode} units={same.units} rank={u.br} />
       </Section>
@@ -469,6 +504,20 @@ function AirStatGrid({ u }: { u: UnitDetail }) {
 }
 
 /** Vehicles of the same branch at exactly the same BR in each mode: same nation first, then others. */
+/** Per other nation, the obtainable vehicle of the same class closest in RB BR (tech tree first on ties). */
+function counterparts(u: UnitDetail, index: UnitSummary[]): UnitSummary[] {
+  if (u.type === "other") return [];
+  const best = new Map<string, UnitSummary>();
+  const score = (o: UnitSummary) => Math.abs(o.br.rb - u.br.rb) * 10 + (o.status === "tree" ? 0 : 1);
+  for (const o of index) {
+    if (o.nation === u.nation || o.type !== u.type || o.branch !== u.branch || o.hidden || o.removedIn) continue;
+    if (Math.abs(o.br.rb - u.br.rb) > 3) continue;
+    const cur = best.get(o.nation);
+    if (!cur || score(o) < score(cur)) best.set(o.nation, o);
+  }
+  return [...best.values()].sort((a, b) => score(a) - score(b));
+}
+
 /** The tech tree column holding this vehicle, top to bottom, with its neighbours. */
 function treeLine(u: UnitDetail) {
   if (u.removedIn || u.branch === "naval") return null;
