@@ -20,7 +20,16 @@ TANKMODELS = "aces.vromfs.bin_u/gamedata/units/tankmodels"
 COUNTRY_ICONS = "atlases.vromfs.bin_u/gameuiskin"
 VERSION = "version"
 
-SPARSE_PATHS = [VERSION, WPCOST, SHOP, UNITTAGS, UNITS_CSV, WEAPONRY_CSV, f"{TANKMODELS}/*", f"{COUNTRY_ICONS}/country_*.svg"]
+SPARSE_PATHS = [
+    VERSION,
+    WPCOST,
+    SHOP,
+    UNITTAGS,
+    UNITS_CSV,
+    WEAPONRY_CSV,
+    f"{TANKMODELS}/*",
+    f"{COUNTRY_ICONS}/country_*.svg",
+]
 
 
 def _git(repo: Path, *args: str) -> str:

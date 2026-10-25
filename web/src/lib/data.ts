@@ -105,7 +105,12 @@ export const getAnnouncementsByUnit = cache(() => {
     for (const change of a.changes ?? []) {
       for (const id of change.ids ?? []) {
         const list = map.get(id) ?? [];
-        list.push({ a, change });
+        // A post can list one vehicle in two tables (e.g. aircraft and Ground RB): merge them.
+        const same = list.find((x) => x.a.id === a.id);
+        if (same) {
+          const defined = Object.fromEntries(Object.entries(change).filter(([, v]) => v != null));
+          same.change = { ...same.change, ...defined, outcome: { ...same.change.outcome, ...change.outcome } };
+        } else list.push({ a, change });
         map.set(id, list);
       }
     }

@@ -53,3 +53,31 @@ def test_outcomes():
     assert official.outcome(history, "2025-02-01", "2025-06-01", "ab", 10, 12) == "different"
     # Within 45 days and unchanged: still pending.
     assert official.outcome(history, "2025-02-01", "2025-02-05", "sb", 10, 11) == "pending"
+
+
+def test_nation_suffix_matches_glyph_named_copy():
+    details = {
+        "germ_leopard_2a6": SimpleNamespace(branch="ground", nation="germany", history=[]),
+        "sw_leopard_2a6nl": SimpleNamespace(branch="ground", nation="sweden", history=[]),
+    }
+    names = {"germ_leopard_2a6": ["Leopard 2A6"], "sw_leopard_2a6nl": ["▄Leopard 2A6"]}
+    rows = [
+        official.Row(name="Leopard 2A6", branch="ground", changes={"rb": (35, 36)}),
+        official.Row(name="Leopard 2A6 (Sweden)", branch="ground", changes={"rb": (35, 36)}),
+    ]
+    official.match_rows(rows, "2025-10-23", details, names)
+    assert [r.id for r in rows] == ["germ_leopard_2a6", "sw_leopard_2a6nl"]
+
+
+def test_specific_row_claims_vehicle_from_generic_row():
+    details = {
+        "jh_7a": SimpleNamespace(branch="air", nation="china", history=[]),
+        "jh_7a_prototype": SimpleNamespace(branch="air", nation="china", history=[]),
+    }
+    names = {"jh_7a": ["JH-7A"], "jh_7a_prototype": ["JH-7A", "JH-7A Prototype"]}
+    rows = [
+        official.Row(name="JH-7A", branch="air", changes={"rb": (30, 31)}),
+        official.Row(name="JH-7A Prototype", branch="air", changes={"rb": (30, 31)}),
+    ]
+    official.match_rows(rows, "2026-10-23", details, names)
+    assert [r.id for r in rows] == ["jh_7a", "jh_7a_prototype"]

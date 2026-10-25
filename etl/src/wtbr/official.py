@@ -253,13 +253,27 @@ def match_rows(
                 found = by_loose.get((g, loose(base))) or []
         found = list(dict.fromkeys(found))
         if nation:
-            found = [u for u in found if details[u].nation == nation] or found
+            # "Leopard 2A6 (Sweden)": the Swedish copy's name carries an operator glyph,
+            # so try a glyph-blind match within that nation before falling back.
+            found = (
+                [u for u in found if details[u].nation == nation]
+                or [u for u in by_loose.get((g, loose(base)), []) if details[u].nation == nation]
+                or found
+            )
+            found = list(dict.fromkeys(found))
         if len(found) > 1:
             # Keep the copies whose BR on the day matches the table's "was".
             found = [u for u in found if _fits(details[u], r, date)] or found
         r.id = ",".join(found) if found else None
         if found:
             r.branch = details[found[0]].branch
+    # "JH-7A" also matches "JH-7A Prototype"; when the post has its own row for a
+    # vehicle, drop it from rows that only matched it by a shared name.
+    single = {r.id for r in rows if r.id and "," not in r.id}
+    for r in rows:
+        if r.id and "," in r.id:
+            ids = r.id.split(",")
+            r.id = ",".join([u for u in ids if u not in single] or ids)
 
 
 def _fits(d, r: Row, date: str) -> bool:
