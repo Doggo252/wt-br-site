@@ -15,19 +15,28 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      # A repository variable (or secret) overrides the default project.
+      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID || secrets.FIREBASE_PROJECT_ID || 'uptier-wt' }}
+      HAS_DEPLOY_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the deploy key
+        if: env.HAS_DEPLOY_KEY != 'true'
+        run: |
+          echo "::error::Repository secret FIREBASE_SERVICE_ACCOUNT is missing (Settings > Secrets and variables > Actions > Secrets). See README."
+          exit 1
+
       - uses: ./.github/actions/build-site
         with:
           # A custom domain in vars.SITE_URL wins; otherwise the project's default web.app address.
-          site-url: ${{ vars.SITE_URL || (vars.FIREBASE_PROJECT_ID && format('https://{0}.web.app', vars.FIREBASE_PROJECT_ID)) || '' }}
+          site-url: ${{ vars.SITE_URL || format('https://{0}.web.app', env.FIREBASE_PROJECT_ID) }}
 
       - name: Deploy to Firebase Hosting
-        # Needs the FIREBASE_SERVICE_ACCOUNT secret and FIREBASE_PROJECT_ID variable (see README).
-        if: ${{ vars.FIREBASE_PROJECT_ID != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          projectId: ${{ env.FIREBASE_PROJECT_ID }}
           channelId: live
