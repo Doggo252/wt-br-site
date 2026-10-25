@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TechTree, type TreeUnit } from "@/components/TechTree";
 import { BRANCHES, BRANCH_NAME, BRANCH_SHORT, branchHref, treeHref, type Branch } from "@/lib/branches";
-import { getIndex, getMeta, getTree, nationsOf, unitsInNation } from "@/lib/data";
+import { getIndex, getMeta, getPlannedRanks, getTree, nationsOf, unitsInNation } from "@/lib/data";
 import { BranchIcon } from "@/components/BranchIcon";
 import { Flag } from "@/components/Flag";
 import { nationName } from "@/lib/nations";
@@ -99,7 +99,9 @@ export function NationTreePage({ branch, nation }: { branch: Branch; nation: str
   const tree = getTree(branch, nation);
   const units: Record<string, TreeUnit> = {};
   for (const u of unitsInNation(branch, nation).filter((u) => !u.removedIn)) {
+    const planned = getPlannedRanks().get(u.id);
     units[u.id] = { name: u.name, status: u.status, hidden: u.hidden, br: u.br, image: u.image, type: u.type };
+    if (planned) units[u.id].planned = planned;
   }
   const meta = getMeta();
   return (

@@ -13,6 +13,7 @@ import type {
   Meta,
   NationTree,
   OfficialChange,
+  Ranks,
   RecordRow,
   UnitDetail,
   UnitSummary,
@@ -124,4 +125,18 @@ export const getPendingPlan = cache(() => {
   if (!a) return null;
   const pending = (a.changes ?? []).filter((c) => Object.values(c.outcome ?? {}).includes("pending"));
   return pending.length ? { a, pending } : null;
+});
+
+/** Ranks from the newest announcement that aren't live yet, per vehicle (only the modes it changes). */
+export const getPlannedRanks = cache(() => {
+  const map = new Map<string, Partial<Ranks>>();
+  for (const c of getPendingPlan()?.pending ?? []) {
+    const ranks: Partial<Ranks> = {};
+    for (const m of ["ab", "rb", "sb"] as const) {
+      const pair = c[m];
+      if (c.outcome?.[m] === "pending" && pair) ranks[m] = pair[1];
+    }
+    for (const id of c.ids ?? []) map.set(id, ranks);
+  }
+  return map;
 });

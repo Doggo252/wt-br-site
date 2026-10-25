@@ -21,6 +21,8 @@ export type TreeUnit = {
   type?: string;
   /** BR before the version being viewed, when that version changed it. */
   prev?: Ranks;
+  /** Announced by Gaijin, not live yet (only the modes that change). */
+  planned?: Partial<Ranks>;
 };
 
 type Props = {
@@ -42,6 +44,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
   const [vIdx, setVIdx] = useState<number | null>(null);
   // Top BR (rank) of a lineup to highlight: vehicles from 1.0 below it up to it stay lit.
   const [lineupAt, setLineupAt] = useState<number | null>(null);
+  const [showPlanned, setShowPlanned] = useState(false);
 
   async function loadHistory(): Promise<History | null> {
     if (history) return history;
@@ -79,10 +82,17 @@ export function TechTree({ branch, nation, columns, units }: Props) {
     window.history.replaceState(null, "", url);
   }
 
-  const view = useMemo(
-    () => (vIdx !== null && history ? stateAt(history.tm, vIdx) : { columns, units }),
-    [vIdx, history, columns, units],
-  );
+  const plannedCount = Object.values(units).filter((u) => u.planned).length;
+  const view = useMemo(() => {
+    if (vIdx !== null && history) return stateAt(history.tm, vIdx);
+    if (!showPlanned) return { columns, units };
+    // Preview the announcement: planned ranks, with today's as "previous" so cards show the move.
+    const next: Record<string, TreeUnit> = {};
+    for (const [id, u] of Object.entries(units)) {
+      next[id] = u.planned ? { ...u, br: { ...u.br, ...u.planned }, prev: u.br } : u;
+    }
+    return { columns, units: next };
+  }, [vIdx, history, columns, units, showPlanned]);
 
   const visible = (id: string) => view.units[id] && (showHidden || !view.units[id].hidden);
   const ranks = [...new Set(view.columns.flat().map((c) => c.rank))].sort((a, b) => a - b);
@@ -134,6 +144,17 @@ export function TechTree({ branch, nation, columns, units }: Props) {
             ))}
           </select>
         </label>
+        {vIdx === null && plannedCount > 0 && (
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-gold">
+            <input
+              type="checkbox"
+              checked={showPlanned}
+              onChange={(e) => setShowPlanned(e.target.checked)}
+              className="accent-gold"
+            />
+            Preview {plannedCount} planned BR change{plannedCount === 1 ? "" : "s"}
+          </label>
+        )}
         {vIdx === null && (
           <button
             type="button"
