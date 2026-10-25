@@ -69,6 +69,41 @@ for (const [path, text] of PAGES) {
   failures += errors.length ? 1 : 0;
   await page.close();
 }
+// Interactive states the static pages don't show.
+const STATES = [
+  ["tree: time machine + lineup highlight", "/ground/germany/", async (p) => {
+    await p.getByRole("button", { name: "Time machine" }).click();
+    await p.getByText(/Showing the tree as of update/).waitFor();
+    await p.getByLabel("Lineup at").selectOption({ index: 5 });
+  }],
+  ["tree: planned preview", "/ground/germany/", async (p) => {
+    const box = p.getByLabel(/Preview .* planned/);
+    if (await box.count()) await box.check();
+  }],
+  ["search open", "/", async (p) => {
+    await p.keyboard.press("/");
+    await p.keyboard.type("tiger");
+    await p.getByRole("option").first().waitFor();
+  }],
+  ["update filter", "/updates/2.57.1.72/", async (p) => {
+    await p.getByLabel("Nation").selectOption("germany");
+  }],
+];
+for (const [name, path, act] of STATES) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto(base + path, { waitUntil: "networkidle" });
+  await act(page).catch((e) => errors.push(`step failed: ${e.message.split("\n")[0]}`));
+  await page.addScriptTag({ content: AXE });
+  const axe = await page.evaluate(() => window.axe.run(document, { resultTypes: ["violations"] }));
+  for (const v of axe.violations) errors.push(`axe ${v.id} (${v.nodes.length}): ${v.nodes[0].target.join(" ")}`);
+  console.log(`${errors.length ? "FAIL" : "ok  "} [${name}]`);
+  for (const e of errors) console.log(`     ${e}`);
+  failures += errors.length ? 1 : 0;
+  await page.close();
+}
+
 await browser.close();
 server.close();
 process.exit(failures ? 1 : 0);
