@@ -78,7 +78,7 @@ export default function AnnouncementsPage() {
                     {a.title}
                   </a>
                 ) : (
-                  <Link href={`/announcements/${a.id}/`}>{a.title}</Link>
+                  <Link href={`/announcements/${a.id}/`} className="text-fg hover:text-link">{a.title}</Link>
                 )}
               </span>
               <span className="text-sm text-fg-2">

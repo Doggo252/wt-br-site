@@ -16,7 +16,7 @@ const NAV = [
 export function NavLinks() {
   const path = usePathname() ?? "/";
   return (
-    <nav aria-label="Main" className="-mb-px flex min-w-0 flex-1 gap-1 overflow-x-auto sm:flex-none">
+    <nav aria-label="Main" className="-mb-px flex min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] [mask-image:linear-gradient(90deg,#000_85%,transparent)] sm:flex-none sm:[mask-image:none]">
       {NAV.map((item) => {
         const active = path.startsWith(item.href);
         return (
