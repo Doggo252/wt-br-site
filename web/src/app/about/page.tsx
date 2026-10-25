@@ -15,10 +15,43 @@ export default function AboutPage() {
       <header>
         <h1 className="text-4xl font-bold">About Uptier</h1>
         <p className="mt-2 text-fg-2">
-          Uptier shows the Battle Rating history of every War Thunder ground vehicle, update by update. It is a fan
+          Uptier shows the Battle Rating history of every War Thunder tank, aircraft and helicopter, update by update. It is a fan
           project and is not affiliated with or endorsed by Gaijin Entertainment.
         </p>
       </header>
+
+      <Section title="What you can do here">
+        <ul className="list-disc space-y-2 pl-5 text-fg-2">
+          <li>
+            <strong className="text-fg">Tech trees with a time machine.</strong> Rewind any nation&apos;s tree to a past
+            update, preview Gaijin&apos;s planned changes, or light up a lineup&apos;s 1.0 BR window.
+          </li>
+          <li>
+            <strong className="text-fg">Vehicle pages</strong> with the full BR history in every mode, stats, night
+            vision, its line in the tree, and counterparts from other nations.
+          </li>
+          <li>
+            <strong className="text-fg">
+              <Link href="/lineup/">Lineup planner</Link>.
+            </strong>{" "}
+            Pick a nation and BR to see what you can bring and everything you can meet.
+          </li>
+          <li>
+            <strong className="text-fg">
+              <Link href="/watchlist/">Watchlist</Link>.
+            </strong>{" "}
+            Star vehicles and see how their BR moved since. It stays in your browser.
+          </li>
+          <li>
+            <strong className="text-fg">Search</strong> by name, or list vehicles with a nation and BR such as{" "}
+            <em>germany 6.7</em>. Press <kbd>/</kbd> anywhere to start.
+          </li>
+          <li>
+            <strong className="text-fg">Follow along</strong> with the <a href="/feed.xml">Atom feed</a> of BR
+            changes.
+          </li>
+        </ul>
+      </Section>
 
       <Section title="Where the data comes from">
         <ul className="list-disc space-y-2 pl-5 text-fg-2">
