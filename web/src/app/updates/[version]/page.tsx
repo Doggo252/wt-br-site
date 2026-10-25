@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
+import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, formatBr, formatBrDelta } from "@/lib/br";
 import { BRANCHES, BRANCH_NAME, type Branch } from "@/lib/branches";
@@ -49,6 +50,7 @@ export default async function UpdatePage({ params }: Params) {
   return (
     <div className="space-y-8">
       <header className="space-y-4">
+        <ArrowKeyNav prev={u.prev ? `/updates/${u.prev}/` : null} next={u.next ? `/updates/${u.next}/` : null} />
         <nav className="flex flex-wrap items-center justify-between gap-2 text-sm">
           {u.prev ? (
             <Link href={`/updates/${u.prev}/`} className="btn">
