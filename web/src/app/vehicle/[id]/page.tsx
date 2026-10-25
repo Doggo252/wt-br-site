@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { BrStepChart } from "@/components/BrStepChart";
+import { BranchIcon } from "@/components/BranchIcon";
 import { ChangeLog } from "@/components/ChangeLog";
 import { Flag } from "@/components/Flag";
 import { ChangeCell, OutcomeChip, rowOutcome } from "@/components/OfficialChanges";
@@ -100,6 +101,12 @@ export default async function VehiclePage({ params }: Params) {
                 alt={u.name}
                 className={`h-full w-full object-contain drop-shadow-[0_20px_24px_rgb(0_0_0/0.75)] ${u.removedIn ? "grayscale" : ""}`}
               />
+            )}
+            {!u.image && u.branch !== "naval" && (
+              <div className="flex h-full flex-col items-center justify-center gap-2 text-fg/10">
+                <BranchIcon branch={u.branch} className="h-2/3 w-2/3" />
+                <p className="text-xs text-fg-3">No picture of this vehicle in the game files</p>
+              </div>
             )}
             {/* Floor shadow. */}
             <div aria-hidden className="absolute inset-x-[12%] bottom-[6%] h-[10%] rounded-[50%] bg-black/50 blur-xl" />
