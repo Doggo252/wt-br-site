@@ -4,6 +4,8 @@ import { BrBadge } from "@/components/BrBadge";
 import { ThermalChip } from "@/components/ThermalChip";
 import { Arrow } from "@/components/Arrow";
 import { contrastRatio } from "@/lib/contrast";
+import { Flag } from "@/components/Flag";
+import { BranchIcon } from "@/components/BranchIcon";
 import { GlyphFontStatus, ModeToggleDemo } from "./DesignDemos";
 
 export const metadata: Metadata = {
@@ -170,6 +172,33 @@ export default function DesignPage() {
           <BrBadge rank={16} mode="rb" fromRank={15} />
           <BrBadge rank={27} mode="ab" fromRank={30} />
           <BrBadge rank={0} mode="sb" size="sm" />
+        </div>
+      </Section>
+
+      <Section title="Surfaces & components" note="Utility classes from globals.css: panel, section-title, eyebrow, btn, callout-gold, data-table.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="panel space-y-3 p-5">
+            <p className="eyebrow">Eyebrow</p>
+            <h3 className="section-title">Section title</h3>
+            <p className="text-sm text-fg-2">Panels sit on the page background with a soft gradient and inset highlight.</p>
+            <div className="flex flex-wrap gap-2">
+              <span className="btn">Button</span>
+              <span className="btn">Another</span>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="callout-gold p-4 text-sm">Gold callout, used for planned changes and dev-server notices.</div>
+            <div className="panel flex flex-wrap items-center gap-4 p-4 text-sm text-fg-2">
+              {["germany", "usa", "ussr", "britain", "japan"].map((n) => (
+                <Flag key={n} nation={n} labelled className="h-5" />
+              ))}
+              <span className="inline-flex items-center gap-2">
+                <BranchIcon branch="ground" className="h-5 w-5" />
+                <BranchIcon branch="air" className="h-5 w-5" />
+                <BranchIcon branch="heli" className="h-5 w-5" />
+              </span>
+            </div>
+          </div>
         </div>
       </Section>
 

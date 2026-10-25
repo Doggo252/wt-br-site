@@ -13,7 +13,7 @@ import { Flag } from "@/components/Flag";
 import { treeHref } from "@/lib/branches";
 import { plural } from "@/lib/format";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
-import type { CrewRole, Sight as ChipSight } from "@/lib/units";
+import { CREW_LABEL, type CrewRole, type Sight as ChipSight } from "@/lib/units";
 
 export const dynamicParams = false;
 
@@ -204,7 +204,7 @@ export default async function VehiclePage({ params }: Params) {
             <ChangeLog history={u.history} absences={u.absences} added={u.added} />
           </div>
         ) : (
-          <p className="border border-dashed border-card-border bg-panel p-5 text-sm text-fg-2">
+          <p className="panel p-5 text-sm text-fg-2">
             No history recorded for this vehicle yet.
           </p>
         )}
@@ -327,19 +327,19 @@ function toChip(s: Sight): ChipSight {
 function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
   const anyMod = Object.values(sights).some((ss) => ss.some((s) => s.viaModification));
   if (Object.keys(sights).length === 0) {
-    return <p className="text-sm text-fg-2">No night vision or thermal sights.</p>;
+    return <p className="panel px-3 py-3 text-sm text-fg-2">No night vision or thermal sights.</p>;
   }
   return (
-    <div className="space-y-3">
-      <dl className="space-y-2">
+    <div className="space-y-2">
+      <dl className="panel divide-y divide-[#262f35]">
         {CREWS.map((crew) => {
           const ss = sights[crew] ?? [];
           return (
-            <div key={crew} className="flex flex-wrap items-center gap-2">
-              <dt className="sr-only">{crew}</dt>
-              <dd className="flex flex-wrap items-center gap-2">
+            <div key={crew} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+              <dt className="text-sm text-fg-3">{CREW_LABEL[crew]}</dt>
+              <dd className="flex flex-wrap items-center justify-end gap-2">
                 {ss.length === 0 ? (
-                  <ThermalChip crew={crew} sight={{ kind: "none" }} />
+                  <span className="text-sm text-fg-3">None</span>
                 ) : (
                   ss.map((s, i) => (
                     <span key={i} className="inline-flex items-center gap-1">

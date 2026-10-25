@@ -37,7 +37,7 @@ function readIds(): string[] {
   return raw ? raw.split(",").filter(Boolean).slice(0, MAX) : [];
 }
 
-export function CompareTool() {
+export function CompareTool({ suggestions = [] }: { suggestions?: { label: string; ids: string[] }[] }) {
   const [mode, setMode] = useMode();
   const [ids, setIds] = useState<string[]>([]);
   const [units, setUnits] = useState<Record<string, Unit>>({});
@@ -133,9 +133,18 @@ export function CompareTool() {
       )}
 
       {shown.length === 0 ? (
-        <p className="border border-dashed border-card-border bg-panel p-6 text-sm text-fg-2">
-          Add vehicles above to see their {MODE_NAME[mode]} BR history on one chart.
-        </p>
+        <div className="panel space-y-3 p-6">
+          <p className="text-sm text-fg-2">
+            Add vehicles above to see their {MODE_NAME[mode]} BR history on one chart, or start from one of these:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((g) => (
+              <button key={g.label} type="button" className="btn" onClick={() => update(g.ids)}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
       ) : (
         <figure className="panel p-3 sm:p-4">
           <figcaption className="sr-only">{MODE_NAME[mode]} BR over time</figcaption>

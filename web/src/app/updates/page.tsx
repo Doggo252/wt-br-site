@@ -2,12 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { BRANCHES, BRANCH_SHORT } from "@/lib/branches";
-import { getVersions, type Version } from "@/lib/data";
+import { getUnitMap, getUpdate, getVersions, type Version } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Updates",
   description: "Every War Thunder update since March 2020 that changed Battle Ratings, for ground, air and helicopters.",
 };
+
+/** Up to five changed (or added) vehicles with images, biggest RB moves first. */
+function preview(version: string): string[] {
+  const u = getUpdate(version);
+  const units = getUnitMap();
+  const moved = [...u.changes]
+    .sort((a, b) => Math.abs(b.after.rb - b.before.rb) - Math.abs(a.after.rb - a.before.rb))
+    .map((c) => c.id);
+  return [...moved, ...u.added].filter((id) => units.get(id)?.image).slice(0, 5);
+}
 
 export default function UpdatesPage() {
   const versions = getVersions()
@@ -23,7 +33,8 @@ export default function UpdatesPage() {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold">Updates</h1>
+      <p className="eyebrow">Since March 2020</p>
+      <h1 className="mt-1 text-4xl font-bold">Updates</h1>
       <p className="mt-2 max-w-2xl text-fg-2">
         Every game version since March 2020 that changed a Battle Rating, or added or removed a vehicle. Counts are
         Realistic Battles uptiers and downtiers. Dates are when the version appeared in the datamine.
@@ -39,7 +50,7 @@ export default function UpdatesPage() {
                 <li key={v.v}>
                   <Link
                     href={`/updates/${v.v}/`}
-                    className="flex flex-wrap items-baseline gap-x-6 gap-y-1 px-3 py-2 no-underline hover:bg-header"
+                    className="flex flex-wrap items-center gap-x-6 gap-y-1 px-3 py-2 transition-colors hover:bg-white/[0.03]"
                   >
                     <span className="w-28 font-display font-semibold tabular text-fg">{v.v}</span>
                     <span className="w-24 text-sm tabular text-fg-3">{v.d}</span>
@@ -74,6 +85,18 @@ export default function UpdatesPage() {
                           </span>
                         );
                       })}
+                    </span>
+                    <span className="ml-auto hidden items-center -space-x-3 md:flex" aria-hidden>
+                      {preview(v.v).map((id) => (
+                        // eslint-disable-next-line @next/next/no-img-element -- static export
+                        <img
+                          key={id}
+                          src={`/img/units/${id}.webp`}
+                          alt=""
+                          loading="lazy"
+                          className="h-7 w-14 object-contain drop-shadow-[0_2px_3px_rgb(0_0_0/0.7)]"
+                        />
+                      ))}
                     </span>
                   </Link>
                 </li>
