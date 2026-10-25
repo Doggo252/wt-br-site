@@ -4,6 +4,7 @@ import { BranchIcon } from "@/components/BranchIcon";
 import { Flag } from "@/components/Flag";
 import { HomeWatchlist } from "@/components/HomeWatchlist";
 import { SearchBox } from "@/components/SearchBox";
+import { SinceLastVisit } from "@/components/SinceLastVisit";
 import { UnitCard } from "@/components/UnitCard";
 import { BRANCHES, BRANCH_NAME, branchHref, treeHref } from "@/lib/branches";
 import {
@@ -116,6 +117,8 @@ export default function Home() {
           )}
         </div>
       )}
+
+      <SinceLastVisit recent={versions.slice(-40).map((v) => [v.v, v.changes, v.added])} />
 
       <HomeWatchlist />
 
