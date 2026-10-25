@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 
 const OUT = join(import.meta.dirname, "../out");
 const AXE = readFileSync(join(import.meta.dirname, "../node_modules/axe-core/axe.min.js"), "utf8");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".webp": "image/webp", ".woff2": "font/woff2", ".txt": "text/plain", ".xml": "application/xml" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".webp": "image/webp", ".woff2": "font/woff2", ".txt": "text/plain", ".xml": "application/xml", ".svg": "image/svg+xml", ".png": "image/png" };
 
 // [path, text that must appear]
 const PAGES = [
