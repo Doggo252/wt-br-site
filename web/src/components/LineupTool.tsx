@@ -11,8 +11,23 @@ import { nationName } from "@/lib/nations";
 import { useMode } from "@/lib/useMode";
 import type { UnitStatus } from "@/lib/units";
 
-/** [id, name, nation, branch, type, status index, hidden, ab, rb, sb, image] from /data/lineup.json */
-type Row = [string, string, string, Branch, string, number, number, number, number, number, number];
+/** [id, name, nation, branch, type, status index, hidden, ab, rb, sb, image, planned] from /data/lineup.json */
+type Row = [
+  string,
+  string,
+  string,
+  Branch,
+  string,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  Planned,
+];
+/** Announced, not yet live: [ab, rb, sb] with null for unchanged modes, or 0 for none. */
+type Planned = (number | null)[] | 0;
 
 const STATUS: UnitStatus[] = ["tree", "premium", "squadron", "event"];
 const MODE_COL = { ab: 7, rb: 8, sb: 9 } as const;
@@ -62,20 +77,34 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   }, [branch, nation, rank]);
 
   const col = MODE_COL[mode];
-  const pool = useMemo(() => rows.filter((r) => r[3] === branch && !r[6]), [rows, branch]);
-  const ranks = useMemo(() => [...new Set(pool.map((r) => r[col]))].sort((a, b) => a - b), [pool, col]);
-  const nationList = nations[branch].includes(nation) ? nation : nations[branch][0];
+  const pool = useMemo(
+    () => rows.filter((r) => r[3] === branch && !r[6]),
+    [rows, branch],
+  );
+  const ranks = useMemo(
+    () => [...new Set(pool.map((r) => r[col]))].sort((a, b) => a - b),
+    [pool, col],
+  );
+  const nationList = nations[branch].includes(nation)
+    ? nation
+    : nations[branch][0];
 
   const lineup = pool
-    .filter((r) => r[2] === nationList && r[col] <= rank && r[col] >= rank - SPREAD)
+    .filter(
+      (r) => r[2] === nationList && r[col] <= rank && r[col] >= rank - SPREAD,
+    )
     .sort((a, b) => b[col] - a[col] || a[1].localeCompare(b[1]));
-  const steps = Array.from({ length: SPREAD * 2 + 1 }, (_, i) => rank - SPREAD + i);
+  const steps = Array.from(
+    { length: SPREAD * 2 + 1 },
+    (_, i) => rank - SPREAD + i,
+  );
   const counts = steps.map((s) => pool.filter((r) => r[col] === s).length);
   const max = Math.max(1, ...counts);
   const shown = focus ?? rank + SPREAD;
   const facing = pool.filter((r) => r[col] === shown);
   const byNation = new Map<string, Row[]>();
-  for (const r of facing) byNation.set(r[2], [...(byNation.get(r[2]) ?? []), r]);
+  for (const r of facing)
+    byNation.set(r[2], [...(byNation.get(r[2]) ?? []), r]);
 
   return (
     <div className="space-y-6">
@@ -96,7 +125,11 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
         </div>
         <label className="flex flex-col gap-1 text-xs text-fg-3">
           Nation
-          <select value={nationList} onChange={(e) => setNation(e.target.value)} className={INPUT}>
+          <select
+            value={nationList}
+            onChange={(e) => setNation(e.target.value)}
+            className={INPUT}
+          >
             {nations[branch].map((n) => (
               <option key={n} value={n}>
                 {nationName(n)}
@@ -130,19 +163,33 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
           Your lineup, {formatBr(rank - SPREAD)}–{formatBr(rank)}
         </h2>
         <p className="text-sm text-fg-2">
-          {lineup.length} {nationName(nationList)} {BRANCH_NAME[branch].toLowerCase()} vehicles you can bring without
-          raising your {MODE_NAME[mode]} BR above {formatBr(rank)}. Unobtainable vehicles are left out.
+          {lineup.length} {nationName(nationList)}{" "}
+          {BRANCH_NAME[branch].toLowerCase()} vehicles you can bring without
+          raising your {MODE_NAME[mode]} BR above {formatBr(rank)}. Unobtainable
+          vehicles are left out.
         </p>
+        {lineup.some((r) => planned(r, col) !== null) && (
+          <p className="callout-gold px-3 py-2 text-sm">
+            {lineup.filter((r) => planned(r, col) !== null).length} of these
+            have a BR change announced by Gaijin that isn&apos;t live yet,
+            marked below.
+          </p>
+        )}
         {lineup.length > 0 && <Cards rows={lineup} col={col} />}
       </section>
 
       <section className="space-y-3">
         <h2 className="section-title">What you can meet</h2>
         <p className="text-sm text-fg-2">
-          Vehicles from every nation at each BR in your matchmaking range. Select a bar to list them.
+          Vehicles from every nation at each BR in your matchmaking range.
+          Select a bar to list them.
         </p>
         <div className="panel p-4">
-          <div className="flex h-44 items-end gap-[2px]" role="group" aria-label="Vehicles per BR">
+          <div
+            className="flex h-44 items-end gap-[2px]"
+            role="group"
+            aria-label="Vehicles per BR"
+          >
             {steps.map((s, i) => {
               const selected = s === shown;
               return (
@@ -159,7 +206,10 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
                     className={`w-full max-w-16 rounded-t-[4px] transition-colors ${
                       selected ? "bg-gold" : "bg-link/70 group-hover:bg-link"
                     }`}
-                    style={{ height: `${(counts[i] / max) * 100}%`, minHeight: counts[i] ? 2 : 0 }}
+                    style={{
+                      height: `${(counts[i] / max) * 100}%`,
+                      minHeight: counts[i] ? 2 : 0,
+                    }}
                   />
                 </button>
               );
@@ -173,7 +223,13 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
               >
                 {formatBr(s)}
                 <span className="block text-[10px] uppercase tracking-wide text-fg-3">
-                  {s === rank ? "You" : s === rank + SPREAD ? "Full uptier" : s === rank - SPREAD ? "Full downtier" : " "}
+                  {s === rank
+                    ? "You"
+                    : s === rank + SPREAD
+                      ? "Full uptier"
+                      : s === rank - SPREAD
+                        ? "Full downtier"
+                        : " "}
                 </span>
               </span>
             ))}
@@ -196,7 +252,8 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
               <div key={n}>
                 <h4 className="mb-2 flex items-center gap-2 text-sm text-fg-2">
                   <Flag nation={n} className="h-3.5" />
-                  {nationName(n)} <span className="text-fg-3">{list.length}</span>
+                  {nationName(n)}{" "}
+                  <span className="text-fg-3">{list.length}</span>
                 </h4>
                 <Cards rows={list} col={col} />
               </div>
@@ -207,23 +264,38 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   );
 }
 
+/** The announced rank for this mode column, or null. */
+function planned(r: Row, col: number): number | null {
+  const p = r[11];
+  return p ? (p[col - 7] ?? null) : null;
+}
+
 function Cards({ rows, col }: { rows: Row[]; col: number }) {
   return (
     <ul className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
-      {rows.map((r) => (
-        <li key={r[0]}>
-          <UnitCard
-            name={r[1]}
-            rank={r[col] as number}
-            status={STATUS[r[5]]}
-            image={r[10] ? `/img/units/${r[0]}.webp` : undefined}
-            href={`/vehicle/${r[0]}/`}
-            type={r[4]}
-          />
-        </li>
-      ))}
+      {rows.map((r) => {
+        const next = planned(r, col);
+        return (
+          <li key={r[0]}>
+            <UnitCard
+              name={r[1]}
+              rank={r[col] as number}
+              status={STATUS[r[5]]}
+              image={r[10] ? `/img/units/${r[0]}.webp` : undefined}
+              href={`/vehicle/${r[0]}/`}
+              type={r[4]}
+            />
+            {next !== null && (
+              <p className="mt-1 text-xs text-gold">
+                Planned: {formatBr(r[col] as number)} → {formatBr(next)}
+              </p>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
-const INPUT = "border border-card-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-link focus:outline-none";
+const INPUT =
+  "border border-card-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-link focus:outline-none";
