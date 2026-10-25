@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: url("/explore/"), lastModified },
     { url: url("/about/") },
     { url: url("/compare/") },
+    { url: url("/lineup/") },
     { url: url("/announcements/") },
     ...getAnnouncements()
       .filter((a) => !a.unavailable && (a.changes ?? []).length > 0)
