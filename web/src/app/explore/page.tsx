@@ -242,7 +242,7 @@ export default function ExplorePage() {
           Realistic Battles BR changes per calendar year. 2020 starts in March,
           when tracking began.
         </p>
-        <Tabs labels={labels}>
+        <Tabs labels={labels} lazy>
           {byBranch.map((x) => (
             <UpDownChart key={x.branch} data={x.byYear} />
           ))}
@@ -254,7 +254,7 @@ export default function ExplorePage() {
         <p className="mb-4 text-sm text-fg-3">
           The highest Realistic Battles BR in each branch at each update.
         </p>
-        <Tabs labels={labels}>
+        <Tabs labels={labels} lazy>
           {byBranch.map((x) => (
             <TopBrChart key={x.branch} data={x.top} />
           ))}
