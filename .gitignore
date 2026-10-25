@@ -12,7 +12,8 @@ etl/cache/
 firebase-debug.log
 
 .DS_Store
-data/
+# ETL output at the repo root only (web/src/app/data/ holds route handlers).
+/data/
 web/public/img/units/
 web/public/data/
 web/public/img/flags/
