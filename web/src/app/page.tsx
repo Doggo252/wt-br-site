@@ -85,6 +85,11 @@ export default function Home() {
           </p>
           {/* Phones already have the header search. */}
           <SearchBox className="mt-6 hidden max-w-md sm:block" />
+          <p className="mt-2 hidden text-xs text-fg-3 sm:block">
+            Try <span className="font-display text-fg-2">germany 6.7</span> or{" "}
+            <span className="font-display text-fg-2">uk 10.0</span> to list every vehicle at a Realistic BR. Press{" "}
+            <kbd className="border border-card-border px-1 font-display">/</kbd> to search from any page.
+          </p>
           <dl className="mt-8 grid max-w-xl grid-cols-3 gap-3">
             <Stat label="Vehicles" value={index.filter((u) => !u.removedIn).length.toLocaleString("en")} />
             <Stat label="BR updates" value={brUpdates.toLocaleString("en")} />
