@@ -14,6 +14,21 @@ export type UnitCardProps = {
   selected?: boolean;
   image?: string;
   href?: string;
+  /** Vehicle class (UnitSummary.type), shown as a small badge. */
+  type?: string;
+};
+
+const TYPE_ABBR: Record<string, string> = {
+  light_tank: "LT",
+  medium_tank: "MT",
+  heavy_tank: "HT",
+  tank_destroyer: "TD",
+  spaa: "AA",
+  fighter: "FTR",
+  strike: "ATK",
+  bomber: "BMR",
+  attack_helicopter: "AH",
+  utility_helicopter: "UH",
 };
 
 /** Card palettes from unitcard.css: background / 1px border / 2px top line. */
@@ -48,6 +63,7 @@ export function UnitCard({
   selected = false,
   image,
   href,
+  type,
 }: UnitCardProps) {
   const inactive = availability !== "current";
   const changed = previousRank !== undefined && previousRank !== rank;
@@ -68,9 +84,9 @@ export function UnitCard({
         ) : (
           <TankSilhouette />
         )}
-        {tag && (
+        {(tag || (type && TYPE_ABBR[type])) && (
           <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1 font-display text-[10px] uppercase tracking-wide text-fg-2">
-            {tag}
+            {tag ?? TYPE_ABBR[type!]}
           </span>
         )}
         {dir && previousRank !== undefined && (

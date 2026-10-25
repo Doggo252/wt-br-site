@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 import { formatBr } from "@/lib/br";
 import { BRANCH_SHORT, type Branch } from "@/lib/branches";
+import { Flag } from "./Flag";
 import { nationName } from "@/lib/nations";
 
 /** [id, name, nation, rb rank, removed (0/1), branch] from data/public/search.json */
@@ -125,7 +126,10 @@ export function SearchBox({
               onMouseEnter={() => setActive(i)}
               className={`flex cursor-pointer items-baseline justify-between gap-3 px-3 py-1.5 text-sm ${i === active ? "bg-header" : ""}`}
             >
-              <span className={`truncate font-display ${r[4] ? "text-fg-3" : "text-fg"}`}>{r[1]}</span>
+              <span className={`flex min-w-0 items-center gap-2 font-display ${r[4] ? "text-fg-3" : "text-fg"}`}>
+                <Flag nation={r[2]} className="h-3" />
+                <span className="truncate">{r[1]}</span>
+              </span>
               <span className="shrink-0 text-xs text-fg-3">
                 {BRANCH_SHORT[r[5] as Branch] ?? r[5]} · {nationName(r[2])} ·{" "}
                 <span className="tabular">{formatBr(r[3])}</span>

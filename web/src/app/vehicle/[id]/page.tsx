@@ -432,7 +432,8 @@ function sameBr(u: UnitDetail, index: UnitSummary[], limit = 30) {
       .sort((a, b) => Number(b.nation === u.nation) - Number(a.nation === u.nation) || a.name.localeCompare(b.name))
       .slice(0, limit);
     byMode[m] = peers.map((o) => o.id);
-    for (const o of peers) units[o.id] = { name: o.name, status: o.status, hidden: o.hidden, br: o.br, image: o.image };
+    for (const o of peers)
+      units[o.id] = { name: o.name, status: o.status, hidden: o.hidden, br: o.br, image: o.image, type: o.type };
   }
   return { byMode, units };
 }

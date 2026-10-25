@@ -11,7 +11,7 @@ export default function AboutPage() {
   const meta = getMeta();
   const versions = getVersions();
   return (
-    <article className="max-w-2xl space-y-8 leading-relaxed">
+    <article className="prose max-w-2xl space-y-8 leading-relaxed">
       <header>
         <h1 className="text-4xl font-bold">About Uptier</h1>
         <p className="mt-2 text-fg-2">
@@ -96,7 +96,7 @@ export default function AboutPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="section-title mb-2">{title}</h2>
+      <h2 className="section-title mb-3">{title}</h2>
       {children}
     </section>
   );

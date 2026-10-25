@@ -10,7 +10,11 @@ export const metadata: Metadata = {
     "Every official War Thunder Battle Rating change announcement since 2023, and how many planned changes went live as announced.",
 };
 
-const KIND: Record<string, string> = { planned: "Planned", implemented: "Implemented", other: "Announcement" };
+const KIND: Record<string, { label: string; className: string }> = {
+  planned: { label: "Planned", className: "border-gold/50 text-gold" },
+  implemented: { label: "Implemented", className: "border-good/40 text-good" },
+  other: { label: "Announcement", className: "border-[#3a4650] text-fg-2" },
+};
 
 export default function AnnouncementsPage() {
   const all = getAnnouncements();
@@ -18,13 +22,17 @@ export default function AnnouncementsPage() {
   // Only announcements whose 45-day window has passed count towards the success rate.
   const settled = (a: (typeof all)[number]) =>
     a.kind === "planned" && (a.changes ?? []).length > 0 && !(a.changes ?? []).some((c) => rowOutcome(c) === "pending");
-  const judged = all.filter(settled).flatMap((a) => (a.changes ?? []).map(rowOutcome));
+  const judged = all
+    .filter(settled)
+    .flatMap((a) => (a.changes ?? []).map(rowOutcome))
+    .filter((o) => o !== null);
   const applied = judged.filter((o) => o === "applied").length;
 
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-4xl font-bold">Gaijin&apos;s BR announcements</h1>
+        <p className="eyebrow">From the official forum</p>
+        <h1 className="mt-1 text-4xl font-bold">Gaijin&apos;s BR announcements</h1>
         <p className="mt-2 max-w-2xl text-fg-2">
           Official Battle Rating change tables posted on the War Thunder forum. Planned changes are checked against what
           the game files actually did in the 45 days after the post.
@@ -40,9 +48,9 @@ export default function AnnouncementsPage() {
       {pending && (
         <Link
           href={`/announcements/${pending.a.id}/`}
-          className="block border border-card-premium-border bg-card-premium-bg p-4 no-underline hover:brightness-110"
+          className="callout-gold block p-4 hover:brightness-110"
         >
-          <span className="font-display text-sm uppercase tracking-wide text-gold">Coming soon</span>
+          <span className="eyebrow">Coming soon</span>
           <span className="mt-1 block text-lg text-fg">{pending.a.title}</span>
           <span className="text-sm text-fg-2">
             {plural(pending.pending.length, "vehicle")} with BR changes not live yet · posted {pending.a.date}
@@ -50,16 +58,20 @@ export default function AnnouncementsPage() {
         </Link>
       )}
 
-      <ul className="divide-y divide-card-border panel">
+      <ul className="panel divide-y divide-[#262f35]">
         {all.map((a) => {
           const rows = a.changes ?? [];
-          const outs = settled(a) ? rows.map(rowOutcome) : [];
+          const outs = settled(a) ? rows.map(rowOutcome).filter((o) => o !== null) : [];
           const ok = outs.filter((o) => o === "applied").length;
           const pendingRows = rows.filter((c) => rowOutcome(c) === "pending").length;
           return (
-            <li key={a.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-3 py-2">
+            <li key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 transition-colors hover:bg-white/[0.02]">
               <span className="w-24 text-sm tabular text-fg-3">{a.date}</span>
-              <span className="w-24 text-xs uppercase tracking-wide text-fg-3">{KIND[a.kind]}</span>
+              <span
+                className={`w-28 shrink-0 border px-1.5 py-px text-center font-display text-[11px] uppercase tracking-wider ${KIND[a.kind].className}`}
+              >
+                {KIND[a.kind].label}
+              </span>
               <span className="min-w-0 flex-1">
                 {a.unavailable || rows.length === 0 ? (
                   <a href={a.url} rel="noopener">

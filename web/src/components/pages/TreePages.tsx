@@ -99,7 +99,7 @@ export function NationTreePage({ branch, nation }: { branch: Branch; nation: str
   const tree = getTree(branch, nation);
   const units: Record<string, TreeUnit> = {};
   for (const u of unitsInNation(branch, nation).filter((u) => !u.removedIn)) {
-    units[u.id] = { name: u.name, status: u.status, hidden: u.hidden, br: u.br, image: u.image };
+    units[u.id] = { name: u.name, status: u.status, hidden: u.hidden, br: u.br, image: u.image, type: u.type };
   }
   const meta = getMeta();
   return (

@@ -150,6 +150,7 @@ export default function Home() {
                         status={u.status}
                         image={u.image ? `/img/units/${c.id}.webp` : undefined}
                         href={`/vehicle/${c.id}/`}
+                        type={u.type}
                       />
                     </li>
                   );

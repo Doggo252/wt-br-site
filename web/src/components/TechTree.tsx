@@ -18,6 +18,7 @@ export type TreeUnit = {
   hidden?: boolean;
   br: Ranks;
   image?: boolean;
+  type?: string;
   /** BR before the version being viewed, when that version changed it. */
   prev?: Ranks;
 };
@@ -83,6 +84,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
 
   const visible = (id: string) => view.units[id] && (showHidden || !view.units[id].hidden);
   const ranks = [...new Set(view.columns.flat().map((c) => c.rank))].sort((a, b) => a - b);
+  const headers = view.columns.map((col) => columnLabel(col, view.units));
   const version = vIdx !== null && history ? history.versions[vIdx] : null;
   const changedHere = Object.values(view.units).filter((u) => u.prev && u.prev[mode] !== u.br[mode]).length;
 
@@ -153,6 +155,20 @@ export function TechTree({ branch, nation, columns, units }: Props) {
 
       <div className="overflow-x-auto pb-4">
         <table className="table-fixed border-separate border-spacing-x-2 border-spacing-y-0">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 bg-[#12161b]/95" />
+              {headers.map((h, i) => (
+                <th
+                  key={i}
+                  scope="col"
+                  className={`pb-2 text-left font-display text-[11px] font-semibold uppercase tracking-[0.12em] ${h.premium ? "text-premium" : "text-fg-3"}`}
+                >
+                  {h.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
           <tbody>
             {ranks.map((rank) => (
               <tr key={rank} className="align-top">
@@ -320,6 +336,7 @@ function TreeCard({ id, unit, mode }: { id: string; unit: TreeUnit; mode: Mode }
       availability={unit.hidden ? "unobtainable" : "current"}
       image={unit.image ? `/img/units/${id}.webp` : undefined}
       href={`/vehicle/${id}/`}
+      type={unit.type}
     />
   );
 }
@@ -386,4 +403,27 @@ function ClockIcon() {
       <path d="M8 4.5V8l2.4 1.6" />
     </svg>
   );
+}
+
+const COLUMN_LABEL: Record<string, string> = {
+  light_tank: "Light tanks",
+  medium_tank: "Medium tanks",
+  heavy_tank: "Heavy tanks",
+  tank_destroyer: "Tank destroyers",
+  spaa: "Anti-air",
+  fighter: "Fighters",
+  strike: "Strike aircraft",
+  bomber: "Bombers",
+  attack_helicopter: "Attack helicopters",
+  utility_helicopter: "Utility helicopters",
+};
+
+/** Name a column by its most common vehicle class; columns of only non-tree vehicles are "Premium". */
+function columnLabel(col: TreeCell[], units: Record<string, TreeUnit>): { label: string; premium: boolean } {
+  const list = col.flatMap((c) => c.units).map((id) => units[id]).filter(Boolean);
+  if (list.length && list.every((u) => u.status !== "tree")) return { label: "Premium & event", premium: true };
+  const counts = new Map<string, number>();
+  for (const u of list) if (u.type) counts.set(u.type, (counts.get(u.type) ?? 0) + 1);
+  const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+  return { label: top ? (COLUMN_LABEL[top] ?? "") : "", premium: false };
 }

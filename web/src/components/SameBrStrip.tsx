@@ -38,6 +38,7 @@ export function SameBrStrip({ byMode, units, rank }: Props) {
                   availability={u.hidden ? "unobtainable" : "current"}
                   image={u.image ? `/img/units/${id}.webp` : undefined}
                   href={`/vehicle/${id}/`}
+                  type={u.type}
                 />
               </li>
             );
