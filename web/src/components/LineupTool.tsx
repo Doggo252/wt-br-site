@@ -6,7 +6,12 @@ import { Flag } from "./Flag";
 import { ModeToggle } from "./ModeToggle";
 import { UnitCard } from "./UnitCard";
 import { MODE_NAME, formatBr } from "@/lib/br";
-import { BRANCHES, BRANCH_NAME, BRANCH_SHORT, type Branch } from "@/lib/branches";
+import {
+  BRANCHES,
+  BRANCH_NAME,
+  BRANCH_SHORT,
+  type Branch,
+} from "@/lib/branches";
 import { nationName } from "@/lib/nations";
 import { useMode } from "@/lib/useMode";
 import type { UnitStatus } from "@/lib/units";
@@ -54,7 +59,7 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [branch, setBranch] = useState<Branch>("ground");
   const [nation, setNation] = useState("usa");
-  const [rank, setRank] = useState(17);
+  const [wantRank, setRank] = useState(17);
   const [focus, setFocus] = useState<number | null>(null);
 
   useEffect(() => {
@@ -66,15 +71,6 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
     /* eslint-enable react-hooks/set-state-in-effect */
     load().then(setRows);
   }, []);
-
-  // Keep the URL shareable.
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("b", branch);
-    url.searchParams.set("n", nation);
-    url.searchParams.set("br", formatBr(rank));
-    window.history.replaceState(null, "", url);
-  }, [branch, nation, rank]);
 
   const col = MODE_COL[mode];
   const pool = useMemo(
@@ -88,6 +84,21 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   const nationList = nations[branch].includes(nation)
     ? nation
     : nations[branch][0];
+  // The chosen BR may not exist in this branch or mode: use the nearest one that does.
+  const rank = ranks.length
+    ? ranks.reduce((best, r) =>
+        Math.abs(r - wantRank) < Math.abs(best - wantRank) ? r : best,
+      )
+    : wantRank;
+
+  // Keep the URL shareable, with what is actually shown.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("b", branch);
+    url.searchParams.set("n", nationList);
+    url.searchParams.set("br", formatBr(rank));
+    window.history.replaceState(null, "", url);
+  }, [branch, nationList, rank]);
 
   const lineup = pool
     .filter(
