@@ -9,6 +9,7 @@ import type { BrChange, UnitSummary } from "@/lib/data.gen";
 import { nationName } from "@/lib/nations";
 import { BranchIcon } from "@/components/BranchIcon";
 import { Flag } from "@/components/Flag";
+import { UpdateFilter } from "@/components/UpdateFilter";
 import { Thumb } from "@/components/Thumb";
 import { plural } from "@/lib/format";
 
@@ -93,8 +94,12 @@ export default async function UpdatePage({ params }: Params) {
         {!u.prev && <p className="text-sm text-fg-3">This is the first version in the datamine, used as the baseline.</p>}
       </header>
 
+      {groups.length > 1 && (
+        <UpdateFilter nations={[...new Set(groups.map((g) => g.nation))]} ids={u.changes.map((c) => c.id)} />
+      )}
+
       {BRANCHES.filter((b) => groups.some((g) => g.branch === b)).map((b) => (
-        <section key={b} className="space-y-6">
+        <section key={b} data-branch={b} className="space-y-6">
           <h2 className="section-title">
             <BranchIcon branch={b} className="h-5 w-5 text-fg-3" />
             {BRANCH_NAME[b]}
@@ -102,7 +107,7 @@ export default async function UpdatePage({ params }: Params) {
           {groups
             .filter((g) => g.branch === b)
             .map((g) => (
-              <div key={g.nation}>
+              <div key={g.nation} data-nation={g.nation}>
                 <h3 className="mb-2 flex items-center gap-2 font-display text-lg font-semibold">
                   <Flag nation={g.nation} className="h-4" />
                   {nationName(g.nation)}
@@ -118,7 +123,7 @@ export default async function UpdatePage({ params }: Params) {
       {u.removed.length > 0 && <UnitGrid title="Removed" ids={u.removed} units={units} removed />}
 
       {u.changes.length === 0 && u.added.length === 0 && u.removed.length === 0 && (
-        <p className="text-fg-2">No ground BR changes in this version; only the tech tree layout changed.</p>
+        <p className="text-fg-2">No BR changes in this version; only the tech tree layout changed.</p>
       )}
     </div>
   );
@@ -143,7 +148,7 @@ function DiffTable({ changes, units }: { changes: BrChange[]; units: Map<string,
           {sorted.map((c) => {
             const unit = units.get(c.id);
             return (
-              <tr key={c.id}>
+              <tr key={c.id} data-unit={c.id}>
                 <td className="px-3 py-1">
                   <Link href={`/vehicle/${c.id}/`} className="flex items-center gap-2 font-display">
                     <Thumb id={c.id} image={unit?.image} />
