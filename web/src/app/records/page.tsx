@@ -3,6 +3,7 @@ import { RecordsTable } from "@/components/RecordsTable";
 import Link from "next/link";
 import { Flag } from "@/components/Flag";
 import { getRecords, getUnitMap, nationsOf } from "@/lib/data";
+import { nationName } from "@/lib/nations";
 
 export const metadata: Metadata = {
   title: "RB kill records",
@@ -16,6 +17,14 @@ export default function RecordsPage() {
   const rows = getRecords().map((r) => ({ ...r, image: r.id ? units.get(r.id)?.image : false }));
   const withKills = rows.filter((r) => r.kills);
   const podium = [...withKills].sort((a, b) => (b.kills ?? 0) - (a.kills ?? 0)).slice(0, 3);
+  const players = topPlayers(withKills);
+  const byNation = nationsOf("ground")
+    .map((n) => {
+      const list = withKills.filter((r) => r.nation === n);
+      const avg = list.reduce((sum, r) => sum + (r.kills ?? 0), 0) / Math.max(1, list.length);
+      return { n, count: list.length, avg, best: Math.max(0, ...list.map((r) => r.kills ?? 0)) };
+    })
+    .sort((a, b) => b.avg - a.avg);
   return (
     <div className="space-y-6">
       <header>
@@ -64,7 +73,73 @@ export default function RecordsPage() {
           </li>
         ))}
       </ol>
+      <div className="grid gap-6 md:grid-cols-2">
+        <section className="panel p-4">
+          <h2 className="section-title mb-3">Most records held</h2>
+          <table className="data-table w-full text-sm">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 font-semibold">Player</th>
+                <th className="px-3 py-2 text-right font-semibold">Records</th>
+                <th className="px-3 py-2 text-right font-semibold">Best</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-card-border">
+              {players.map((p) => (
+                <tr key={p.player}>
+                  <td className="px-3 py-1.5 text-fg">{p.player}</td>
+                  <td className="px-3 py-1.5 text-right font-display tabular">{p.count}</td>
+                  <td className="px-3 py-1.5 text-right font-display tabular text-gold">{p.best}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+        <section className="panel p-4">
+          <h2 className="section-title mb-3">By nation</h2>
+          <table className="data-table w-full text-sm">
+            <thead>
+              <tr>
+                <th className="px-3 py-2 font-semibold">Nation</th>
+                <th className="px-3 py-2 text-right font-semibold">Records</th>
+                <th className="px-3 py-2 text-right font-semibold">Average</th>
+                <th className="px-3 py-2 text-right font-semibold">Best</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-card-border">
+              {byNation.map((x) => (
+                <tr key={x.n}>
+                  <td className="px-3 py-1.5">
+                    <span className="inline-flex items-center gap-2 text-fg">
+                      <Flag nation={x.n} className="h-3" />
+                      {nationName(x.n)}
+                    </span>
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-display tabular">{x.count}</td>
+                  <td className="px-3 py-1.5 text-right font-display tabular">{x.avg.toFixed(1)}</td>
+                  <td className="px-3 py-1.5 text-right font-display tabular text-gold">{x.best}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </div>
       <RecordsTable rows={rows} nations={nationsOf("ground")} />
     </div>
   );
+}
+
+/** Players holding the most vehicle records (names compared case-insensitively). */
+function topPlayers(rows: { player?: string | null; kills?: number | null }[], limit = 10) {
+  const by = new Map<string, { player: string; count: number; best: number }>();
+  for (const r of rows) {
+    const name = r.player?.trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    const p = by.get(key) ?? { player: name, count: 0, best: 0 };
+    p.count++;
+    p.best = Math.max(p.best, r.kills ?? 0);
+    by.set(key, p);
+  }
+  return [...by.values()].sort((a, b) => b.count - a.count || b.best - a.best).slice(0, limit);
 }
