@@ -11,6 +11,7 @@ import { getIndex, getUnit, getVersions, nationsOf, type Version } from "@/lib/d
 import type { UnitDetail } from "@/lib/data.gen";
 import { Flag } from "@/components/Flag";
 import { Thumb } from "@/components/Thumb";
+import { nationName } from "@/lib/nations";
 
 export const metadata: Metadata = {
   title: "Explore",
@@ -37,6 +38,7 @@ export default function ExplorePage() {
       most: [...ds].sort((a, b) => (b.changes ?? 0) - (a.changes ?? 0)).slice(0, 15),
       top: topBr(ds, versions.map((v) => v.v), versions.map((v) => v.d)),
       byYear: upDownByYear(versions, b),
+      nations: nationBalance(ds),
     };
   });
   const labels = byBranch.map((x) => BRANCH_SHORT[x.branch]);
@@ -65,6 +67,7 @@ export default function ExplorePage() {
           <a className="btn" href="#movers">Biggest moves</a>
           <a className="btn" href="#most-changed">Most changed</a>
           <a className="btn" href="#thermals">Thermal finder</a>
+          <a className="btn" href="#nations">By nation</a>
           <a className="btn" href="#by-year">By year</a>
           <a className="btn" href="#top-br">Top BR over time</a>
           <Link className="btn" href="/compare/">Compare vehicles</Link>
@@ -112,6 +115,19 @@ export default function ExplorePage() {
           Best thermal sight per crew position, including ones that need a modification. Sorted from the lowest BR.
         </p>
         <ThermalFinder units={thermal} nations={nationsOf("ground")} />
+      </section>
+
+      <section id="nations" className="scroll-mt-16">
+        <h2 className="section-title mb-1">Uptiers and downtiers by nation</h2>
+        <p className="mb-4 text-sm text-fg-3">
+          Every RB change to vehicles in the game today, since March 2020. Net is the sum of all moves (one 1.0 uptier and
+          three 0.3 downtiers come to +0.1); per vehicle divides it by the nation&apos;s vehicle count.
+        </p>
+        <Tabs labels={labels}>
+          {byBranch.map((x) => (
+            <NationTable key={x.branch} rows={x.nations} />
+          ))}
+        </Tabs>
       </section>
 
       <section id="by-year" className="scroll-mt-16">
@@ -171,6 +187,95 @@ function MoverTable({
                 <span className="inline-flex items-center gap-1">
                   <Arrow dir={delta > 0 ? "up" : "down"} />
                   {formatBrDelta(first, d.br.rb)}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+type NationRow = { nation: string; vehicles: number; ups: number; downs: number; net: number };
+
+/** Per nation: RB change events up and down, and their summed size in ranks. */
+function nationBalance(details: UnitDetail[]): NationRow[] {
+  const rows = new Map<string, NationRow>();
+  for (const d of details) {
+    const row = rows.get(d.nation) ?? { nation: d.nation, vehicles: 0, ups: 0, downs: 0, net: 0 };
+    row.vehicles++;
+    const h = d.history ?? [];
+    for (let i = 1; i < h.length; i++) {
+      const delta = h[i].rb - h[i - 1].rb;
+      if (delta > 0) row.ups++;
+      if (delta < 0) row.downs++;
+      row.net += delta;
+    }
+    rows.set(d.nation, row);
+  }
+  return [...rows.values()].sort((a, b) => b.net / b.vehicles - a.net / a.vehicles);
+}
+
+function NationTable({ rows }: { rows: NationRow[] }) {
+  const avg = (r: NationRow) => r.net / r.vehicles / 3;
+  const max = Math.max(0.01, ...rows.map((r) => Math.abs(avg(r))));
+  // Centre the bars only when there are moves both ways.
+  const diverging = rows.some((r) => r.net < 0) && rows.some((r) => r.net > 0);
+  const half = diverging ? 50 : 100;
+  return (
+    <div className="overflow-x-auto panel">
+      <table className="data-table w-full min-w-[560px] text-sm">
+        <thead>
+          <tr>
+            <th className="px-3 py-2 font-semibold">Nation</th>
+            <th className="px-3 py-2 text-right font-semibold">Vehicles</th>
+            <th className="px-3 py-2 text-right font-semibold">Uptiers</th>
+            <th className="px-3 py-2 text-right font-semibold">Downtiers</th>
+            <th className="px-3 py-2 text-right font-semibold">Net BR</th>
+            <th className="px-3 py-2 text-right font-semibold">Per vehicle</th>
+            <th className="w-1/4 px-3 py-2 font-semibold">
+              <span className="sr-only">Per vehicle, as a bar</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-card-border">
+          {rows.map((r) => (
+            <tr key={r.nation}>
+              <td className="px-3 py-1.5">
+                <span className="inline-flex items-center gap-2 font-display">
+                  <Flag nation={r.nation} className="h-3.5" />
+                  {nationName(r.nation)}
+                </span>
+              </td>
+              <td className="px-3 py-1.5 text-right tabular text-fg-2">{r.vehicles}</td>
+              <td className="px-3 py-1.5 text-right tabular text-fg-2">{r.ups}</td>
+              <td className="px-3 py-1.5 text-right tabular text-fg-2">{r.downs}</td>
+              <td
+                className={`whitespace-nowrap px-3 py-1.5 text-right font-display tabular ${r.net > 0 ? "text-bad" : r.net < 0 ? "text-good" : "text-fg-2"}`}
+              >
+                <span className="inline-flex items-center gap-1">
+                  {r.net !== 0 && <Arrow dir={r.net > 0 ? "up" : "down"} />}
+                  {r.net > 0 ? "+" : r.net < 0 ? "−" : ""}
+                  {(Math.abs(r.net) / 3).toFixed(1)}
+                </span>
+              </td>
+              <td className="px-3 py-1.5 text-right font-display tabular text-fg">
+                {avg(r) > 0 ? "+" : avg(r) < 0 ? "−" : ""}
+                {Math.abs(avg(r)).toFixed(2)}
+              </td>
+              <td className="px-3 py-1.5" aria-hidden>
+                {/* Up to the right, down to the left of the baseline (centred when both occur). */}
+                <span className="relative block h-2.5">
+                  <span className={`absolute inset-y-[-3px] w-px bg-fg-3/50 ${diverging ? "left-1/2" : "left-0"}`} />
+                  <span
+                    className={`absolute inset-y-0 ${
+                      r.net >= 0
+                        ? `${diverging ? "left-1/2" : "left-0"} rounded-r-[4px] bg-bad/80`
+                        : "right-1/2 rounded-l-[4px] bg-good/80"
+                    }`}
+                    style={{ width: `${(Math.abs(avg(r)) / max) * half}%` }}
+                  />
                 </span>
               </td>
             </tr>
