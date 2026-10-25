@@ -28,6 +28,18 @@ export default function AnnouncementsPage() {
     .filter((o) => o !== null);
   const applied = judged.filter((o) => o === "applied").length;
 
+  // Some same-day posts repeat another post's table word for word; say so. (A planned table
+  // reappearing later as "implemented" is expected and already told apart by its kind.)
+  const sameTableAs = new Map<number, string>();
+  const firstWithTable = new Map<string, string>();
+  for (const a of all) {
+    if (!a.changes?.length) continue;
+    const sig = JSON.stringify([a.date, a.changes.map((c) => [c.name, c.ab, c.rb, c.sb, c.grb])]);
+    const first = firstWithTable.get(sig);
+    if (first) sameTableAs.set(a.id, first);
+    else firstWithTable.set(sig, a.title);
+  }
+
   return (
     <div className="space-y-8">
       <header>
@@ -60,6 +72,7 @@ export default function AnnouncementsPage() {
 
       <ul className="panel divide-y divide-[#262f35]">
         {all.map((a) => {
+          const twin = sameTableAs.get(a.id);
           const rows = a.changes ?? [];
           const outs = settled(a) ? rows.map(rowOutcome).filter((o) => o !== null) : [];
           const ok = outs.filter((o) => o === "applied").length;
@@ -80,6 +93,7 @@ export default function AnnouncementsPage() {
                 ) : (
                   <Link href={`/announcements/${a.id}/`} className="text-fg hover:text-link">{a.title}</Link>
                 )}
+                {twin && <span className="block text-xs text-fg-3">Same table as “{twin}”</span>}
               </span>
               <span className="text-sm text-fg-2">
                 {a.unavailable
