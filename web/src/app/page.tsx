@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Arrow } from "@/components/Arrow";
 import { BranchIcon } from "@/components/BranchIcon";
 import { Flag } from "@/components/Flag";
+import { HomeWatchlist } from "@/components/HomeWatchlist";
 import { SearchBox } from "@/components/SearchBox";
 import { UnitCard } from "@/components/UnitCard";
 import { BRANCHES, BRANCH_NAME, branchHref, treeHref } from "@/lib/branches";
@@ -110,6 +111,8 @@ export default function Home() {
           )}
         </div>
       )}
+
+      <HomeWatchlist />
 
       {latest && update && (
         <section className="panel p-4 sm:p-6">

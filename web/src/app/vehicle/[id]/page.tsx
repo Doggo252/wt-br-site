@@ -2,17 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BrStepChart } from "@/components/BrStepChart";
 import { ChangeLog } from "@/components/ChangeLog";
+import { Flag } from "@/components/Flag";
 import { ChangeCell, OutcomeChip, rowOutcome } from "@/components/OfficialChanges";
 import { SameBrStrip } from "@/components/SameBrStrip";
+import { StarButton } from "@/components/StarButton";
 import type { TreeUnit } from "@/components/TechTree";
 import { ThermalChip } from "@/components/ThermalChip";
+import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, MODE_NAME, formatBr, type Mode } from "@/lib/br";
-import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getUnit } from "@/lib/data";
+import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getTree, getUnit, getUnitMap } from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
-import { Flag } from "@/components/Flag";
 import { treeHref } from "@/lib/branches";
 import { plainName, plural } from "@/lib/format";
-import { StarButton } from "@/components/StarButton";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
 import { CREW_LABEL, type CrewRole, type Sight as ChipSight } from "@/lib/units";
 
@@ -55,6 +56,7 @@ export default async function VehiclePage({ params }: Params) {
   const u = getUnit(id);
   const meta = getMeta();
   const same = sameBr(u, getIndex());
+  const line = treeLine(u);
   const dev = getDev();
   const devChange = dev?.changes?.find((c) => c.id === id);
   const devVersion = dev?.v;
@@ -262,6 +264,48 @@ export default async function VehiclePage({ params }: Params) {
         </Section>
       )}
 
+      {line && (
+        <Section title="In the tech tree">
+          <nav aria-label="Tech tree line" className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+              {line.prev ? (
+                <Link href={`/vehicle/${line.prev.id}/`} className="btn" rel="prev">
+                  ← {line.prev.name}
+                </Link>
+              ) : (
+                <span />
+              )}
+              <Link href={treeHref(u.branch, u.nation)} className="text-fg-2">
+                Full {nationName(u.nation)} tree
+              </Link>
+              {line.next ? (
+                <Link href={`/vehicle/${line.next.id}/`} className="btn" rel="next">
+                  {line.next.name} →
+                </Link>
+              ) : (
+                <span />
+              )}
+            </div>
+            <ul className="flex snap-x gap-2 overflow-x-auto pb-3">
+              {line.units.map((o) => (
+                <li key={o.id} className="w-[140px] shrink-0 snap-start">
+                  <UnitCard
+                    name={o.name}
+                    rank={o.br.rb}
+                    status={o.status}
+                    availability={o.hidden ? "unobtainable" : "current"}
+                    image={o.image ? `/img/units/${o.id}.webp` : undefined}
+                    href={o.id === u.id ? undefined : `/vehicle/${o.id}/`}
+                    selected={o.id === u.id}
+                    type={o.type}
+                  />
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </Section>
+      )}
+
       <Section title="Same Battle Rating">
         <SameBrStrip byMode={same.byMode} units={same.units} rank={u.br} />
       </Section>
@@ -425,6 +469,26 @@ function AirStatGrid({ u }: { u: UnitDetail }) {
 }
 
 /** Vehicles of the same branch at exactly the same BR in each mode: same nation first, then others. */
+/** The tech tree column holding this vehicle, top to bottom, with its neighbours. */
+function treeLine(u: UnitDetail) {
+  if (u.removedIn || u.branch === "naval") return null;
+  let tree;
+  try {
+    tree = getTree(u.branch, u.nation);
+  } catch {
+    return null;
+  }
+  const col = tree.columns.find((c) => c.some((cell) => cell.units.includes(u.id)));
+  if (!col) return null;
+  const map = getUnitMap();
+  const units = col.flatMap((cell) => cell.units).flatMap((id) => map.get(id) ?? []);
+  const i = units.findIndex((o) => o.id === u.id);
+  if (units.length < 2) return null;
+  // Up to seven cards, centred on this vehicle where the column allows.
+  const start = Math.max(0, Math.min(i - 3, units.length - 7));
+  return { units: units.slice(start, start + 7), prev: units[i - 1], next: units[i + 1] };
+}
+
 function sameBr(u: UnitDetail, index: UnitSummary[], limit = 30) {
   const byMode = {} as Record<Mode, string[]>;
   const units: Record<string, TreeUnit> = {};
