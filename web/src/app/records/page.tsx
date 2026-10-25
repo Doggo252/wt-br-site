@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { RecordsTable } from "@/components/RecordsTable";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Flag } from "@/components/Flag";
 import { getRecords, getUnitMap, nationsOf } from "@/lib/data";
 import { nationName } from "@/lib/nations";

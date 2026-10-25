@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { BrStepChart } from "@/components/BrStepChart";
 import { ChangeLog } from "@/components/ChangeLog";
 import { Flag } from "@/components/Flag";

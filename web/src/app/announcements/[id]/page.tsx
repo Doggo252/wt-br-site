@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { OfficialChangeTable, rowOutcome } from "@/components/OfficialChanges";
 import { BRANCHES, BRANCH_NAME } from "@/lib/branches";
 import { getAnnouncements, getUnitMap } from "@/lib/data";

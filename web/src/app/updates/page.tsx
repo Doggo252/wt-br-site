@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Arrow } from "@/components/Arrow";
 import { BRANCHES, BRANCH_SHORT } from "@/lib/branches";
 import { getUnitMap, getUpdate, getVersions, type Version } from "@/lib/data";

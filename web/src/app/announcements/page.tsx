@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { rowOutcome } from "@/components/OfficialChanges";
 import { getAnnouncements, getPendingPlan } from "@/lib/data";
 import { plural } from "@/lib/format";

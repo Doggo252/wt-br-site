@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Arrow } from "@/components/Arrow";
 import { Tabs } from "@/components/Tabs";
 import { ThermalFinder, type ThermalUnit } from "@/components/ThermalFinder";

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Arrow } from "@/components/Arrow";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { UnitCard } from "@/components/UnitCard";

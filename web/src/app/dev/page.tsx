@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Arrow } from "@/components/Arrow";
 import { MODES, MODE_LABEL, formatBr, formatBrDelta } from "@/lib/br";
 import { BRANCH_NAME, BRANCHES } from "@/lib/branches";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Arrow } from "./Arrow";
 import { MODES, MODE_LABEL, formatBr, formatBrDelta } from "@/lib/br";
 import type { Absence, HistoryPoint } from "@/lib/data.gen";

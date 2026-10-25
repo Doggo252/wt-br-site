@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Arrow } from "@/components/Arrow";
 import { BranchIcon } from "@/components/BranchIcon";
 import { Flag } from "@/components/Flag";

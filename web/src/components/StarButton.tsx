@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import type { Ranks } from "@/lib/data.gen";
 import { useWatchlist } from "@/lib/watchlist";
 

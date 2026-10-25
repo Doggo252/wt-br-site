@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { TechTree, type TreeUnit } from "@/components/TechTree";
 import { formatBr } from "@/lib/br";
 import { BRANCHES, BRANCH_NAME, BRANCH_SHORT, branchHref, treeHref, type Branch } from "@/lib/branches";

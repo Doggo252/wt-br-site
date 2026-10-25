@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import "@fontsource/fira-sans-condensed/400.css";
 import "@fontsource/fira-sans-condensed/500.css";
 import "@fontsource/fira-sans-condensed/600.css";

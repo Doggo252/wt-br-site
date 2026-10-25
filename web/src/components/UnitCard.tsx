@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Arrow } from "./Arrow";
 import { formatBr, formatBrDelta } from "@/lib/br";
 import type { Availability, UnitStatus } from "@/lib/units";
