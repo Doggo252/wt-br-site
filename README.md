@@ -56,7 +56,7 @@ The ETL refuses to write data that looks broken (vehicles without names, out-of-
 
 1. Create a Firebase project and enable Hosting.
 2. In the GitHub repo settings:
-   - Add a variable `FIREBASE_PROJECT_ID` with the project ID.
+   - Add a variable `FIREBASE_PROJECT_ID` with the project ID. Links in share cards, the sitemap and the feed then point at `https://<project-id>.web.app`; set a `SITE_URL` variable too if you use a custom domain.
    - Add a secret `FIREBASE_SERVICE_ACCOUNT` with a service-account JSON key that has the Firebase Hosting Admin role (`firebase init hosting:github` can create it).
 3. Push to `main`. The **Build and deploy** workflow runs the ETL, builds the site, tests it and deploys. It also runs daily at 05:17 UTC to pick up new game versions.
 

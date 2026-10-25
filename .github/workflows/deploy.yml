@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build-site
+        with:
+          # A custom domain in vars.SITE_URL wins; otherwise the project's default web.app address.
+          site-url: ${{ vars.SITE_URL || (vars.FIREBASE_PROJECT_ID && format('https://{0}.web.app', vars.FIREBASE_PROJECT_ID)) || '' }}
 
       - name: Deploy to Firebase Hosting
         # Needs the FIREBASE_SERVICE_ACCOUNT secret and FIREBASE_PROJECT_ID variable (see README).
