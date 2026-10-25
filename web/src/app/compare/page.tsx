@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CompareTool } from "@/components/CompareTool";
+import { CopyLink } from "@/components/CopyLink";
 import { getUnitMap } from "@/lib/data";
 
 // Starting points for an empty comparison; groups with a missing id are dropped at build time.
@@ -29,6 +30,7 @@ export default function ComparePage() {
           Put up to five vehicles, aircraft or helicopters on one BR chart. The link updates as you go, so you can
           share it.
         </p>
+        <CopyLink className="mt-3" />
       </header>
       <CompareTool suggestions={suggestions} />
     </div>

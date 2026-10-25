@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CopyLink } from "@/components/CopyLink";
 import { LineupTool } from "@/components/LineupTool";
 import { BRANCHES, type Branch } from "@/lib/branches";
 import { nationsOf } from "@/lib/data";
@@ -20,6 +21,7 @@ export default function LineupPage() {
           Pick a nation and the Battle Rating you want to play. You can meet vehicles up to 1.0 above or below your
           highest BR. The link updates as you go, so you can share it.
         </p>
+        <CopyLink className="mt-3" />
       </header>
       <LineupTool nations={nations} />
     </div>

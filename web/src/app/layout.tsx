@@ -9,6 +9,7 @@ import "@fontsource/pt-sans/700.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { Logo } from "@/components/Logo";
+import { RandomVehicle } from "@/components/RandomVehicle";
 import { NavLinks } from "@/components/NavLinks";
 import { SearchBox } from "@/components/SearchBox";
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/compare/">Compare</Link>
               <Link href="/lineup/">Lineup planner</Link>
               <Link href="/watchlist/">Your watchlist</Link>
+              <RandomVehicle className="text-left text-link hover:underline" />
               <Link href="/explore/">Explore</Link>
             </nav>
             <nav aria-label="About" className="grid content-start gap-1.5">
