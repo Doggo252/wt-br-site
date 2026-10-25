@@ -11,7 +11,7 @@ import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getUnit } from "@/li
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { Flag } from "@/components/Flag";
 import { treeHref } from "@/lib/branches";
-import { plural } from "@/lib/format";
+import { plainName, plural } from "@/lib/format";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
 import { CREW_LABEL, type CrewRole, type Sight as ChipSight } from "@/lib/units";
 
@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const u = getUnit(id);
   return {
-    title: `${u.name} BR history`,
-    description: `${u.fullName} (${nationName(u.nation)}): Battle Rating ${formatBr(u.br.ab)} AB / ${formatBr(u.br.rb)} RB / ${formatBr(u.br.sb)} SB, with stats and night vision.`,
+    title: `${plainName(u.name)} (${nationName(u.nation)}) BR history`,
+    description: `${plainName(u.fullName)} (${nationName(u.nation)}): Battle Rating ${formatBr(u.br.ab)} AB / ${formatBr(u.br.rb)} RB / ${formatBr(u.br.sb)} SB, with stats and night vision.`,
     openGraph: u.image ? { images: [`/img/units/${id}.webp`] } : undefined,
   };
 }

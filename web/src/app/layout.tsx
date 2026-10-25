@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "Uptier: every BR change, patch by patch." }],
   },
   twitter: { card: "summary_large_image" },
+  alternates: { types: { "application/atom+xml": [{ url: "/feed.xml", title: "Uptier BR changes" }] } },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Logo />
             </Link>
             <NavLinks />
-            <SearchBox className="order-last w-full sm:order-none sm:ml-auto sm:w-60" />
+            <SearchBox shortcut className="order-last w-full sm:order-none sm:ml-auto sm:w-60" />
           </div>
           {/* Thin gold rule, brightest in the middle. */}
           <div
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <span className="eyebrow mb-1 text-fg-3">Site</span>
               <Link href="/about/">About and sources</Link>
               <Link href="/design/">Style guide</Link>
+              <a href="/feed.xml">Atom feed</a>
               <a href="https://github.com/Doggo252/wt-br-site">Source code</a>
             </nav>
           </div>

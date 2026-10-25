@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { formatBr } from "@/lib/br";
 import { BRANCH_SHORT, type Branch } from "@/lib/branches";
 import { Flag } from "./Flag";
@@ -46,8 +46,11 @@ export function SearchBox({
   className = "",
   onSelect,
   placeholder = "Search vehicles and aircraft",
+  shortcut = false,
 }: {
   className?: string;
+  /** Focus this box when "/" is pressed outside a text field. */
+  shortcut?: boolean;
   /** Called instead of navigating to the vehicle page. */
   onSelect?: (row: Row) => void;
   placeholder?: string;
@@ -60,6 +63,19 @@ export function SearchBox({
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!shortcut) return;
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement;
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
+      e.preventDefault();
+      input.current?.focus();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [shortcut]);
 
   function update(value: string, data = rows) {
     setQ(value);
@@ -108,8 +124,17 @@ export function SearchBox({
             setOpen(false);
           }
         }}
-        className="w-full border border-card-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-3 focus:border-link focus:outline-none"
+        aria-keyshortcuts={shortcut ? "/" : undefined}
+        className={`peer w-full border border-card-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-3 focus:border-link focus:outline-none ${shortcut ? "pr-8" : ""}`}
       />
+      {shortcut && !q && (
+        <kbd
+          aria-hidden
+          className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 border border-card-border px-1.5 font-display text-[11px] leading-4 text-fg-3 peer-focus:hidden sm:block"
+        >
+          /
+        </kbd>
+      )}
       {open && results.length > 0 && (
         <ul
           id={listId}
