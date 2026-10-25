@@ -423,7 +423,7 @@ const COLUMN_LABEL: Record<string, string> = {
 /** Name a column by its most common vehicle class; columns of only non-tree vehicles are "Premium". */
 function columnLabel(col: TreeCell[], units: Record<string, TreeUnit>): { label: string; premium: boolean } {
   const list = col.flatMap((c) => c.units).map((id) => units[id]).filter(Boolean);
-  if (list.length && list.every((u) => u.status !== "tree")) return { label: "Premium & event", premium: true };
+  if (list.length && list.every((u) => u.status !== "tree" || u.hidden)) return { label: "Premium & event", premium: true };
   const counts = new Map<string, number>();
   for (const u of list) if (u.type) counts.set(u.type, (counts.get(u.type) ?? 0) + 1);
   const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
