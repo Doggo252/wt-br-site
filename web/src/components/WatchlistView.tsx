@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ModeToggle } from "./ModeToggle";
 import { StarIcon } from "./StarButton";
+import { loadIndex } from "./SearchBox";
 import { UnitCard } from "./UnitCard";
 import { MODE_NAME } from "@/lib/br";
 import { plural } from "@/lib/format";
@@ -19,11 +20,14 @@ export function WatchlistView() {
   const [mode, setMode] = useMode();
   const [list, set, ready] = useWatchlist();
   const [rows, setRows] = useState<Map<string, Row> | null>(null);
+  // Names for vehicles that have left the game (they aren't in lineup.json).
+  const [names, setNames] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     fetch("/data/lineup.json")
       .then((r) => r.json())
       .then((data: Row[]) => setRows(new Map(data.map((r) => [r[0], r]))));
+    loadIndex().then((index) => setNames(new Map(index.map((r) => [r[0], r[1]]))));
   }, []);
 
   if (!ready || !rows) return <p className="text-sm text-fg-3">Loading…</p>;
@@ -74,7 +78,8 @@ export function WatchlistView() {
               />
             ) : (
               <Link href={`/vehicle/${id}/`} className="panel block p-3 text-sm text-fg-3">
-                {id} (no longer in the game)
+                <span className="block font-display text-fg-2">{names.get(id) ?? id}</span>
+                No longer in the game
               </Link>
             )}
             <div className="flex items-center justify-between text-xs text-fg-3">
@@ -83,7 +88,7 @@ export function WatchlistView() {
                 type="button"
                 onClick={() => set(id, null)}
                 className="inline-flex min-h-6 items-center gap-1 text-gold hover:text-fg"
-                aria-label={`Remove ${r?.[1] ?? id} from your watchlist`}
+                aria-label={`Remove ${r?.[1] ?? names.get(id) ?? id} from your watchlist`}
               >
                 <StarIcon filled className="h-3 w-3" />
                 Remove
