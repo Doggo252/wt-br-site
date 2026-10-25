@@ -57,8 +57,8 @@
 
 /*
  * The game's symbol font (symbols_skyquake.ttf). It is not in the datamine, so
- * the file is optional: until public/fonts/ has it, the glyphs fall back to
- * system fonts. See web/public/fonts/README.md.
+ * the file is optional: until public/fonts/ has it, wt-blank.woff2 (zero-width,
+ * from scripts/make_blank_glyphs.py) hides the glyphs instead of showing boxes. See web/public/fonts/README.md.
  *
  * Range: country/event glyphs from gui.vromfs.bin_u/globalscripts/countrysymbols.nut
  * (U+2415-2420, U+22E0, U+2580-25E5, U+F059) plus U+2622.
@@ -67,9 +67,9 @@
  */
 @font-face {
   font-family: "WTSymbols";
-  src:
-    url("/fonts/wt-symbols.woff2") format("woff2"),
-    url("/fonts/symbols_skyquake.ttf") format("truetype");
+  /* Once the game font is in public/fonts/, put url("/fonts/wt-symbols.woff2") format("woff2")
+   * first in this list. Listing it while missing costs a 404 on every page. */
+  src: url("/fonts/wt-blank.woff2") format("woff2");
   unicode-range: U+2415-2420, U+22E0, U+2580-25E5, U+2622, U+F059;
   font-display: swap;
 }

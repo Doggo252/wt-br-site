@@ -29,7 +29,13 @@ export function GlyphFontStatus() {
     let cancelled = false;
     document.fonts
       .load('16px "WTSymbols"', "◍")
-      .then((faces) => !cancelled && setState(faces.length > 0 ? "loaded" : "missing"))
+      .then(() => {
+        // The zero-width fallback (wt-blank.woff2) also "loads"; the real font has width.
+        const ctx = document.createElement("canvas").getContext("2d");
+        if (ctx) ctx.font = '16px "WTSymbols"';
+        const width = ctx?.measureText("◍").width ?? 0;
+        if (!cancelled) setState(width > 0 ? "loaded" : "missing");
+      })
       .catch(() => !cancelled && setState("missing"));
     return () => {
       cancelled = true;
@@ -40,7 +46,7 @@ export function GlyphFontStatus() {
     checking: "Checking for the WTSymbols font…",
     loaded: "WTSymbols loaded: glyphs below use the game's own font.",
     missing:
-      "WTSymbols not found in public/fonts/. Glyphs below are system-font fallbacks. See web/public/fonts/README.md.",
+      "WTSymbols not found in public/fonts/, so these glyphs are hidden in vehicle names (zero-width fallback). See web/public/fonts/README.md.",
   }[state];
   const color = { checking: "text-fg-3", loaded: "text-good", missing: "text-gold" }[state];
 

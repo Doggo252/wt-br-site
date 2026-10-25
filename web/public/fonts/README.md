@@ -12,8 +12,9 @@ That font is **not** in the War Thunder Datamine. The datamine only has the inde
    pyftsubset symbols_skyquake.ttf --unicodes="U+2415-2420,U+22E0,U+2580-25E5,U+2622,U+F059" \
      --flavor=woff2 --output-file=wt-symbols.woff2
    ```
-3. Reload `/design`. The "Name glyphs" section reports whether the font loaded.
+3. In `src/app/globals.css`, add `url("/fonts/wt-symbols.woff2") format("woff2")` before the `wt-blank.woff2` entry in the WTSymbols `@font-face` `src` list.
+4. Reload `/design`. The "Name glyphs" section reports whether the font loaded.
 
-Until the file is here, the glyphs fall back to system fonts and the site still works.
+Until then, `wt-blank.woff2` (built by `scripts/make_blank_glyphs.py`) maps the whole range to a zero-width glyph, so the symbols are hidden instead of drawn as boxes.
 
 Redistributing a game font is a licensing gray area; see PLAN.md §2 before shipping it publicly.
