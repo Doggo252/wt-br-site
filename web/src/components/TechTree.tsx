@@ -34,6 +34,9 @@ type Props = {
 
 type History = { versions: VersionInfo[]; tm: TimeMachine };
 
+/** Outside a "Lineup at" window: fade the pictures only, so names and BRs stay readable. */
+const DIM = "[&_img]:opacity-20 [&_img]:grayscale [&_svg]:opacity-20";
+
 export function TechTree({ branch, nation, columns, units }: Props) {
   const [mode, setMode] = useMode();
   const [showHidden, setShowHidden] = useState(true);
@@ -84,7 +87,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
 
   const plannedCount = Object.values(units).filter((u) => u.planned).length;
   const view = useMemo(() => {
-    if (vIdx !== null && history) return stateAt(history.tm, vIdx);
+    if (vIdx !== null && history) return stateAt(history.tm, vIdx, units);
     if (!showPlanned) return { columns, units };
     // Preview the announcement: planned ranks, with today's as "previous" so cards show the move.
     const next: Record<string, TreeUnit> = {};
@@ -211,7 +214,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
                   scope="col"
                   className={`pb-2 text-left font-display text-[11px] font-semibold uppercase tracking-[0.12em] ${h.premium ? "text-premium" : "text-fg-3"}`}
                 >
-                  {h.label}
+                  {h.label || <span className="sr-only">Column {i + 1}</span>}
                 </th>
               ))}
             </tr>
@@ -237,7 +240,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
                           if (ids.length === 0) return null;
                           if (!cell.group || ids.length === 1) {
                             return ids.map((id) => (
-                              <div key={id} className={`transition-opacity ${lit(id) ? "" : "opacity-20"}`}>
+                              <div key={id} className={lit(id) ? "" : DIM}>
                                 <TreeCard id={id} unit={view.units[id]} mode={mode} />
                               </div>
                             ));
@@ -246,7 +249,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
                           return (
                             <div
                               key={`${cell.group}-${k}`}
-                              className={`flex flex-col gap-1.5 transition-opacity ${ids.some(lit) ? "" : "opacity-20"}`}
+                              className={`flex flex-col gap-1.5 ${ids.some(lit) ? "" : DIM}`}
                             >
                               <FolderCard
                                 name={cell.groupName ?? ids.map((id) => view.units[id].name).join(" / ")}
@@ -259,7 +262,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
                               {isOpen && (
                                 <div className="ml-2 flex flex-col gap-1.5 border-l border-card-top pl-2">
                                   {ids.map((id) => (
-                                    <div key={id} className={lit(id) ? "" : "opacity-40"}>
+                                    <div key={id} className={lit(id) ? "" : DIM}>
                                       <TreeCard id={id} unit={view.units[id]} mode={mode} />
                                     </div>
                                   ))}
@@ -281,7 +284,11 @@ export function TechTree({ branch, nation, columns, units }: Props) {
 }
 
 /** Tree layout and BRs at a past version, from the time-machine file. */
-function stateAt(tm: TimeMachine, vIdx: number): { columns: TreeCell[][]; units: Record<string, TreeUnit> } {
+function stateAt(
+  tm: TimeMachine,
+  vIdx: number,
+  today: Record<string, TreeUnit>,
+): { columns: TreeCell[][]; units: Record<string, TreeUnit> } {
   let layout = tm.layouts[0];
   for (const l of tm.layouts) {
     if (l[0] <= vIdx) layout = l;
@@ -300,6 +307,8 @@ function stateAt(tm: TimeMachine, vIdx: number): { columns: TreeCell[][]; units:
     const toRanks = (p: number[]): Ranks => ({ ab: p[1], rb: p[2], sb: p[3] });
     units[id] = {
       name: u.n,
+      // The time-machine file has no classes; today's is right for any vehicle still in the game.
+      type: today[id]?.type,
       status: u.s,
       image: u.i,
       br: toRanks(cur),
