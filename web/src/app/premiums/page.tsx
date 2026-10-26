@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "@/components/Link";
-import { ShopTabs } from "@/components/ShopTabs";
+import { SHOP_TABS, SectionTabs } from "@/components/SectionTabs";
 import { PremiumBrowser, type PremiumRow } from "@/components/PremiumBrowser";
 import { getIndex, getStore } from "@/lib/data";
 
@@ -42,7 +42,7 @@ export default function PremiumsPage() {
           <Link href="/deals/">See current discounts →</Link>
         </p>
       </header>
-      <ShopTabs current="/premiums/" />
+      <SectionTabs label="Shop" tabs={SHOP_TABS} current="/premiums/" />
       <PremiumBrowser rows={rows} />
       <p className="text-xs text-fg-3">
         Store prices in US dollars{store ? `, read ${store.fetched.slice(0, 10)}` : ""}; your region may differ. Golden

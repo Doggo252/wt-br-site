@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { RANKING_TABS, SectionTabs } from "@/components/SectionTabs";
 import { RecordsTable } from "@/components/RecordsTable";
 import Link from "@/components/Link";
 import { Flag } from "@/components/Flag";
@@ -42,6 +43,7 @@ export default function RecordsPage() {
           . Submit new records there, not here. Uptier only links each record to its vehicle.
         </p>
       </header>
+      <SectionTabs label="Rankings" tabs={RANKING_TABS} current="/records/" />
       <ol className="grid gap-3 sm:grid-cols-3">
         {podium.map((r, i) => (
           <li key={r.id ?? r.name}>

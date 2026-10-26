@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "@/components/Link";
-import { ShopTabs } from "@/components/ShopTabs";
+import { SHOP_TABS, SectionTabs } from "@/components/SectionTabs";
 import { MarketBrowser } from "@/components/MarketBrowser";
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default function MarketPage() {
           <Link href="/deals/">deals</Link>.
         </p>
       </header>
-      <ShopTabs current="/market/" />
+      <SectionTabs label="Shop" tabs={SHOP_TABS} current="/market/" />
       <MarketBrowser />
     </div>
   );

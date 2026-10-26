@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BadgePercent, ShoppingCart, Store, TrendingDown } from "lucide-react";
 import Link from "@/components/Link";
-import { ShopTabs } from "@/components/ShopTabs";
+import { SHOP_TABS, SectionTabs } from "@/components/SectionTabs";
 import { UnitCard } from "@/components/UnitCard";
 import { getMarket, getMeta, getStore, getUnitMap } from "@/lib/data";
 import type { MarketEntry, StorePack } from "@/lib/data.gen";
@@ -54,7 +54,7 @@ export default function DealsPage() {
           <Link href="/premiums/">premium vehicles</Link> and <Link href="/market/">market prices</Link>.
         </p>
       </header>
-      <ShopTabs current="/deals/" />
+      <SectionTabs label="Shop" tabs={SHOP_TABS} current="/deals/" />
 
       <section className="space-y-3">
         <h2 className="section-title">

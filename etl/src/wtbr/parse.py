@@ -2,6 +2,7 @@
 
 import csv
 import io
+import math
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass, field
@@ -314,8 +315,7 @@ def parse_stats(model: dict, wp: dict, tags: dict, weaponry: dict[str, str]) -> 
         "massT": round(mass_kg / 1000, 1) if mass_kg else None,
         "enginePowerHp": hp,
         "powerToWeight": round(hp / (mass_kg / 1000), 1) if hp and mass_kg else None,
-        "maxSpeedFwd": model.get("maxFwdSpeed"),
-        "maxSpeedRev": model.get("maxRevSpeed"),
+        **_top_speeds(phys),
         "crew": wp.get("crewTotalCount"),
         "reloadS": wp.get("reloadTime_cannon"),
         "mainGun": _gun_name(main["blk"], weaponry) if main else None,
@@ -342,6 +342,25 @@ def _gun_mount(w: dict | None) -> dict:
         "gunElevation": pitch[1] if pitch else None,
         "traverseLimits": None if full_turn else (yaw[0], yaw[1]),
         "ammo": w.get("bullets"),
+    }
+
+
+def _top_speeds(phys: dict) -> dict:
+    """Top speed in the highest gear and fastest reverse gear, from engine RPM, drive wheel radius
+    and the gear train: what the in-game card shows for RB. (The model's maxFwdSpeed is a generic
+    75 km/h limit, not the vehicle's speed.)"""
+    engine, mech = phys.get("engine") or {}, phys.get("mechanics") or {}
+    ratios = ((mech.get("gearRatios") or {}).get("ratio")) or []
+    rpm, radius = engine.get("maxRPM"), mech.get("driveGearRadius")
+    if not (rpm and radius and ratios):
+        return {}
+    wheel = rpm / 60 * 2 * math.pi * radius  # m/s at a 1:1 ratio
+    final = (mech.get("mainGearRatio") or 1) * (mech.get("sideGearRatio") or 1)
+    fwd = [r for r in ratios if r > 0]
+    rev = [-r for r in ratios if r < 0]
+    return {
+        "maxSpeedFwd": round(wheel / (min(fwd) * final) * 3.6) if fwd else None,
+        "maxSpeedRev": round(wheel / (min(rev) * final) * 3.6) if rev else None,
     }
 
 

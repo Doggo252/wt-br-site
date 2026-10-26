@@ -34,6 +34,7 @@ const PAGES = [
   ["/shells/?br=8.7", "Shell penetration"],
   ["/vehicle/germ_leopard_2a6/", "DM53"],
   ["/premiums/", "Premium vehicles"],
+  ["/rankings/?b=ground&br=6.7", "Best gun depression"],
   ["/deals/", "Deals"],
   ["/vehicle/ussr_is_6/", "Gaijin Store"],
 ];

@@ -11,7 +11,7 @@ const NAV: { href: string; label: string; icon: React.ReactNode; also?: string[]
   { href: "/helicopters/", label: "Helis", icon: <BranchIcon branch="heli" className="h-4 w-4" /> },
   { href: "/updates/", label: "Updates", icon: <History className="h-4 w-4" /> },
   { href: "/announcements/", label: "Planned", icon: <Megaphone className="h-4 w-4" /> },
-  { href: "/records/", label: "Records", icon: <Trophy className="h-4 w-4" /> },
+  { href: "/rankings/", label: "Rankings", icon: <Trophy className="h-4 w-4" />, also: ["/records/", "/shells/"] },
   { href: "/lineup/", label: "Lineup", icon: <Swords className="h-4 w-4" /> },
   { href: "/premiums/", label: "Shop", icon: <Store className="h-4 w-4" />, also: ["/deals/", "/market/"] },
   { href: "/explore/", label: "Explore", icon: <Compass className="h-4 w-4" /> },

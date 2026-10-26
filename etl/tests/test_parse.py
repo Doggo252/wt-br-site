@@ -209,3 +209,18 @@ def test_market_name_formats():
     assert market_name(50373, "Scimitar Mk.2", "britain") == "id50373_scimitar_mk_2_great_britain"
     assert market_name(50068, "AMX-50 Surblindé", "france") == "AMX 50 Surblindé (France)"
     assert market_name(None, "Tiger", "germany") is None
+
+
+def test_top_speed_comes_from_the_gear_train():
+    # Leopard 2A6: the in-game card says 68 km/h forward, 31 back (RB).
+    phys = {
+        "engine": {"maxRPM": 2600.0},
+        "mechanics": {
+            "driveGearRadius": 0.312,
+            "mainGearRatio": 4.47,
+            "sideGearRatio": 1.0,
+            "gearRatios": {"ratio": [-2.209, -3.3565, -4.504, -9.008, 0.0, 9.008, 4.504, 1.003]},
+        },
+    }
+    assert parse._top_speeds(phys) == {"maxSpeedFwd": 68, "maxSpeedRev": 31}
+    assert parse._top_speeds({}) == {}

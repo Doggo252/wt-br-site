@@ -658,7 +658,7 @@ function StatGrid({ u }: { u: UnitDetail }) {
     <>
       <StatTiles rows={rows} />
       <p className="mt-2 text-xs text-fg-3">
-        Armor is front / side / rear. Speeds are forward / reverse. Reload is basic crew → aced crew. Traverse and
+        Armor is front / side / rear. Speeds are forward / reverse in realistic battles (arcade is about 10% faster). Reload is basic crew → aced crew. Traverse and
         elevation are for a stock vehicle.
       </p>
     </>

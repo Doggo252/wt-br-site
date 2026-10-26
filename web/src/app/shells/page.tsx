@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { RANKING_TABS, SectionTabs } from "@/components/SectionTabs";
 import { CopyLink } from "@/components/CopyLink";
 import { ShellBrowser } from "@/components/ShellBrowser";
 
@@ -20,6 +21,7 @@ export default function ShellsPage() {
         </p>
         <CopyLink className="mt-3" />
       </header>
+      <SectionTabs label="Rankings" tabs={RANKING_TABS} current="/shells/" />
       <ShellBrowser />
     </div>
   );
