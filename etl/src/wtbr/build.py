@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
@@ -40,6 +41,35 @@ from .models import (
 NATION_ORDER = [
     "usa", "germany", "ussr", "britain", "japan", "china", "italy", "france", "sweden", "israel",
 ]  # fmt: skip
+
+
+# Gaijin Market item names, from links players shared:
+#   newer: id50381_f_16xl_usa, id50373_scimitar_mk_2_great_britain (shop name + nation)
+#   older: "AMX 50 Surblindé (France)" (display name, hyphens as spaces)
+#   also:  "items_Heavy Tank No.6 (Japan)", not generated yet
+# A best guess until the market's own item list replaces it; the switch point is a guess
+# from the samples (50068 old, 50160 new).
+MARKET_NEW_FROM = 50100
+MARKET_NATION = {
+    "usa": ("usa", "USA"), "germany": ("germany", "Germany"), "ussr": ("ussr", "USSR"),
+    "britain": ("great_britain", "Great Britain"), "japan": ("japan", "Japan"),
+    "china": ("china", "China"),
+    "italy": ("italy", "Italy"), "france": ("france", "France"), "sweden": ("sweden", "Sweden"),
+    "israel": ("israel", "Israel"),
+}  # fmt: skip
+
+
+def market_name(item_id: int | None, name: str, nation: str) -> str | None:
+    if not item_id or nation not in MARKET_NATION:
+        return None
+    from .records import GLYPHS
+
+    plain = GLYPHS.sub("", name).strip()
+    slug_nation, display_nation = MARKET_NATION[nation]
+    if item_id < MARKET_NEW_FROM:
+        return f"{plain.replace('-', ' ')} ({display_nation})"
+    slug = re.sub(r"[^a-z0-9]+", "_", plain.lower()).strip("_")
+    return f"id{item_id}_{slug}_{slug_nation}"
 
 
 def status_of(wp: dict, shop_flags: dict, uid: str = "") -> str:
@@ -202,6 +232,7 @@ def _current_unit(dm, uid, branch, su, wp, ranks, unittags, lang, weaponry, imag
         stats=Stats(**stats),
         eventName=su.flags.get("event") or wp.get("event"),
         marketItemId=su.flags.get("marketplaceItemdefId"),
+        marketName=market_name(su.flags.get("marketplaceItemdefId"), name, su.nation),
         groundBattleRb=wp.get("economicRankTankHistorical") if branch != "ground" else None,
         groundBattleSb=wp.get("economicRankTankSimulation") if branch != "ground" else None,
     )

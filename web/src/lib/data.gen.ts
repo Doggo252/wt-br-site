@@ -174,6 +174,7 @@ export interface UnitDetail {
   };
   image?: boolean;
   marketItemId?: number | null;
+  marketName?: string | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
@@ -283,6 +284,7 @@ export interface UnitSummary {
   };
   image?: boolean;
   marketItemId?: number | null;
+  marketName?: string | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;

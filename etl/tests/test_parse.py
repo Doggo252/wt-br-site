@@ -199,3 +199,13 @@ def test_classify_dev_builds():
         ["2.59.0.80", "2.60.0.30"], d[:2], now=datetime(2026, 10, 4, tzinfo=UTC)
     )
     assert live == [True, True] and not any(pending)
+
+
+def test_market_name_formats():
+    from wtbr.build import market_name
+
+    assert market_name(50381, "F-16XL", "usa") == "id50381_f_16xl_usa"
+    assert market_name(50160, "PT-76-57", "ussr") == "id50160_pt_76_57_ussr"
+    assert market_name(50373, "Scimitar Mk.2", "britain") == "id50373_scimitar_mk_2_great_britain"
+    assert market_name(50068, "AMX-50 Surblindé", "france") == "AMX 50 Surblindé (France)"
+    assert market_name(None, "Tiger", "germany") is None
