@@ -72,6 +72,7 @@ class UnitSummary(Model):
     br: Ranks
     thermal: dict[Crew, int] = {}  # best thermal generation per crew position
     image: bool = False  # whether img/units/<id>.webp exists
+    marketItemId: int | None = None  # Gaijin Market item (shop.blkx marketplaceItemdefId) when tradeable
     added: str | None = None  # version first seen; None if already in the first snapshot (2020-03)
     removedIn: str | None = None  # set when the vehicle is no longer in the game
     changes: int = 0  # number of updates that changed its BR in any mode

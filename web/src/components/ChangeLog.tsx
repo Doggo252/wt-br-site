@@ -14,8 +14,11 @@ export function ChangeLog({
   history,
   absences = [],
   added,
+  from,
 }: {
   history: HistoryPoint[];
+  /** Vehicle id, so update pages can link back and highlight it. */
+  from?: string;
   absences?: Absence[];
   /** Version the vehicle was added in; unset if it was already in the first snapshot (2020-03). */
   added?: string | null;
@@ -53,7 +56,7 @@ export function ChangeLog({
           {entries.map((e, i) => (
             <tr key={i}>
               <td className="px-3 py-1.5 font-display tabular">
-                <Link href={`/updates/${e.v}/`}>{e.v}</Link>
+                <Link href={`/updates/${e.v}/${from ? `?from=${from}` : ""}`}>{e.v}</Link>
               </td>
               <td className="px-3 py-1.5 tabular text-fg-3">{e.d ?? ""}</td>
               {e.kind === "removed" ? (

@@ -18,12 +18,17 @@ type Row = {
   rb: number | null;
   sb: number | null;
   end?: boolean;
+  /** Filler point between changes: the values are those set at update `v` on `since`. */
+  since?: number;
   /** A future point showing Gaijin's announced BR. */
   planned?: boolean;
   abPlan?: number;
   rbPlan?: number;
   sbPlan?: number;
 };
+
+/** Filler points across the timeline for a smooth hover. */
+const SAMPLES = 400;
 
 /** How far right the planned step is drawn; the announced change has no exact date. */
 const PLAN_DAYS = 45;
@@ -50,6 +55,21 @@ export function BrStepChart({ history, asOf, planned }: Props) {
   const last = rows[rows.length - 1];
   const end = Date.parse(asOf.slice(0, 10));
   if (last && end > last.t) rows.push({ ...last, t: end, end: true });
+  // Recharts' tooltip snaps to data points, and the real points are only the changes. Fill the
+  // timeline with evenly spaced points holding the values in effect, so hovering moves smoothly.
+  if (rows.length > 1) {
+    const changes = [...rows];
+    const first = changes[0].t;
+    const span = changes[changes.length - 1].t - first;
+    let k = 0;
+    for (let i = 1; i < SAMPLES; i++) {
+      const t = first + (span * i) / SAMPLES;
+      while (k + 1 < changes.length && changes[k + 1].t <= t) k++;
+      const at = changes[k];
+      if (t !== at.t) rows.push({ t, v: at.v, ab: at.ab, rb: at.rb, sb: at.sb, since: at.t });
+    }
+    rows.sort((a, b) => a.t - b.t);
+  }
   const plannedModes = MODES.filter((m) => planned?.[m] !== undefined);
   if (planned && plannedModes.length && rows.length) {
     const now = rows[rows.length - 1];
@@ -214,8 +234,13 @@ function ChartTooltip({
   return (
     <div className="border border-card-border bg-bg/95 px-3 py-2 text-sm shadow-lg">
       <div className="mb-1 font-display text-fg">
-        {row.end ? "Current" : `Update ${row.v}`}
-        <span className="ml-2 text-xs text-fg-3">{new Date(row.t).toISOString().slice(0, 10)}</span>
+        {new Date(row.t).toISOString().slice(0, 10)}
+        {row.end && <span className="ml-2 text-xs text-fg-3">today</span>}
+      </div>
+      <div className="mb-1 text-xs text-fg-3">
+        {row.since !== undefined || row.end
+          ? `Set by update ${row.v}${row.since !== undefined ? ` on ${new Date(row.since).toISOString().slice(0, 10)}` : ""}`
+          : `Update ${row.v}`}
       </div>
       {MODES.filter((m) => !hidden.has(m)).map((m) => (
         <div key={m} className="flex items-center justify-between gap-6">

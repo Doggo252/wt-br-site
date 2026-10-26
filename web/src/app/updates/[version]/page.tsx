@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { Arrow } from "@/components/Arrow";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
+import { BackToVehicle } from "@/components/BackToVehicle";
 import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, formatBr, formatBrDelta } from "@/lib/br";
 import { BRANCHES, BRANCH_NAME, type Branch } from "@/lib/branches";
@@ -12,7 +13,7 @@ import { BranchIcon } from "@/components/BranchIcon";
 import { Flag } from "@/components/Flag";
 import { UpdateFilter } from "@/components/UpdateFilter";
 import { Thumb } from "@/components/Thumb";
-import { plural } from "@/lib/format";
+import { plainName, plural } from "@/lib/format";
 
 export const dynamicParams = false;
 
@@ -51,6 +52,11 @@ export default async function UpdatePage({ params }: Params) {
     <div className="space-y-8">
       <header className="space-y-4">
         <ArrowKeyNav prev={u.prev ? `/updates/${u.prev}/` : null} next={u.next ? `/updates/${u.next}/` : null} />
+        <BackToVehicle
+          names={Object.fromEntries(
+            [...u.changes.map((c) => c.id), ...u.added, ...u.removed].map((id) => [id, plainName(units.get(id)?.name ?? id)]),
+          )}
+        />
         <nav className="flex flex-wrap items-center justify-between gap-2 text-sm">
           {u.prev ? (
             <Link href={`/updates/${u.prev}/`} className="btn">

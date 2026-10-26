@@ -1,4 +1,23 @@
 import type { Metadata } from "next";
+import {
+  Binoculars,
+  Car,
+  Cog,
+  Crosshair,
+  Gauge,
+  type LucideIcon,
+  Mountain,
+  Repeat,
+  RotateCw,
+  Shield,
+  ShieldHalf,
+  Store,
+  TimerReset,
+  TrendingUp,
+  Users,
+  Weight,
+  Zap,
+} from "lucide-react";
 import Link from "@/components/Link";
 import { BrStepChart } from "@/components/BrStepChart";
 import { BranchIcon } from "@/components/BranchIcon";
@@ -143,6 +162,18 @@ export default async function VehiclePage({ params }: Params) {
                 )
               )}
               {!u.removedIn && <StarButton id={u.id} name={plainName(u.name)} br={u.br} />}
+              {u.marketItemId && (
+                <a
+                  href={marketUrl(u.marketItemId, u.id)}
+                  rel="noopener"
+                  target="_blank"
+                  className="btn gap-1.5 px-2 py-0.5 text-xs uppercase tracking-wider"
+                  title="Trade this vehicle on the Gaijin Market (needs a Gaijin login)"
+                >
+                  <Store className="h-3.5 w-3.5" aria-hidden />
+                  Gaijin Market
+                </a>
+              )}
             </p>
             <dl className="mt-6 grid max-w-md grid-cols-3 gap-2">
               {MODES.map((m) => (
@@ -175,8 +206,10 @@ export default async function VehiclePage({ params }: Params) {
 
       <nav aria-label="On this page" className="-mt-4 flex flex-wrap gap-2 text-sm">
         {[
-          "Battle Rating history",
           u.branch === "ground" ? "Stats" : "Flight performance",
+          u.branch === "ground" && "Night vision",
+          u.record && "RB kill record",
+          "Battle Rating history",
           announced.length > 0 && "Official announcements",
           line && "In the tech tree",
           rivals.length > 0 && "Counterparts",
@@ -221,6 +254,29 @@ export default async function VehiclePage({ params }: Params) {
         </Link>
       )}
 
+
+      <Section title={u.branch === "ground" ? "Stats" : "Flight performance"}>
+        <StatGrid u={u} />
+        {u.branch !== "ground" && (
+          <p className="mt-2 text-xs text-fg-3">From the in-game stat card, stock (unupgraded).</p>
+        )}
+      </Section>
+
+      {(u.branch === "ground" || u.record) && (
+        <div className="grid gap-10 md:grid-cols-2">
+          {u.branch === "ground" && (
+            <Section title="Night vision">
+              <NightVision sights={u.sights ?? {}} />
+            </Section>
+          )}
+          {u.record && (
+            <Section title="RB kill record">
+              <RecordCard record={u.record} />
+            </Section>
+          )}
+        </div>
+      )}
+
       <Section title="Battle Rating history">
         {u.history && u.history.length > 0 ? (
           <div className="space-y-4">
@@ -231,7 +287,7 @@ export default async function VehiclePage({ params }: Params) {
               </Link>
             </div>
             <BrStepChart history={u.history} asOf={meta.date} planned={plannedForChart} />
-            <ChangeLog history={u.history} absences={u.absences} added={u.added} />
+            <ChangeLog history={u.history} absences={u.absences} added={u.added} from={u.id} />
           </div>
         ) : (
           <p className="panel p-5 text-sm text-fg-2">
@@ -239,27 +295,6 @@ export default async function VehiclePage({ params }: Params) {
           </p>
         )}
       </Section>
-
-      <div className="grid gap-10 md:grid-cols-2">
-        {u.branch === "ground" ? (
-          <Section title="Night vision">
-            <NightVision sights={u.sights ?? {}} />
-          </Section>
-        ) : null}
-        <div className="space-y-10">
-          <Section title={u.branch === "ground" ? "Stats" : "Flight performance"}>
-            <StatGrid u={u} />
-            {u.branch !== "ground" && (
-              <p className="mt-2 text-xs text-fg-3">From the in-game stat card, stock (unupgraded).</p>
-            )}
-          </Section>
-          {u.record && (
-            <Section title="RB kill record">
-              <RecordCard record={u.record} />
-            </Section>
-          )}
-        </div>
-      </div>
 
       {announced.length > 0 && (
         <Section title="Official announcements">
@@ -430,6 +465,8 @@ function toChip(s: Sight): ChipSight {
   };
 }
 
+const CREW_ICON: Record<CrewRole, LucideIcon> = { commander: Binoculars, gunner: Crosshair, driver: Car };
+
 function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
   const anyMod = Object.values(sights).some((ss) => ss.some((s) => s.viaModification));
   if (Object.keys(sights).length === 0) {
@@ -440,9 +477,13 @@ function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
       <dl className="panel divide-y divide-[#262f35]">
         {CREWS.map((crew) => {
           const ss = sights[crew] ?? [];
+          const Icon = CREW_ICON[crew];
           return (
             <div key={crew} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-              <dt className="text-sm text-fg-3">{CREW_LABEL[crew]}</dt>
+              <dt className="inline-flex items-center gap-2 text-sm text-fg-3">
+                <Icon className="h-4 w-4 text-gold/80" aria-hidden />
+                {CREW_LABEL[crew]}
+              </dt>
               <dd className="flex flex-wrap items-center justify-end gap-2">
                 {ss.length === 0 ? (
                   <span className="text-sm text-fg-3">None</span>
@@ -450,6 +491,9 @@ function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
                   ss.map((s, i) => (
                     <span key={i} className="inline-flex items-center gap-1">
                       <ThermalChip crew={crew} sight={toChip(s)} />
+                      <span className="font-display text-xs tabular text-fg-2">
+                        {s.resolution[0]}×{s.resolution[1]}
+                      </span>
                       {s.viaModification && (
                         <span className="text-xs text-fg-3" title="Needs a researched modification">
                           mod
@@ -468,35 +512,29 @@ function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
   );
 }
 
+type StatRow = [LucideIcon, string, string | null];
+
 function StatGrid({ u }: { u: UnitDetail }) {
   const s = u.stats ?? {};
   if (u.branch !== "ground") return <AirStatGrid u={u} />;
-  const rows: [string, string | null][] = [
-    ["Main gun", s.mainGun ?? null],
-    ["Reload", s.reloadS != null ? `${s.reloadS.toFixed(1)} s` : null],
-    ["Crew", s.crew != null ? String(s.crew) : null],
-    ["Mass", s.massT != null ? `${s.massT.toFixed(1)} t` : null],
-    ["Engine", s.enginePowerHp != null ? `${Math.round(s.enginePowerHp)} hp` : null],
-    ["Power-to-weight", s.powerToWeight != null ? `${s.powerToWeight.toFixed(1)} hp/t` : null],
+  const rows: StatRow[] = [
+    [Crosshair, "Main gun", s.mainGun ?? null],
+    [TimerReset, "Reload", s.reloadS != null ? `${s.reloadS.toFixed(1)} s` : null],
+    [Users, "Crew", s.crew != null ? String(s.crew) : null],
+    [Weight, "Mass", s.massT != null ? `${s.massT.toFixed(1)} t` : null],
+    [Cog, "Engine", s.enginePowerHp != null ? `${Math.round(s.enginePowerHp)} hp` : null],
+    [Zap, "Power-to-weight", s.powerToWeight != null ? `${s.powerToWeight.toFixed(1)} hp/t` : null],
     [
+      Gauge,
       "Max speed",
       s.maxSpeedFwd != null ? `${Math.round(s.maxSpeedFwd)} / ${Math.round(s.maxSpeedRev ?? 0)} km/h` : null,
     ],
-    ["Hull armor", s.armorHull ? `${s.armorHull.map((x) => Math.round(x)).join(" / ")} mm` : null],
-    ["Turret armor", s.armorTurret ? `${s.armorTurret.map((x) => Math.round(x)).join(" / ")} mm` : null],
+    [Shield, "Hull armor", s.armorHull ? `${s.armorHull.map((x) => Math.round(x)).join(" / ")} mm` : null],
+    [ShieldHalf, "Turret armor", s.armorTurret ? `${s.armorTurret.map((x) => Math.round(x)).join(" / ")} mm` : null],
   ];
   return (
     <>
-      <dl className="divide-y divide-card-border panel">
-        {rows
-          .filter((r): r is [string, string] => r[1] !== null)
-          .map(([k, v]) => (
-            <div key={k} className="flex justify-between gap-4 px-3 py-1.5 text-sm">
-              <dt className="text-fg-3">{k}</dt>
-              <dd className="text-right font-display tabular text-fg">{v}</dd>
-            </div>
-          ))}
-      </dl>
+      <StatTiles rows={rows} />
       <p className="mt-2 text-xs text-fg-3">Armor is front / side / rear. Speeds are forward / reverse.</p>
     </>
   );
@@ -506,29 +544,44 @@ function AirStatGrid({ u }: { u: UnitDetail }) {
   const s = u.stats ?? {};
   const n = (v: number | null | undefined, unit: string, digits = 0) =>
     v != null ? `${v.toLocaleString("en", { maximumFractionDigits: digits })} ${unit}` : null;
-  const rows: [string, string | null][] = [
-    ["Max speed", s.maxSpeedKmh != null ? `${n(s.maxSpeedKmh, "km/h")}${s.maxSpeedAltM ? ` at ${n(s.maxSpeedAltM, "m")}` : ""}` : null],
-    ["Climb rate", n(s.climbRate, "m/s", 1)],
-    ["Turn time", n(s.turnTimeS, "s", 1)],
-    ["Roll rate", n(s.rollRate, "°/s")],
-    ["Ceiling", n(s.ceilingM, "m")],
-    ["Crew", s.crew != null ? String(s.crew) : null],
+  const rows: StatRow[] = [
+    [
+      Gauge,
+      "Max speed",
+      s.maxSpeedKmh != null ? `${n(s.maxSpeedKmh, "km/h")}${s.maxSpeedAltM ? ` at ${n(s.maxSpeedAltM, "m")}` : ""}` : null,
+    ],
+    [TrendingUp, "Climb rate", n(s.climbRate, "m/s", 1)],
+    [RotateCw, "Turn time", n(s.turnTimeS, "s", 1)],
+    [Repeat, "Roll rate", n(s.rollRate, "°/s")],
+    [Mountain, "Ceiling", n(s.ceilingM, "m")],
+    [Users, "Crew", s.crew != null ? String(s.crew) : null],
   ];
+  return <StatTiles rows={rows} />;
+}
+
+function StatTiles({ rows }: { rows: StatRow[] }) {
   return (
-    <dl className="divide-y divide-card-border panel">
+    <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       {rows
-        .filter((r): r is [string, string] => r[1] !== null)
-        .map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-4 px-3 py-1.5 text-sm">
-            <dt className="text-fg-3">{k}</dt>
-            <dd className="text-right font-display tabular text-fg">{v}</dd>
+        .filter((r): r is [LucideIcon, string, string] => r[2] !== null)
+        .map(([Icon, k, v]) => (
+          <div key={k} className="panel px-3 py-2.5">
+            <dt className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-fg-3">
+              <Icon className="h-4 w-4 shrink-0 text-gold/80" aria-hidden />
+              {k}
+            </dt>
+            <dd className="mt-0.5 pl-6 font-display text-base leading-tight tabular text-fg">{v}</dd>
           </div>
         ))}
     </dl>
   );
 }
 
-/** Vehicles of the same branch at exactly the same BR in each mode: same nation first, then others. */
+/** The vehicle's Gaijin Market page. Item names look like "id50381_f_16xl" (seen in shared links). */
+function marketUrl(itemId: number, id: string): string {
+  return `https://trade.gaijin.net/market/1067/id${itemId}_${id}`;
+}
+
 /** Nation, plus what tells this vehicle apart from same-named ones in that nation (event copies, cup editions). */
 function titleQualifier(u: UnitDetail): string {
   const name = plainName(u.name);
@@ -573,6 +626,7 @@ function treeLine(u: UnitDetail) {
   return { units: units.slice(start, start + 7), prev: units[i - 1], next: units[i + 1] };
 }
 
+/** Vehicles of the same branch at exactly the same BR in each mode: same nation first, then others. */
 function sameBr(u: UnitDetail, index: UnitSummary[], limit = 30) {
   const byMode = {} as Record<Mode, string[]>;
   const units: Record<string, TreeUnit> = {};

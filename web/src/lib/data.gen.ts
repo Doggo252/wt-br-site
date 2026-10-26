@@ -173,6 +173,7 @@ export interface UnitDetail {
     [k: string]: number;
   };
   image?: boolean;
+  marketItemId?: number | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
@@ -281,6 +282,7 @@ export interface UnitSummary {
     [k: string]: number;
   };
   image?: boolean;
+  marketItemId?: number | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
