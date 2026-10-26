@@ -71,6 +71,41 @@ export interface DevUnit {
   br: Ranks;
 }
 
+/**
+ * data/market.json.
+ */
+
+export interface MarketData {
+  snapshot: string;
+  snapshots: string[];
+  items: MarketEntry[];
+}
+/**
+ * One row of data/market.json: every War Thunder item on the Gaijin Market.
+ */
+
+export interface MarketEntry {
+  name: string;
+  title: string;
+  price?: number | null;
+  buy?: number | null;
+  sellers?: number;
+  buyers?: number;
+  icon?: string | null;
+  quality?: string | null;
+  event?: string | null;
+  kind: string;
+  unit?: string | null;
+  country?: string | null;
+  history?: MarketPoint[];
+}
+
+export interface MarketPoint {
+  d: string;
+  price?: number | null;
+  buy?: number | null;
+}
+
 export interface Meta {
   version: string;
   commit: string;
@@ -175,6 +210,7 @@ export interface UnitDetail {
   image?: boolean;
   marketItemId?: number | null;
   marketName?: string | null;
+  marketPrice?: number | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
@@ -190,6 +226,8 @@ export interface UnitDetail {
   history?: HistoryPoint[];
   absences?: Absence[];
   record?: UnitRecord | null;
+  market?: MarketQuote | null;
+  skins?: MarketQuote[];
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -252,6 +290,21 @@ export interface UnitRecord {
   player?: string | null;
   patch?: string | null;
 }
+/**
+ * One Gaijin Market listing at snapshot time. Prices in GJN.
+ */
+
+export interface MarketQuote {
+  name: string;
+  title: string;
+  price?: number | null;
+  buy?: number | null;
+  sellers?: number;
+  buyers?: number;
+  icon?: string | null;
+  quality?: string | null;
+  event?: string | null;
+}
 
 /**
  * One row of data/units/index.json.
@@ -285,6 +338,7 @@ export interface UnitSummary {
   image?: boolean;
   marketItemId?: number | null;
   marketName?: string | null;
+  marketPrice?: number | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;

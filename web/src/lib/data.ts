@@ -10,6 +10,7 @@ import { BRANCHES, type Branch } from "./branches";
 import type {
   Announcement,
   DevPreview,
+  MarketData,
   Meta,
   NationTree,
   OfficialChange,
@@ -140,3 +141,8 @@ export const getPlannedRanks = cache(() => {
   }
   return map;
 });
+
+/** Gaijin Market snapshot (data/market.json), or null before the first snapshot. */
+export const getMarket = cache((): MarketData | null =>
+  existsSync(join(DATA, "market.json")) ? read<MarketData>("market.json") : null,
+);

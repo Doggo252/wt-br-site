@@ -12,6 +12,7 @@ import {
   Shield,
   ShieldHalf,
   Store,
+  Paintbrush,
   TimerReset,
   TrendingUp,
   Users,
@@ -31,7 +32,7 @@ import { ThermalChip } from "@/components/ThermalChip";
 import { TreeLineStrip } from "@/components/TreeLineStrip";
 import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, MODE_NAME, formatBr, type Mode } from "@/lib/br";
-import { getAnnouncementsByUnit, getDev, getIndex, getMeta, getTree, getUnit, getUnitMap } from "@/lib/data";
+import { getAnnouncementsByUnit, getDev, getIndex, getMarket, getMeta, getTree, getUnit, getUnitMap } from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { treeHref } from "@/lib/branches";
 import { plainName, plural } from "@/lib/format";
@@ -79,6 +80,7 @@ export default async function VehiclePage({ params }: Params) {
   const same = sameBr(u, getIndex());
   const line = treeLine(u);
   const rivals = counterparts(u, getIndex());
+  const marketDate = getMarket()?.snapshot;
   const dev = getDev();
   const devChange = dev?.changes?.find((c) => c.id === id);
   const devVersion = dev?.v;
@@ -162,9 +164,9 @@ export default async function VehiclePage({ params }: Params) {
                 )
               )}
               {!u.removedIn && <StarButton id={u.id} name={plainName(u.name)} br={u.br} />}
-              {u.marketItemId && (
+              {u.marketName && (
                 <a
-                  href={marketUrl(u.marketItemId, u.id)}
+                  href={marketHref(u.marketName)}
                   rel="noopener"
                   target="_blank"
                   className="btn gap-1.5 px-2 py-0.5 text-xs uppercase tracking-wider"
@@ -172,6 +174,7 @@ export default async function VehiclePage({ params }: Params) {
                 >
                   <Store className="h-3.5 w-3.5" aria-hidden />
                   Gaijin Market
+                  {u.market?.price != null && <span className="tabular normal-case text-gold">{gjn(u.market.price)}</span>}
                 </a>
               )}
             </p>
@@ -213,6 +216,7 @@ export default async function VehiclePage({ params }: Params) {
           announced.length > 0 && "Official announcements",
           line && "In the tech tree",
           rivals.length > 0 && "Counterparts",
+          (u.market || (u.skins ?? []).length > 0) && "Gaijin Market",
           "Same Battle Rating",
         ]
           .filter((t): t is string => Boolean(t))
@@ -397,6 +401,12 @@ export default async function VehiclePage({ params }: Params) {
         </Section>
       )}
 
+      {(u.market || (u.skins ?? []).length > 0) && (
+        <Section title="Gaijin Market">
+          <MarketSection u={u} asOf={marketDate} />
+        </Section>
+      )}
+
       <Section title="Same Battle Rating">
         <SameBrStrip byMode={same.byMode} units={same.units} rank={u.br} />
       </Section>
@@ -577,9 +587,85 @@ function StatTiles({ rows }: { rows: StatRow[] }) {
   );
 }
 
-/** The vehicle's Gaijin Market page. Item names look like "id50381_f_16xl" (seen in shared links). */
-function marketUrl(itemId: number, id: string): string {
-  return `https://trade.gaijin.net/market/1067/id${itemId}_${id}`;
+function marketHref(name: string): string {
+  return `https://trade.gaijin.net/market/1067/${encodeURIComponent(name)}`;
+}
+
+function gjn(price: number): string {
+  return `${price.toLocaleString("en", { maximumFractionDigits: 2 })} GJN`;
+}
+
+const SKINS_SHOWN = 12;
+
+function MarketSection({ u, asOf }: { u: UnitDetail; asOf?: string }) {
+  const m = u.market;
+  const skins = u.skins ?? [];
+  return (
+    <div className="space-y-4">
+      {m && (
+        <div className="panel flex flex-wrap items-center gap-x-8 gap-y-3 p-4">
+          <dl className="flex flex-wrap gap-x-8 gap-y-2">
+            <div>
+              <dt className="text-[11px] uppercase tracking-wider text-fg-3">Lowest offer</dt>
+              <dd className="font-display text-2xl font-bold tabular text-gold">{m.price != null ? gjn(m.price) : "None"}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] uppercase tracking-wider text-fg-3">Best buy order</dt>
+              <dd className="font-display text-2xl font-bold tabular text-fg">{m.buy != null ? gjn(m.buy) : "None"}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] uppercase tracking-wider text-fg-3">Listings</dt>
+              <dd className="font-display text-2xl font-bold tabular text-fg">
+                {m.sellers ?? 0} <span className="text-sm font-normal text-fg-3">sell</span> · {m.buyers ?? 0}{" "}
+                <span className="text-sm font-normal text-fg-3">buy</span>
+              </dd>
+            </div>
+          </dl>
+          <a href={marketHref(m.name)} rel="noopener" target="_blank" className="btn ml-auto gap-1.5">
+            <Store className="h-4 w-4" aria-hidden />
+            Open on the Gaijin Market
+          </a>
+        </div>
+      )}
+      {skins.length > 0 && (
+        <div>
+          <h3 className="mb-2 flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-fg-3">
+            <Paintbrush className="h-4 w-4 text-gold/80" aria-hidden />
+            {skins.length} skin{skins.length === 1 ? "" : "s"} for sale
+          </h3>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
+            {skins.slice(0, SKINS_SHOWN).map((k) => (
+              <li key={k.name}>
+                <a
+                  href={marketHref(k.name)}
+                  rel="noopener"
+                  target="_blank"
+                  className="panel block overflow-hidden no-underline transition hover:brightness-125"
+                >
+                  {k.icon && (
+                    // eslint-disable-next-line @next/next/no-img-element -- remote Gaijin CDN thumbnail
+                    <img src={k.icon} alt="" loading="lazy" className="aspect-[16/9] w-full bg-black/30 object-cover" />
+                  )}
+                  <span className="block px-2 pt-1.5 text-xs text-fg-2" title={k.title}>
+                    <span className="line-clamp-2">{k.title}</span>
+                  </span>
+                  <span className="block px-2 pb-1.5 font-display text-sm tabular text-gold">
+                    {k.price != null ? gjn(k.price) : "No offers"}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          {skins.length > SKINS_SHOWN && (
+            <p className="mt-2 text-sm text-fg-3">
+              Plus {skins.length - SKINS_SHOWN} more on the <Link href="/market/">market page</Link>.
+            </p>
+          )}
+        </div>
+      )}
+      {asOf && <p className="text-xs text-fg-3">Prices as of {asOf}. Trading needs a Gaijin login.</p>}
+    </div>
+  );
 }
 
 /** Nation, plus what tells this vehicle apart from same-named ones in that nation (event copies, cup editions). */

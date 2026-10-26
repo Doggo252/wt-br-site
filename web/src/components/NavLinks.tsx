@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "@/components/Link";
-import { Compass, History, Megaphone, Swords, Trophy } from "lucide-react";
+import { Compass, History, Megaphone, Store, Swords, Trophy } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { BranchIcon } from "./BranchIcon";
 
@@ -13,6 +13,7 @@ const NAV: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: "/announcements/", label: "Planned", icon: <Megaphone className="h-4 w-4" /> },
   { href: "/records/", label: "Records", icon: <Trophy className="h-4 w-4" /> },
   { href: "/lineup/", label: "Lineup", icon: <Swords className="h-4 w-4" /> },
+  { href: "/market/", label: "Market", icon: <Store className="h-4 w-4" /> },
   { href: "/explore/", label: "Explore", icon: <Compass className="h-4 w-4" /> },
 ];
 

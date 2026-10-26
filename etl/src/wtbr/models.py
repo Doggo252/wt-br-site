@@ -72,12 +72,11 @@ class UnitSummary(Model):
     br: Ranks
     thermal: dict[Crew, int] = {}  # best thermal generation per crew position
     image: bool = False  # whether img/units/<id>.webp exists
-    marketItemId: int | None = (
-        None  # Gaijin Market item (shop.blkx marketplaceItemdefId) when tradeable
-    )
-    marketName: str | None = (
-        None  # its item name in market URLs (trade.gaijin.net/market/1067/<name>)
-    )
+    # Gaijin Market: item id (shop.blkx marketplaceItemdefId), its name in market URLs
+    # (trade.gaijin.net/market/1067/<name>) and the lowest sell offer in GJN at the last snapshot.
+    marketItemId: int | None = None
+    marketName: str | None = None
+    marketPrice: float | None = None
     added: str | None = None  # version first seen; None if already in the first snapshot (2020-03)
     removedIn: str | None = None  # set when the vehicle is no longer in the game
     changes: int = 0  # number of updates that changed its BR in any mode
@@ -121,6 +120,20 @@ class Absence(Model):
     returned: str | None = None
 
 
+class MarketQuote(Model):
+    """One Gaijin Market listing at snapshot time. Prices in GJN."""
+
+    name: str  # item name in market URLs (trade.gaijin.net/market/1067/<name>)
+    title: str  # display name
+    price: float | None = None  # lowest sell offer
+    buy: float | None = None  # highest buy order
+    sellers: int = 0
+    buyers: int = 0
+    icon: str | None = None
+    quality: str | None = None
+    event: str | None = None
+
+
 class UnitDetail(UnitSummary):
     """data/units/<id>.json."""
 
@@ -134,6 +147,8 @@ class UnitDetail(UnitSummary):
     history: list[HistoryPoint] = []
     absences: list[Absence] = []
     record: UnitRecord | None = None
+    market: MarketQuote | None = None  # the vehicle itself, when tradeable
+    skins: list[MarketQuote] = []  # its skins on the Gaijin Market, cheapest first
 
 
 class BranchCounts(Model):
@@ -264,3 +279,26 @@ class TimeMachine(Model):
     branch: Branch
     layouts: list[tuple[int, list[list[TreeCell]]]]  # (from version index, columns)
     units: dict[str, TimeMachineUnit]
+
+
+class MarketPoint(Model):
+    d: str  # snapshot date
+    price: float | None = None
+    buy: float | None = None
+
+
+class MarketEntry(MarketQuote):
+    """One row of data/market.json: every War Thunder item on the Gaijin Market."""
+
+    kind: str  # tank, aircraft, helicopter, skin, decal, chest, key, ...
+    unit: str | None = None  # vehicle id, for vehicles and matched skins
+    country: str | None = None
+    history: list[MarketPoint] = []
+
+
+class MarketData(Model):
+    """data/market.json."""
+
+    snapshot: str  # date of the newest snapshot
+    snapshots: list[str]
+    items: list[MarketEntry]

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import official, parse, paths, records
+from . import market, official, parse, paths, records
 from .datamine import SHOP, UNITS_CSV, UNITTAGS, WEAPONRY_CSV, WPCOST, Datamine
 from .history_build import HistoryResult, major_of
 from .models import (
@@ -20,6 +20,10 @@ from .models import (
     DevPreview,
     DevUnit,
     HistoryPoint,
+    MarketData,
+    MarketEntry,
+    MarketPoint,
+    MarketQuote,
     Meta,
     NationTree,
     OfficialChange,
@@ -125,6 +129,7 @@ def build_current(
 
     if record_rows is not None:
         _attach_records(details, record_rows, lang)
+    market_data = _attach_market(details, paths.MANUAL / "market")
 
     summaries = [
         UnitSummary(**d.model_dump(include=set(UnitSummary.model_fields))) for d in details.values()
@@ -191,6 +196,8 @@ def build_current(
         _write(out / "dev.json", _dev_preview(dev, lang))
     else:
         (out / "dev.json").unlink(missing_ok=True)
+    if market_data:
+        _write(out / "market.json", market_data)
     if record_rows is not None:
         rows = [
             RecordRow(
@@ -292,6 +299,76 @@ def validate(meta: Meta, previous: Path, details: dict[str, UnitDetail]) -> None
                 problems.append(f"{nation}: {count} -> {new} vehicles (more than a 5% drop)")
     if problems and not os.environ.get("WTBR_SKIP_VALIDATION"):
         raise ValidationError("data validation failed:\n  " + "\n  ".join(problems[:50]))
+
+
+def _attach_market(details: dict[str, UnitDetail], folder: Path) -> MarketData | None:
+    """Prices from the newest Gaijin Market snapshot onto vehicles; every item, with its price
+    history across snapshots, for the market page."""
+    snaps = market.load_snapshots(folder)
+    if not snaps:
+        return None
+    latest = snaps[-1]
+    by_item_id = {d.marketItemId: uid for uid, d in details.items() if d.marketItemId}
+    vehicles = [
+        (uid, d.branch, d.nation, [d.name, d.fullName])
+        for uid, d in details.items()
+        if not d.removedIn
+    ]
+    skin_owner = market.match_skins(latest.items, vehicles)
+
+    history: dict[str, list[MarketPoint]] = {}
+    for snap in snaps:
+        for it in snap.items:
+            point = MarketPoint(
+                d=snap.date, price=market.gjn(it.get("price")), buy=market.gjn(it.get("buy_price"))
+            )
+            history.setdefault(it["hash_name"], []).append(point)
+
+    entries = []
+    for it in latest.items:
+        t = market.tags(it)
+        kind = t.get("type", "other")
+        quote = MarketQuote(
+            name=it["hash_name"],
+            title=it["name"],
+            price=market.gjn(it.get("price")),
+            buy=market.gjn(it.get("buy_price")),
+            sellers=it.get("depth") or 0,
+            buyers=it.get("buy_depth") or 0,
+            icon=it.get("icon"),
+            quality=t.get("quality"),
+            event=t.get("eventName"),
+        )
+        unit = None
+        if kind in market.VEHICLE_TYPES:
+            item_id = next(
+                (
+                    int(a["value"])
+                    for a in it.get("asset_class", [])
+                    if a.get("name") == "__itemdefid"
+                ),
+                None,
+            )
+            unit = by_item_id.get(item_id) or market.vehicle_id(it)
+            if unit in details:
+                d = details[unit]
+                d.market, d.marketName, d.marketPrice = quote, quote.name, quote.price
+        elif kind == "skin":
+            unit = skin_owner.get(it["hash_name"])
+            if unit in details:
+                details[unit].skins.append(quote)
+        entries.append(
+            MarketEntry(
+                **quote.model_dump(),
+                kind=kind,
+                unit=unit if unit in details else None,
+                country=t.get("country"),
+                history=history.get(it["hash_name"], []),
+            )
+        )
+    for d in details.values():
+        d.skins.sort(key=lambda q: (q.price is None, q.price or 0))
+    return MarketData(snapshot=latest.date, snapshots=[s.date for s in snaps], items=entries)
 
 
 def _attach_records(details: dict[str, UnitDetail], rows: list, lang: dict) -> None:

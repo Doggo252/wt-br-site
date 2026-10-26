@@ -11,6 +11,7 @@ from .history_build import build_history, diff_states, state_at
 from .models import (
     Announcement,
     DevPreview,
+    MarketData,
     Meta,
     NationTree,
     RecordRow,
@@ -124,6 +125,7 @@ def write_schema() -> None:
         Meta, UnitSummary, UnitDetail, NationTree, VersionInfo, UpdateDiff, TimeMachine, RecordRow,
         DevPreview,
         Announcement,
+        MarketData,
     ):  # fmt: skip
         schema = model.model_json_schema(mode="serialization")
         (out / f"{model.__name__}.json").write_text(json.dumps(schema, indent=2))
