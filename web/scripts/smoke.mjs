@@ -30,6 +30,7 @@ const PAGES = [
   ["/lineup/?b=ground&n=germany&br=6.7", "Tiger H1"],
   ["/watchlist/", "Watchlist"],
   ["/market/", "Market prices"],
+  ["/patch-notes/", "Patch notes"],
 ];
 
 const server = createServer((req, res) => {

@@ -48,6 +48,17 @@ class Stats(Model):
     mainGun: str | None = None
     armorHull: tuple[float, float, float] | None = None  # front, side, rear (mm)
     armorTurret: tuple[float, float, float] | None = None
+    # Main gun mount (deg/s and degrees), from the tank model; aced crew, stock vehicle.
+    traverseDegS: float | None = None
+    elevationDegS: float | None = None
+    gunDepression: float | None = None  # negative, e.g. -9
+    gunElevation: float | None = None
+    traverseLimits: tuple[float, float] | None = (
+        None  # set when the gun can't turn all the way round
+    )
+    ammo: int | None = None  # main gun rounds carried
+    gearsFwd: int | None = None
+    gearsRev: int | None = None
     # Aircraft and helicopters
     maxSpeedKmh: float | None = None
     maxSpeedAltM: float | None = None
@@ -134,6 +145,47 @@ class MarketQuote(Model):
     event: str | None = None
 
 
+class ModeValues(Model):
+    ab: float | None = None
+    rb: float | None = None
+    sb: float | None = None
+
+
+class Economy(Model):
+    """Research, purchase, crew and repair costs from wpcost.blkx. SL = Silver Lions,
+    RP = research points, GE = Golden Eagles."""
+
+    researchRp: int | None = None
+    purchaseSl: int | None = None
+    purchaseGe: int | None = None  # premiums bought in the game
+    crewSl: int | None = None
+    expertsSl: int | None = None
+    acesGe: int | None = None
+    acesRp: int | None = None
+    repairSl: ModeValues = ModeValues()  # stock
+    repairUpgradedSl: ModeValues = ModeValues()
+    rewardPct: ModeValues = ModeValues()  # Silver Lion reward multiplier, as a percentage
+    rpPct: int | None = None  # research point multiplier, as a percentage
+
+
+class Modification(Model):
+    id: str
+    name: str
+    tier: int | None = None
+    rp: int | None = None
+    sl: int | None = None
+    ge: int | None = None  # cost to buy outright with Golden Eagles
+
+
+class PatchMention(Model):
+    """A patch note item naming this vehicle."""
+
+    id: int  # changelog entry
+    date: str
+    title: str
+    html: str  # the item, reduced to <strong>, <em> and <a>
+
+
 class UnitDetail(UnitSummary):
     """data/units/<id>.json."""
 
@@ -149,6 +201,9 @@ class UnitDetail(UnitSummary):
     record: UnitRecord | None = None
     market: MarketQuote | None = None  # the vehicle itself, when tradeable
     skins: list[MarketQuote] = []  # its skins on the Gaijin Market, cheapest first
+    patchNotes: list[PatchMention] = []  # newest first, capped
+    economy: Economy | None = None
+    modifications: list[Modification] = []
 
 
 class BranchCounts(Model):
@@ -302,3 +357,34 @@ class MarketData(Model):
     snapshot: str  # date of the newest snapshot
     snapshots: list[str]
     items: list[MarketEntry]
+
+
+class PatchNoteItem(Model):
+    html: str  # reduced to <strong>, <em> and <a href>
+    depth: int = 0  # list nesting
+    units: list[str] = []  # vehicles named in the item's bold lead
+
+
+class PatchNoteSection(Model):
+    title: str | None = None
+    items: list[PatchNoteItem]
+
+
+class PatchNoteSummary(Model):
+    """One row of data/patchnotes/index.json (newest first)."""
+
+    id: int
+    title: str
+    date: str
+    summary: str = ""
+    image: str | None = None
+    version: str | None = None  # game version in the title, when there is one
+    forVersion: str | None = None  # the update page (data/versions.json) it belongs to
+    units: int = 0  # vehicles mentioned
+
+
+class PatchNote(PatchNoteSummary):
+    """data/patchnotes/<id>.json: one warthunder.com changelog entry."""
+
+    url: str
+    sections: list[PatchNoteSection]

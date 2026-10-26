@@ -102,6 +102,7 @@ export function NationTreePage({ branch, nation }: { branch: Branch; nation: str
   for (const u of unitsInNation(branch, nation).filter((u) => !u.removedIn)) {
     const planned = getPlannedRanks().get(u.id);
     units[u.id] = { name: u.name, status: u.status, hidden: u.hidden, br: u.br, image: u.image, type: u.type };
+    if (u.marketPrice != null) units[u.id].price = u.marketPrice;
     if (planned) units[u.id].planned = planned;
   }
   const meta = getMeta();

@@ -161,6 +161,17 @@ def parse_lang(text: str, wanted_suffixes=("_shop", "_0", "_1")) -> dict[str, st
     return out
 
 
+def parse_mod_names(text: str) -> dict[str, str]:
+    """English modification names ("modification/<id>" rows, without the /desc ones)."""
+    out = {}
+    reader = csv.reader(io.StringIO(text), delimiter=";", quotechar='"')
+    next(reader, None)
+    for row in reader:
+        if len(row) >= 2 and row[0].startswith("modification/") and row[0].count("/") == 1:
+            out[row[0]] = row[1]
+    return out
+
+
 def parse_weaponry(text: str) -> dict[str, str]:
     """English weapon names keyed by lower-case weapon id ("weapons/<id>" rows)."""
     out = {}
@@ -297,8 +308,90 @@ def parse_stats(model: dict, wp: dict, tags: dict, weaponry: dict[str, str]) -> 
         "mainGun": _gun_name(main["blk"], weaponry) if main else None,
         "armorHull": _armor(shop.get("armorThicknessHull")),
         "armorTurret": _armor(shop.get("armorThicknessTurret")),
+        **_gun_mount(main),
+        **_gears(phys),
     }
     return {k: v for k, v in stats.items() if v is not None}
+
+
+def _gun_mount(w: dict | None) -> dict:
+    """Traverse and elevation speeds, gun limits and ammo for the main gun."""
+    if not w:
+        return {}
+    limits = w.get("limits") or {}
+    pitch = limits.get("pitch") if isinstance(limits.get("pitch"), list) else None
+    yaw = limits.get("yaw") if isinstance(limits.get("yaw"), list) else None
+    full_turn = yaw is None or (yaw[0] <= -180 and yaw[1] >= 180)
+    return {
+        "traverseDegS": w.get("speedYaw"),
+        "elevationDegS": w.get("speedPitch"),
+        "gunDepression": pitch[0] if pitch else None,
+        "gunElevation": pitch[1] if pitch else None,
+        "traverseLimits": None if full_turn else (yaw[0], yaw[1]),
+        "ammo": w.get("bullets"),
+    }
+
+
+def _gears(phys: dict) -> dict:
+    ratios = (((phys.get("mechanics") or {}).get("gearRatios") or {}).get("ratio")) or []
+    if not isinstance(ratios, list) or not ratios:
+        return {}
+    return {
+        "gearsFwd": sum(1 for r in ratios if isinstance(r, (int, float)) and r > 0),
+        "gearsRev": sum(1 for r in ratios if isinstance(r, (int, float)) and r < 0),
+    }
+
+
+def _modes(wp: dict, key: str, scale: float = 1.0) -> dict:
+    out = {}
+    for mode, suffix in (("ab", "Arcade"), ("rb", "Historical"), ("sb", "Simulation")):
+        v = wp.get(f"{key}{suffix}")
+        if isinstance(v, (int, float)):
+            out[mode] = round(v * scale) if scale != 1.0 else v
+    return out
+
+
+def parse_economy(wp: dict) -> dict:
+    """Costs and multipliers from a wpcost.blkx unit block."""
+
+    def num(key):
+        v = wp.get(key)
+        return int(v) if isinstance(v, (int, float)) and v > 0 else None
+
+    return {
+        "researchRp": num("reqExp"),
+        "purchaseSl": num("value"),
+        "purchaseGe": num("costGold"),
+        "crewSl": num("trainCost"),
+        "expertsSl": num("train2Cost"),
+        "acesGe": num("train3Cost_gold"),
+        "acesRp": num("train3Cost_exp"),
+        "repairSl": _modes(wp, "repairCost"),
+        "repairUpgradedSl": _modes(wp, "repairCostFullUpgraded"),
+        "rewardPct": _modes(wp, "rewardMul", 100),
+        "rpPct": round(wp["expMul"] * 100) if isinstance(wp.get("expMul"), (int, float)) else None,
+    }
+
+
+def parse_modifications(wp: dict, names: dict[str, str]) -> list[dict]:
+    """Researchable modifications with their tier and costs, in research order."""
+    out = []
+    for mod_id, m in (wp.get("modifications") or {}).items():
+        # Untiered entries are consumables, starting ammo and talismans, not research steps.
+        if not isinstance(m, dict) or not m.get("tier"):
+            continue
+        name = names.get(f"modification/{mod_id}") or names.get(f"weapons/{mod_id}")
+        out.append(
+            {
+                "id": mod_id,
+                "name": name or mod_id.replace("_", " "),
+                "tier": m.get("tier"),
+                "rp": m.get("reqExp") or None,
+                "sl": m.get("value") or None,
+                "ge": m.get("openCostGold") or m.get("costGold") or None,
+            }
+        )
+    return sorted(out, key=lambda m: (m["tier"] or 99, m["rp"] or 0))
 
 
 def _armor(v) -> tuple[float, float, float] | None:

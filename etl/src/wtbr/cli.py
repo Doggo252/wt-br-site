@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from . import images, official, paths, records
+from . import images, official, patchnotes, paths, records
 from .build import build_current
 from .datamine import COUNTRY_ICONS, SHOP, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
@@ -14,6 +14,8 @@ from .models import (
     MarketData,
     Meta,
     NationTree,
+    PatchNote,
+    PatchNoteSummary,
     RecordRow,
     TimeMachine,
     UnitDetail,
@@ -35,7 +37,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("schema", help="write JSON Schema for the output files")
     sub.add_parser("records", help="download the RB records sheet")
     sub.add_parser("official", help="download Gaijin's BR change announcements")
-    sub.add_parser("all", help="history, fetch, images, records, build, schema")
+    pn = sub.add_parser("patchnotes", help="download the warthunder.com changelog (patch notes)")
+    pn.add_argument("--full", action="store_true", help="re-read the whole index to fill gaps")
+    sub.add_parser("all", help="every step above, then build and schema")
     args = parser.parse_args(argv)
 
     dm = Datamine(paths.CACHE / "datamine")
@@ -84,6 +88,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd in ("official", "all"):
         n = len(official.fetch(paths.CACHE / "official"))
         print(f"official: {n} announcements")
+    if args.cmd in ("patchnotes", "all"):
+        full = getattr(args, "full", False)
+        n = len(patchnotes.fetch(paths.CACHE / "patchnotes", full=full))
+        print(f"patchnotes: {n} changelog entries")
     if args.cmd in ("build", "all"):
         rec_dir = paths.CACHE / "records"
         record_rows = (
@@ -126,6 +134,8 @@ def write_schema() -> None:
         DevPreview,
         Announcement,
         MarketData,
+        PatchNote,
+        PatchNoteSummary,
     ):  # fmt: skip
         schema = model.model_json_schema(mode="serialization")
         (out / f"{model.__name__}.json").write_text(json.dumps(schema, indent=2))

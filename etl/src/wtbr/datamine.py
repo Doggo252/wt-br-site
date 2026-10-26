@@ -16,6 +16,7 @@ SHOP = "char.vromfs.bin_u/config/shop.blkx"
 UNITTAGS = "char.vromfs.bin_u/config/unittags.blkx"
 UNITS_CSV = "lang.vromfs.bin_u/lang/units.csv"
 WEAPONRY_CSV = "lang.vromfs.bin_u/lang/units_weaponry.csv"
+MODIFICATIONS_CSV = "lang.vromfs.bin_u/lang/units_modifications.csv"
 TANKMODELS = "aces.vromfs.bin_u/gamedata/units/tankmodels"
 COUNTRY_ICONS = "atlases.vromfs.bin_u/gameuiskin"
 VERSION = "version"
@@ -27,6 +28,7 @@ SPARSE_PATHS = [
     UNITTAGS,
     UNITS_CSV,
     WEAPONRY_CSV,
+    MODIFICATIONS_CSV,
     f"{TANKMODELS}/*",
     f"{COUNTRY_ICONS}/country_*.svg",
 ]

@@ -11,8 +11,14 @@ import { nationName } from "@/lib/nations";
 import { useMode } from "@/lib/useMode";
 import type { UnitStatus } from "@/lib/units";
 
-/** [id, name, nation, branch, type, status index, hidden, ab, rb, sb, image, planned] from /data/lineup.json */
-type Row = [string, string, string, Branch, string, number, number, number, number, number, number, Planned];
+/**
+ * [id, name, nation, branch, type, status index, hidden, ab, rb, sb, image, planned, price] from
+ * /data/lineup.json, plus [13] today's ranks when the planned BRs are being shown instead.
+ */
+type Row = [
+  string, string, string, Branch, string, number, number, number, number, number, number, Planned, number,
+  ([number, number, number] | 0)?,
+]; // prettier-ignore
 /** Announced, not yet live: [ab, rb, sb] with null for unchanged modes, or 0 for none. */
 type Planned = (number | null)[] | 0;
 
@@ -33,6 +39,7 @@ function readParams() {
     branch: b && BRANCHES.includes(b) ? b : null,
     nation: p.get("n"),
     rank: p.get("br") ? brToRank(p.get("br")!) : null,
+    planned: p.get("planned") === "1",
   };
 }
 
@@ -44,6 +51,8 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
   const [wantRank, setRank] = useState(17);
   // Selected bar as an offset from your BR, so it survives branch/nation/mode changes.
   const [focusOffset, setFocusOffset] = useState<number | null>(null);
+  // Plan with the BRs from Gaijin's newest announcement instead of today's.
+  const [usePlanned, setUsePlanned] = useState(false);
 
   useEffect(() => {
     const p = readParams();
@@ -51,12 +60,29 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
     if (p.branch) setBranch(p.branch);
     if (p.nation) setNation(p.nation);
     if (p.rank !== null && Number.isFinite(p.rank)) setRank(p.rank);
+    if (p.planned) setUsePlanned(true);
     /* eslint-enable react-hooks/set-state-in-effect */
     load().then(setRows);
   }, []);
 
   const col = MODE_COL[mode];
-  const pool = useMemo(() => rows.filter((r) => r[3] === branch && !r[6]), [rows, branch]);
+  const anyPlanned = rows.some((r) => r[11]);
+  const view = useMemo(
+    () =>
+      usePlanned
+        ? rows.map((r) => {
+            const p = r[11];
+            if (!p) return r;
+            const c = [...r] as Row;
+            c[13] = [r[7], r[8], r[9]];
+            for (let i = 0; i < 3; i++) if (p[i] != null) c[7 + i] = p[i]!;
+            c[11] = 0;
+            return c;
+          })
+        : rows,
+    [rows, usePlanned],
+  );
+  const pool = useMemo(() => view.filter((r) => r[3] === branch && !r[6]), [view, branch]);
   const ranks = useMemo(() => [...new Set(pool.map((r) => r[col]))].sort((a, b) => a - b), [pool, col]);
   const nationList = nations[branch].includes(nation) ? nation : nations[branch][0];
   // The chosen BR may not exist in this branch or mode: use the nearest one that does.
@@ -72,8 +98,10 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
     url.searchParams.set("b", branch);
     url.searchParams.set("n", nationList);
     url.searchParams.set("br", formatBr(rank));
+    if (usePlanned) url.searchParams.set("planned", "1");
+    else url.searchParams.delete("planned");
     window.history.replaceState(null, "", url);
-  }, [branch, nationList, rank]);
+  }, [branch, nationList, rank, usePlanned]);
 
   const lineup = pool
     .filter((r) => r[2] === nationList && r[col] <= rank && r[col] >= low)
@@ -132,6 +160,20 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
           </select>
         </label>
         <ModeToggle value={mode} onChange={setMode} />
+        {anyPlanned && (
+          <label className="flex cursor-pointer items-center gap-2 self-center text-sm text-gold">
+            <input
+              type="checkbox"
+              checked={usePlanned}
+              onChange={(e) => {
+                setUsePlanned(e.target.checked);
+                setFocusOffset(null);
+              }}
+              className="accent-gold"
+            />
+            Use Gaijin&apos;s planned BRs
+          </label>
+        )}
       </div>
 
       <section className="space-y-3">
@@ -143,11 +185,19 @@ export function LineupTool({ nations }: { nations: Record<Branch, string[]> }) {
           {lineup.length} {nationName(nationList)} {BRANCH_NAME[branch].toLowerCase()} vehicles you can bring without
           raising your {MODE_NAME[mode]} BR above {formatBr(rank)}. Unobtainable vehicles are left out.
         </p>
-        {lineup.some((r) => planned(r, col) !== null) && (
+        {usePlanned ? (
           <p className="callout-gold px-3 py-2 text-sm">
-            {lineup.filter((r) => planned(r, col) !== null).length} of these have a BR change announced by Gaijin that
-            isn&apos;t live yet, marked below.
+            Showing every vehicle at the BR Gaijin has announced but not yet applied.{" "}
+            {lineup.filter((r) => r[13] && r[13][col - 7] !== r[col]).length} of these would move into or within this
+            lineup; their current BR is marked below.
           </p>
+        ) : (
+          lineup.some((r) => planned(r, col) !== null) && (
+            <p className="callout-gold px-3 py-2 text-sm">
+              {lineup.filter((r) => planned(r, col) !== null).length} of these have a BR change announced by Gaijin that
+              isn&apos;t live yet, marked below.
+            </p>
+          )
         )}
         {lineup.length > 0 && <Cards rows={lineup} col={col} />}
       </section>
@@ -244,21 +294,25 @@ function Cards({ rows, col }: { rows: Row[]; col: number }) {
     <ul className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
       {rows.map((r) => {
         const next = planned(r, col);
+        const now = r[13] ? r[13][col - 7] : null;
         return (
           <li key={r[0]}>
             <UnitCard
               name={r[1]}
               rank={r[col] as number}
+              previousRank={now != null && now !== r[col] ? now : undefined}
               status={STATUS[r[5]]}
               image={r[10] ? `/img/units/${r[0]}.webp` : undefined}
               href={`/vehicle/${r[0]}/`}
               type={r[4]}
+              price={r[12] || undefined}
             />
             {next !== null && (
               <p className="mt-1 text-xs text-gold">
                 Planned: {formatBr(r[col] as number)} → {formatBr(next)}
               </p>
             )}
+            {now != null && now !== r[col] && <p className="mt-1 text-xs text-gold">Today: {formatBr(now)}</p>}
           </li>
         );
       })}

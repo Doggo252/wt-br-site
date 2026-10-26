@@ -16,6 +16,8 @@ export type UnitCardProps = {
   href?: string;
   /** Vehicle class (UnitSummary.type), shown as a small badge. */
   type?: string;
+  /** Gaijin Market price in GJN, shown instead of the class badge. */
+  price?: number;
 };
 
 const TYPE_ABBR: Record<string, string> = {
@@ -64,6 +66,7 @@ export function UnitCard({
   image,
   href,
   type,
+  price,
 }: UnitCardProps) {
   const inactive = availability !== "current";
   const changed = previousRank !== undefined && previousRank !== rank;
@@ -84,10 +87,19 @@ export function UnitCard({
         ) : (
           <TankSilhouette />
         )}
-        {(tag || (type && TYPE_ABBR[type])) && (
-          <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1 font-display text-[10px] uppercase tracking-wide text-fg-2">
-            {tag ?? TYPE_ABBR[type!]}
+        {price != null && !inactive ? (
+          <span
+            className="absolute left-1 top-1 rounded-sm bg-black/65 px-1 font-display text-[10px] tabular text-gold"
+            title="Lowest offer on the Gaijin Market"
+          >
+            {price.toLocaleString("en", { maximumFractionDigits: price < 100 ? 2 : 0 })} GJN
           </span>
+        ) : (
+          (tag || (type && TYPE_ABBR[type])) && (
+            <span className="absolute left-1 top-1 rounded-sm bg-black/55 px-1 font-display text-[10px] uppercase tracking-wide text-fg-2">
+              {tag ?? TYPE_ABBR[type!]}
+            </span>
+          )
         )}
         {dir && previousRank !== undefined && (
           <span
@@ -123,7 +135,7 @@ export function UnitCard({
       : "",
   ].join(" ");
 
-  const label = `${name}, BR ${formatBr(rank)}${tag ? `, ${tag}` : ""}${
+  const label = `${name}, BR ${formatBr(rank)}${tag ? `, ${tag}` : ""}${price != null ? `, ${price} GJN on the Gaijin Market` : ""}${
     dir && previousRank !== undefined ? `, changed from ${formatBr(previousRank)}` : ""
   }`;
 

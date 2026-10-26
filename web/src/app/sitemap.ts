@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { BRANCHES, branchHref, treeHref } from "@/lib/branches";
-import { getAnnouncements, getIndex, getMeta, getVersions, nationsOf } from "@/lib/data";
+import { getAnnouncements, getIndex, getMeta, getPatchNotes, getVersions, nationsOf } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-static";
@@ -18,6 +18,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: url("/compare/") },
     { url: url("/lineup/") },
     { url: url("/market/") },
+    { url: url("/patch-notes/"), lastModified },
+    ...getPatchNotes().map((n) => ({ url: url(`/patch-notes/${n.id}/`), lastModified: n.date })),
     { url: url("/announcements/") },
     ...getAnnouncements()
       .filter((a) => !a.unavailable && (a.changes ?? []).length > 0)

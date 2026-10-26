@@ -141,6 +141,49 @@ export interface TreeCell {
 }
 
 /**
+ * data/patchnotes/<id>.json: one warthunder.com changelog entry.
+ */
+
+export interface PatchNote {
+  id: number;
+  title: string;
+  date: string;
+  summary?: string;
+  image?: string | null;
+  version?: string | null;
+  forVersion?: string | null;
+  units?: number;
+  url: string;
+  sections: PatchNoteSection[];
+}
+
+export interface PatchNoteSection {
+  title?: string | null;
+  items: PatchNoteItem[];
+}
+
+export interface PatchNoteItem {
+  html: string;
+  depth?: number;
+  units?: string[];
+}
+
+/**
+ * One row of data/patchnotes/index.json (newest first).
+ */
+
+export interface PatchNoteSummary {
+  id: number;
+  title: string;
+  date: string;
+  summary?: string;
+  image?: string | null;
+  version?: string | null;
+  forVersion?: string | null;
+  units?: number;
+}
+
+/**
  * One row of data/records.json: a sheet row, matched to a vehicle when possible.
  */
 
@@ -228,6 +271,9 @@ export interface UnitDetail {
   record?: UnitRecord | null;
   market?: MarketQuote | null;
   skins?: MarketQuote[];
+  patchNotes?: PatchMention[];
+  economy?: Economy | null;
+  modifications?: Modification[];
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -255,6 +301,14 @@ export interface Stats {
   mainGun?: string | null;
   armorHull?: [number, number, number] | null;
   armorTurret?: [number, number, number] | null;
+  traverseDegS?: number | null;
+  elevationDegS?: number | null;
+  gunDepression?: number | null;
+  gunElevation?: number | null;
+  traverseLimits?: [number, number] | null;
+  ammo?: number | null;
+  gearsFwd?: number | null;
+  gearsRev?: number | null;
   maxSpeedKmh?: number | null;
   maxSpeedAltM?: number | null;
   climbRate?: number | null;
@@ -304,6 +358,61 @@ export interface MarketQuote {
   icon?: string | null;
   quality?: string | null;
   event?: string | null;
+}
+/**
+ * A patch note item naming this vehicle.
+ */
+
+export interface PatchMention {
+  id: number;
+  date: string;
+  title: string;
+  html: string;
+}
+/**
+ * Research, purchase, crew and repair costs from wpcost.blkx. SL = Silver Lions,
+ * RP = research points, GE = Golden Eagles.
+ */
+
+export interface Economy {
+  researchRp?: number | null;
+  purchaseSl?: number | null;
+  purchaseGe?: number | null;
+  crewSl?: number | null;
+  expertsSl?: number | null;
+  acesGe?: number | null;
+  acesRp?: number | null;
+  repairSl?: ModeValues;
+  repairUpgradedSl?: ModeValues1;
+  rewardPct?: ModeValues2;
+  rpPct?: number | null;
+}
+
+export interface ModeValues {
+  ab?: number | null;
+  rb?: number | null;
+  sb?: number | null;
+}
+
+export interface ModeValues1 {
+  ab?: number | null;
+  rb?: number | null;
+  sb?: number | null;
+}
+
+export interface ModeValues2 {
+  ab?: number | null;
+  rb?: number | null;
+  sb?: number | null;
+}
+
+export interface Modification {
+  id: string;
+  name: string;
+  tier?: number | null;
+  rp?: number | null;
+  sl?: number | null;
+  ge?: number | null;
 }
 
 /**

@@ -9,8 +9,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import market, official, parse, paths, records
-from .datamine import SHOP, UNITS_CSV, UNITTAGS, WEAPONRY_CSV, WPCOST, Datamine
+from . import market, official, parse, patchnotes, paths, records
+from .datamine import MODIFICATIONS_CSV, SHOP, UNITS_CSV, UNITTAGS, WEAPONRY_CSV, WPCOST, Datamine
 from .history_build import HistoryResult, major_of
 from .models import (
     Absence,
@@ -19,14 +19,21 @@ from .models import (
     BrChange,
     DevPreview,
     DevUnit,
+    Economy,
     HistoryPoint,
     MarketData,
     MarketEntry,
     MarketPoint,
     MarketQuote,
     Meta,
+    Modification,
     NationTree,
     OfficialChange,
+    PatchMention,
+    PatchNote,
+    PatchNoteItem,
+    PatchNoteSection,
+    PatchNoteSummary,
     Ranks,
     RecordRow,
     Sight,
@@ -108,6 +115,10 @@ def build_current(
     unittags = dm.read_json(UNITTAGS)
     lang = parse.parse_lang(dm.read_text(UNITS_CSV))
     weaponry = parse.parse_weaponry(dm.read_text(WEAPONRY_CSV))
+    try:
+        mod_names = parse.parse_mod_names(dm.read_text(MODIFICATIONS_CSV))
+    except FileNotFoundError:  # older sparse checkouts; `wtbr fetch` adds the file
+        mod_names = {}
 
     details: dict[str, UnitDetail] = {}
     shop_trees: list[tuple[str, parse.ShopTree]] = []
@@ -121,6 +132,10 @@ def build_current(
             details[uid] = _current_unit(
                 dm, uid, branch, su, wpcost[uid], ranks[uid], unittags, lang, weaponry, images
             )
+            details[uid].economy = Economy(**parse.parse_economy(wpcost[uid]))
+            details[uid].modifications = [
+                Modification(**m) for m in parse.parse_modifications(wpcost[uid], mod_names)
+            ]
 
     if hist:
         _drop_event_units(hist, details, lang)
@@ -130,6 +145,11 @@ def build_current(
     if record_rows is not None:
         _attach_records(details, record_rows, lang)
     market_data = _attach_market(details, paths.MANUAL / "market")
+    notes = _patch_notes(
+        details,
+        patchnotes.load(paths.CACHE / "patchnotes"),
+        [(v.version, v.date[:10]) for v in hist.versions] if hist else [],
+    )
 
     summaries = [
         UnitSummary(**d.model_dump(include=set(UnitSummary.model_fields))) for d in details.values()
@@ -174,7 +194,7 @@ def build_current(
     validate(meta, out / "meta.json", details)
 
     if out.exists():
-        for sub in ("units", "trees", "updates", "public"):
+        for sub in ("units", "trees", "updates", "public", "patchnotes"):
             shutil.rmtree(out / sub, ignore_errors=True)
     _write(out / "meta.json", meta)
     _write(out / "units" / "index.json", sorted(summaries, key=lambda s: s.id))
@@ -198,6 +218,16 @@ def build_current(
         (out / "dev.json").unlink(missing_ok=True)
     if market_data:
         _write(out / "market.json", market_data)
+    if notes:
+        _write(
+            out / "patchnotes" / "index.json",
+            [
+                PatchNoteSummary(**n.model_dump(include=set(PatchNoteSummary.model_fields)))
+                for n in notes
+            ],
+        )
+        for n in notes:
+            _write(out / "patchnotes" / f"{n.id}.json", n)
     if record_rows is not None:
         rows = [
             RecordRow(
@@ -369,6 +399,78 @@ def _attach_market(details: dict[str, UnitDetail], folder: Path) -> MarketData |
     for d in details.values():
         d.skins.sort(key=lambda q: (q.price is None, q.price or 0))
     return MarketData(snapshot=latest.date, snapshots=[s.date for s in snaps], items=entries)
+
+
+# Patch notes that name a vehicle, kept on its page.
+MENTIONS_PER_UNIT = 25
+# A changelog entry without a version in its title (major updates are titled by name) belongs to
+# the first game version that went live within this many days after it.
+NOTE_VERSION_DAYS = 3
+
+
+def _patch_notes(
+    details: dict[str, UnitDetail], entries: list[dict], versions: list[tuple[str, str]]
+) -> list[PatchNote]:
+    """Parse cached changelog entries, tie each to an update page and to the vehicles it names."""
+    from datetime import date as d_
+
+    from .records import loose
+
+    by_name: dict[str, list[str]] = {}
+    for uid, d in details.items():
+        for n in {d.name, d.fullName}:
+            if n:
+                by_name.setdefault(loose(n), []).append(uid)
+    known = {v for v, _ in versions}
+
+    def for_version(version: str | None, day: str) -> str | None:
+        if version:
+            return version if version in known else None
+        for v, vd in versions:
+            gap = (d_.fromisoformat(vd) - d_.fromisoformat(day)).days
+            if 0 <= gap <= NOTE_VERSION_DAYS:
+                return v
+        return None
+
+    out = []
+    for e in entries:
+        sections = []
+        mentioned: set[str] = set()
+        for sec in patchnotes.parse_article(e["html"]):
+            items = []
+            for it in sec.items:
+                units = []
+                for name, nation in patchnotes.lead_names(it.lead) if it.lead else []:
+                    ids = by_name.get(loose(name), [])
+                    if nation:
+                        ids = [u for u in ids if details[u].nation == nation] or ids
+                    units += [u for u in ids if u not in units]
+                mentioned.update(units)
+                items.append(PatchNoteItem(html=it.html, depth=it.depth, units=units))
+                for u in units:
+                    details[u].patchNotes.append(
+                        PatchMention(id=e["id"], date=e["date"], title=e["title"], html=it.html)
+                    )
+            sections.append(PatchNoteSection(title=sec.title, items=items))
+        version = patchnotes.version_of(e["title"])
+        out.append(
+            PatchNote(
+                id=e["id"],
+                title=e["title"],
+                date=e["date"],
+                summary=e.get("summary") or "",
+                image=e.get("image"),
+                version=version,
+                forVersion=for_version(version, e["date"]),
+                units=len(mentioned),
+                url=patchnotes.ENTRY_URL.format(id=e["id"]),
+                sections=sections,
+            )
+        )
+    for d in details.values():
+        d.patchNotes.sort(key=lambda m: (m.date, m.id), reverse=True)
+        del d.patchNotes[MENTIONS_PER_UNIT:]
+    return out
 
 
 def _attach_records(details: dict[str, UnitDetail], rows: list, lang: dict) -> None:

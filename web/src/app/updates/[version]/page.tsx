@@ -3,10 +3,13 @@ import Link from "@/components/Link";
 import { Arrow } from "@/components/Arrow";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { BackToVehicle } from "@/components/BackToVehicle";
+import { PatchNoteBody } from "@/components/PatchNoteBody";
+import { PatchNoteList } from "@/components/PatchNoteList";
+import { ScrollText } from "lucide-react";
 import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, formatBr, formatBrDelta } from "@/lib/br";
 import { BRANCHES, BRANCH_NAME, type Branch } from "@/lib/branches";
-import { getUnitMap, getUpdate, getVersions, nationsOf } from "@/lib/data";
+import { getPatchNote, getUnitMap, getUpdate, getVersions, nationsOf, patchNotesFor } from "@/lib/data";
 import type { BrChange, UnitSummary } from "@/lib/data.gen";
 import { nationName } from "@/lib/nations";
 import { BranchIcon } from "@/components/BranchIcon";
@@ -35,6 +38,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function UpdatePage({ params }: Params) {
   const { version } = await params;
   const u = getUpdate(version);
+  const notes = patchNotesFor(version);
   const units = getUnitMap();
 
   // Group changes by branch, then nation, in game order.
@@ -98,6 +102,12 @@ export default async function UpdatePage({ params }: Params) {
           {u.removed.length > 0 && (
             <span className="border border-[#2f3a42] bg-black/25 px-2.5 py-1 tabular text-fg-3">{u.removed.length} removed</span>
           )}
+          {notes.main.length + notes.since.length > 0 && (
+            <a href="#patch-notes" className="inline-flex items-center gap-1.5 border border-gold/40 bg-black/25 px-2.5 py-1 text-gold no-underline">
+              <ScrollText className="h-3.5 w-3.5" aria-hidden />
+              Patch notes
+            </a>
+          )}
         </div>
         {!u.prev && <p className="text-sm text-fg-3">This is the first version in the datamine, used as the baseline.</p>}
       </header>
@@ -135,6 +145,43 @@ export default async function UpdatePage({ params }: Params) {
 
       {u.changes.length === 0 && u.added.length === 0 && u.removed.length === 0 && (
         <p className="text-fg-2">No BR changes in this version; only the tech tree layout changed.</p>
+      )}
+
+      {(notes.main.length > 0 || notes.since.length > 0) && (
+        <section id="patch-notes" className="scroll-mt-20 space-y-4">
+          <h2 className="section-title">
+            <ScrollText className="h-5 w-5 text-fg-3" aria-hidden />
+            Patch notes
+          </h2>
+          {notes.main.map((n) => (
+            <details key={n.id} open={notes.main.length === 1} className="panel group">
+              <summary className="flex cursor-pointer list-none flex-wrap items-baseline justify-between gap-2 px-4 py-3">
+                <span className="font-display text-lg text-fg">{n.title}</span>
+                <span className="text-sm text-fg-3">
+                  {n.date} · <span className="group-open:hidden">show</span>
+                  <span className="hidden group-open:inline">hide</span>
+                </span>
+              </summary>
+              <div className="border-t border-card-border px-4 py-4">
+                <PatchNoteBody sections={getPatchNote(n.id).sections} units={units} />
+                <p className="mt-4 text-xs text-fg-3">
+                  <Link href={`/patch-notes/${n.id}/`}>Own page</Link> ·{" "}
+                  <a href={`https://warthunder.com/en/game/changelog/current/${n.id}`} rel="noopener">
+                    original on warthunder.com
+                  </a>
+                </p>
+              </div>
+            </details>
+          ))}
+          {notes.since.length > 0 && (
+            <div>
+              <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-fg-3">
+                {notes.main.length ? "Other patches" : "Patches"} since the previous BR update
+              </h3>
+              <PatchNoteList notes={notes.since} />
+            </div>
+          )}
+        </section>
       )}
     </div>
   );

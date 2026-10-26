@@ -16,6 +16,8 @@ export type TreeUnit = {
   name: string;
   status: UnitStatus;
   hidden?: boolean;
+  /** Lowest Gaijin Market offer in GJN: hidden event vehicles you can still buy there. */
+  price?: number;
   br: Ranks;
   image?: boolean;
   type?: string;
@@ -130,7 +132,7 @@ export function TechTree({ branch, nation, columns, units }: Props) {
             onChange={(e) => setShowHidden(e.target.checked)}
             className="accent-link"
           />
-          Show unobtainable vehicles
+          Show unobtainable and market-only vehicles
         </label>
         <label className="flex items-center gap-2 text-sm text-fg-2">
           Lineup at
@@ -398,7 +400,8 @@ function TreeCard({ id, unit, mode }: { id: string; unit: TreeUnit; mode: Mode }
       rank={unit.br[mode]}
       previousRank={unit.prev?.[mode]}
       status={unit.status}
-      availability={unit.hidden ? "unobtainable" : "current"}
+      availability={unit.hidden && unit.price == null ? "unobtainable" : "current"}
+      price={unit.price}
       image={unit.image ? `/img/units/${id}.webp` : undefined}
       href={`/vehicle/${id}/`}
       type={unit.type}

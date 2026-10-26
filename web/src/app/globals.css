@@ -193,6 +193,19 @@
   .data-table tbody a:focus-visible {
     color: var(--color-link);
   }
+  /* Patch note items (markup from the changelog: strong, em, a). */
+  .patch-notes strong {
+    color: var(--color-fg);
+    font-weight: 600;
+  }
+  .patch-notes a {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .patch-notes a strong {
+    color: inherit;
+  }
   /* Buttons. */
   .btn {
     display: inline-flex;

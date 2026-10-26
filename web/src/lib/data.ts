@@ -12,6 +12,8 @@ import type {
   DevPreview,
   MarketData,
   Meta,
+  PatchNote,
+  PatchNoteSummary,
   NationTree,
   OfficialChange,
   Ranks,
@@ -146,3 +148,23 @@ export const getPlannedRanks = cache(() => {
 export const getMarket = cache((): MarketData | null =>
   existsSync(join(DATA, "market.json")) ? read<MarketData>("market.json") : null,
 );
+
+/** Changelog entries (data/patchnotes/index.json), newest first; empty before the first fetch. */
+export const getPatchNotes = cache((): PatchNoteSummary[] =>
+  existsSync(join(DATA, "patchnotes", "index.json")) ? read<PatchNoteSummary[]>("patchnotes", "index.json") : [],
+);
+
+export const getPatchNote = cache((id: number | string) => read<PatchNote>("patchnotes", `${id}.json`));
+
+/** Patch notes for an update page: entries tied to this version, and the smaller ones since the previous update. */
+export function patchNotesFor(v: string): { main: PatchNoteSummary[]; since: PatchNoteSummary[] } {
+  const versions = getVersions();
+  const i = versions.findIndex((x) => x.v === v);
+  const notes = getPatchNotes();
+  const main = notes.filter((n) => n.forVersion === v);
+  if (i < 0) return { main, since: [] };
+  const from = i > 0 ? versions[i - 1].d.slice(0, 10) : "0000";
+  const to = versions[i].d.slice(0, 10);
+  const since = notes.filter((n) => !n.forVersion && n.date > from && n.date <= to);
+  return { main, since };
+}

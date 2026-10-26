@@ -12,6 +12,14 @@ import {
   Shield,
   ShieldHalf,
   Store,
+  Package,
+  MoveHorizontal,
+  MoveVertical,
+  Settings2,
+  Coins,
+  Wrench,
+  GraduationCap,
+  BookOpen,
   Paintbrush,
   TimerReset,
   TrendingUp,
@@ -164,6 +172,18 @@ export default async function VehiclePage({ params }: Params) {
                 )
               )}
               {!u.removedIn && <StarButton id={u.id} name={plainName(u.name)} br={u.br} />}
+              {!u.removedIn && (
+                <a
+                  href={`https://wiki.warthunder.com/unit/${u.id}`}
+                  rel="noopener"
+                  target="_blank"
+                  className="btn gap-1.5 px-2 py-0.5 text-xs uppercase tracking-wider"
+                  title="This vehicle's article on the official War Thunder Wiki: history, usage guide, pros and cons"
+                >
+                  <BookOpen className="h-3.5 w-3.5" aria-hidden />
+                  Wiki
+                </a>
+              )}
               {u.marketName && (
                 <a
                   href={marketHref(u.marketName)}
@@ -210,6 +230,7 @@ export default async function VehiclePage({ params }: Params) {
       <nav aria-label="On this page" className="-mt-4 flex flex-wrap gap-2 text-sm">
         {[
           u.branch === "ground" ? "Stats" : "Flight performance",
+          u.economy && "Economy and crew",
           u.branch === "ground" && "Night vision",
           u.record && "RB kill record",
           "Battle Rating history",
@@ -217,6 +238,8 @@ export default async function VehiclePage({ params }: Params) {
           line && "In the tech tree",
           rivals.length > 0 && "Counterparts",
           (u.market || (u.skins ?? []).length > 0) && "Gaijin Market",
+          (u.modifications ?? []).length > 0 && "Modifications",
+          (u.patchNotes ?? []).length > 0 && "Patch notes",
           "Same Battle Rating",
         ]
           .filter((t): t is string => Boolean(t))
@@ -265,6 +288,12 @@ export default async function VehiclePage({ params }: Params) {
           <p className="mt-2 text-xs text-fg-3">From the in-game stat card, stock (unupgraded).</p>
         )}
       </Section>
+
+      {u.economy && (
+        <Section title="Economy and crew">
+          <EconomyBlock u={u} />
+        </Section>
+      )}
 
       {(u.branch === "ground" || u.record) && (
         <div className="grid gap-10 md:grid-cols-2">
@@ -407,6 +436,31 @@ export default async function VehiclePage({ params }: Params) {
         </Section>
       )}
 
+      {(u.modifications ?? []).length > 0 && (
+        <Section title="Modifications">
+          <ModificationList mods={u.modifications!} />
+        </Section>
+      )}
+
+      {(u.patchNotes ?? []).length > 0 && (
+        <Section title="Patch notes">
+          <ul className="patch-notes divide-y divide-card-border panel text-sm">
+            {u.patchNotes!.map((m, i) => (
+              <li key={`${m.id}-${i}`} className="px-3 py-2.5">
+                <p className="mb-1 flex flex-wrap items-baseline gap-x-3 text-xs text-fg-3">
+                  <span className="tabular">{m.date}</span>
+                  <Link href={`/patch-notes/${m.id}/`} className="text-fg-2 hover:text-link">
+                    {m.title}
+                  </Link>
+                </p>
+                <span className="text-fg-2" dangerouslySetInnerHTML={{ __html: m.html }} />
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-fg-3">Changes that name this vehicle in the official changelog, newest first.</p>
+        </Section>
+      )}
+
       <Section title="Same Battle Rating">
         <SameBrStrip byMode={same.byMode} units={same.units} rank={u.br} />
       </Section>
@@ -529,7 +583,23 @@ function StatGrid({ u }: { u: UnitDetail }) {
   if (u.branch !== "ground") return <AirStatGrid u={u} />;
   const rows: StatRow[] = [
     [Crosshair, "Main gun", s.mainGun ?? null],
-    [TimerReset, "Reload", s.reloadS != null ? `${s.reloadS.toFixed(1)} s` : null],
+    // Game files hold the aced-crew reload; a basic crew takes 30% longer (the wiki's "basic → aced").
+    [TimerReset, "Reload", s.reloadS != null ? `${(s.reloadS * 1.3).toFixed(1)} → ${s.reloadS.toFixed(1)} s` : null],
+    [Package, "Ammo", s.ammo != null ? `${s.ammo} rounds` : null],
+    [
+      MoveHorizontal,
+      "Turret traverse",
+      s.traverseDegS != null
+        ? `${s.traverseDegS.toFixed(1)}°/s${s.traverseLimits ? ` (${s.traverseLimits[0]}° to +${s.traverseLimits[1]}°)` : ""}`
+        : null,
+    ],
+    [
+      MoveVertical,
+      "Gun elevation",
+      s.gunDepression != null && s.gunElevation != null
+        ? `${s.gunDepression}° / +${s.gunElevation}°${s.elevationDegS != null ? ` · ${s.elevationDegS.toFixed(1)}°/s` : ""}`
+        : null,
+    ],
     [Users, "Crew", s.crew != null ? String(s.crew) : null],
     [Weight, "Mass", s.massT != null ? `${s.massT.toFixed(1)} t` : null],
     [Cog, "Engine", s.enginePowerHp != null ? `${Math.round(s.enginePowerHp)} hp` : null],
@@ -541,11 +611,15 @@ function StatGrid({ u }: { u: UnitDetail }) {
     ],
     [Shield, "Hull armor", s.armorHull ? `${s.armorHull.map((x) => Math.round(x)).join(" / ")} mm` : null],
     [ShieldHalf, "Turret armor", s.armorTurret ? `${s.armorTurret.map((x) => Math.round(x)).join(" / ")} mm` : null],
+    [Settings2, "Gearbox", s.gearsFwd != null ? `${s.gearsFwd} forward / ${s.gearsRev ?? 0} reverse` : null],
   ];
   return (
     <>
       <StatTiles rows={rows} />
-      <p className="mt-2 text-xs text-fg-3">Armor is front / side / rear. Speeds are forward / reverse.</p>
+      <p className="mt-2 text-xs text-fg-3">
+        Armor is front / side / rear. Speeds are forward / reverse. Reload is basic crew → aced crew. Traverse and
+        elevation are for a stock vehicle.
+      </p>
     </>
   );
 }
@@ -584,6 +658,113 @@ function StatTiles({ rows }: { rows: StatRow[] }) {
           </div>
         ))}
     </dl>
+  );
+}
+
+const fmt = (n: number) => n.toLocaleString("en");
+
+function EconomyBlock({ u }: { u: UnitDetail }) {
+  const e = u.economy!;
+  const modes = ["ab", "rb", "sb"] as const;
+  const costs: [LucideIcon, string, string | null][] = [
+    [GraduationCap, "Research", e.researchRp ? `${fmt(e.researchRp)} RP` : null],
+    [Coins, "Purchase", e.purchaseGe ? `${fmt(e.purchaseGe)} GE` : e.purchaseSl ? `${fmt(e.purchaseSl)} SL` : null],
+    [Users, "Crew training", e.crewSl ? `${fmt(e.crewSl)} SL` : null],
+    [Users, "Experts", e.expertsSl ? `${fmt(e.expertsSl)} SL` : null],
+    [
+      Users,
+      "Aces",
+      e.acesGe ? `${fmt(e.acesGe)} GE${e.acesRp ? ` or ${fmt(e.acesRp)} RP` : ""}` : null,
+    ],
+    [GraduationCap, "Research bonus", e.rpPct ? `${e.rpPct}% RP` : null],
+  ];
+  return (
+    <div className="space-y-4">
+      <StatTiles rows={costs} />
+      <div className="overflow-x-auto panel">
+        <table className="data-table w-full min-w-[420px] text-sm">
+          <thead>
+            <tr>
+              <th className="px-3 py-2 font-semibold">
+                <span className="sr-only">Measure</span>
+              </th>
+              {modes.map((m) => (
+                <th key={m} className="px-3 py-2 text-right font-semibold">
+                  {MODE_NAME[m]}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-card-border">
+            <tr>
+              <td className="px-3 py-1.5 text-fg-2">
+                <span className="inline-flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-gold/80" aria-hidden /> Silver Lion reward
+                </span>
+              </td>
+              {modes.map((m) => (
+                <td key={m} className="px-3 py-1.5 text-right font-display tabular">
+                  {e.rewardPct?.[m] != null ? `${Math.round(e.rewardPct[m]!)}%` : "–"}
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td className="px-3 py-1.5 text-fg-2">
+                <span className="inline-flex items-center gap-2">
+                  <Wrench className="h-4 w-4 text-gold/80" aria-hidden /> Repair, stock → upgraded
+                </span>
+              </td>
+              {modes.map((m) => (
+                <td key={m} className="px-3 py-1.5 text-right font-display tabular">
+                  {e.repairSl?.[m] != null
+                    ? `${fmt(Math.round(e.repairSl[m]!))}${e.repairUpgradedSl?.[m] != null ? ` → ${fmt(Math.round(e.repairUpgradedSl[m]!))}` : ""} SL`
+                    : "–"}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-fg-3">
+        From the game&apos;s economy file. SL = Silver Lions, RP = research points, GE = Golden Eagles. Premium account
+        and boosters raise rewards further.
+      </p>
+    </div>
+  );
+}
+
+function ModificationList({ mods }: { mods: NonNullable<UnitDetail["modifications"]> }) {
+  const tiers = [...new Set(mods.map((m) => m.tier ?? 0))].sort((a, b) => a - b);
+  const totalRp = mods.reduce((n, m) => n + (m.rp ?? 0), 0);
+  const totalSl = mods.reduce((n, m) => n + (m.sl ?? 0), 0);
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-fg-2">
+        {mods.length} modifications · {fmt(totalRp)} RP and {fmt(totalSl)} SL to research and buy them all.
+      </p>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        {tiers.map((t) => (
+          <div key={t} className="panel">
+            <h3 className="border-b border-card-border px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-wider text-fg-3">
+              {t ? `Tier ${roman(t)}` : "Other"}
+            </h3>
+            <ul className="divide-y divide-card-border text-sm">
+              {mods
+                .filter((m) => (m.tier ?? 0) === t)
+                .map((m) => (
+                  <li key={m.id} className="flex items-baseline justify-between gap-2 px-3 py-1.5">
+                    <span className="min-w-0 text-fg-2">{m.name}</span>
+                    <span className="shrink-0 text-right text-xs tabular text-fg-3">
+                      {m.rp ? `${fmt(m.rp)} RP` : ""}
+                      {m.sl ? <span className="block">{fmt(m.sl)} SL</span> : null}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
