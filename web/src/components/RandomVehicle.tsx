@@ -1,5 +1,6 @@
 "use client";
 
+import { Dices } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { loadIndex } from "./SearchBox";
 
@@ -16,6 +17,7 @@ export function RandomVehicle({ className = "" }: { className?: string }) {
         if (r) router.push(`/vehicle/${r[0]}/`);
       }}
     >
+      <Dices className="h-3.5 w-3.5 text-fg-3" aria-hidden />
       Random vehicle
     </button>
   );

@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "@/components/Link";
+import { Compass, History, Megaphone, Swords, Trophy } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { BranchIcon } from "./BranchIcon";
 
-const NAV = [
-  { href: "/ground/", label: "Ground" },
-  { href: "/air/", label: "Air" },
-  { href: "/helicopters/", label: "Helis" },
-  { href: "/updates/", label: "Updates" },
-  { href: "/announcements/", label: "Planned" },
-  { href: "/records/", label: "Records" },
-  { href: "/lineup/", label: "Lineup" },
-  { href: "/explore/", label: "Explore" },
+const NAV: { href: string; label: string; icon: React.ReactNode }[] = [
+  { href: "/ground/", label: "Ground", icon: <BranchIcon branch="ground" className="h-4 w-4" /> },
+  { href: "/air/", label: "Air", icon: <BranchIcon branch="air" className="h-4 w-4" /> },
+  { href: "/helicopters/", label: "Helis", icon: <BranchIcon branch="heli" className="h-4 w-4" /> },
+  { href: "/updates/", label: "Updates", icon: <History className="h-4 w-4" /> },
+  { href: "/announcements/", label: "Planned", icon: <Megaphone className="h-4 w-4" /> },
+  { href: "/records/", label: "Records", icon: <Trophy className="h-4 w-4" /> },
+  { href: "/lineup/", label: "Lineup", icon: <Swords className="h-4 w-4" /> },
+  { href: "/explore/", label: "Explore", icon: <Compass className="h-4 w-4" /> },
 ];
 
 export function NavLinks() {
@@ -25,10 +27,14 @@ export function NavLinks() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap border-b-2 px-2 py-3 font-display text-sm font-medium tracking-wide transition-colors ${
+            className={`group inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-2 py-3 font-display text-sm font-medium tracking-wide transition-colors ${
               active ? "border-gold text-fg" : "border-transparent text-fg-2 hover:text-fg"
             }`}
           >
+            {/* Icons from lg up; on smaller screens the row already scrolls. */}
+            <span aria-hidden className={`hidden lg:inline ${active ? "text-gold" : "text-fg-3 group-hover:text-fg-2"}`}>
+              {item.icon}
+            </span>
             {item.label}
           </Link>
         );

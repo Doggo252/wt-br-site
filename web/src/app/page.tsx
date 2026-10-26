@@ -1,4 +1,5 @@
 import Link from "@/components/Link";
+import { ArrowUpDown, History, Layers, type LucideIcon } from "lucide-react";
 import { Arrow } from "@/components/Arrow";
 import { BranchIcon } from "@/components/BranchIcon";
 import { Flag } from "@/components/Flag";
@@ -92,9 +93,9 @@ export default function Home() {
             <kbd className="border border-card-border px-1 font-display">/</kbd> to search from any page.
           </p>
           <dl className="mt-8 grid max-w-xl grid-cols-3 gap-3">
-            <Stat label="Vehicles" value={index.filter((u) => !u.removedIn).length.toLocaleString("en")} />
-            <Stat label="BR updates" value={brUpdates.toLocaleString("en")} />
-            <Stat label="BR changes" value={totalChanges.toLocaleString("en")} />
+            <Stat icon={Layers} label="Vehicles" value={index.filter((u) => !u.removedIn).length.toLocaleString("en")} />
+            <Stat icon={History} label="BR updates" value={brUpdates.toLocaleString("en")} />
+            <Stat icon={ArrowUpDown} label="BR changes" value={totalChanges.toLocaleString("en")} />
           </dl>
         </div>
       </section>
@@ -271,10 +272,13 @@ function Callout({ href, label, text }: { href: string; label: string; text: str
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
     <div className="border border-[#2a333b] bg-black/25 px-3 py-2 backdrop-blur-sm">
-      <dt className="font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-3">{label}</dt>
+      <dt className="flex items-center gap-1.5 font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-3">
+        <Icon className="h-3.5 w-3.5 text-gold/80" aria-hidden />
+        {label}
+      </dt>
       <dd className="font-display text-2xl font-bold tabular text-fg sm:text-3xl">{value}</dd>
     </div>
   );

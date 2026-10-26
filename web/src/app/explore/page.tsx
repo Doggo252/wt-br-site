@@ -1,5 +1,16 @@
 import type { Metadata } from "next";
 import Link from "@/components/Link";
+import {
+  Anchor,
+  ArrowUpDown,
+  CalendarDays,
+  ChartLine,
+  Eye,
+  Flag as Flag3,
+  GitCompareArrows,
+  type LucideIcon,
+  Shuffle,
+} from "lucide-react";
 import { Arrow } from "@/components/Arrow";
 import { Tabs } from "@/components/Tabs";
 import { ThermalFinder, type ThermalUnit } from "@/components/ThermalFinder";
@@ -19,6 +30,16 @@ export const metadata: Metadata = {
   description:
     "War Thunder vehicles and aircraft with the biggest Battle Rating moves since 2020, the most-changed vehicles, a thermal sight finder and BR creep over time.",
 };
+
+const SECTIONS: [string, string, LucideIcon][] = [
+  ["#movers", "Biggest moves", ArrowUpDown],
+  ["#most-changed", "Most changed", Shuffle],
+  ["#thermals", "Thermal finder", Eye],
+  ["#stable", "Longest unchanged", Anchor],
+  ["#nations", "By nation", Flag3],
+  ["#by-year", "By year", CalendarDays],
+  ["#top-br", "Top BR over time", ChartLine],
+];
 
 export default function ExplorePage() {
   const versions = getVersions();
@@ -74,28 +95,14 @@ export default function ExplorePage() {
           Realistic Battles BR moves since March 2020 (or since a vehicle was added), and tools for finding vehicles.
         </p>
         <nav className="mt-4 flex flex-wrap gap-2 text-sm">
-          <a className="btn" href="#movers">
-            Biggest moves
-          </a>
-          <a className="btn" href="#most-changed">
-            Most changed
-          </a>
-          <a className="btn" href="#thermals">
-            Thermal finder
-          </a>
-          <a className="btn" href="#stable">
-            Longest unchanged
-          </a>
-          <a className="btn" href="#nations">
-            By nation
-          </a>
-          <a className="btn" href="#by-year">
-            By year
-          </a>
-          <a className="btn" href="#top-br">
-            Top BR over time
-          </a>
-          <Link className="btn" href="/compare/">
+          {SECTIONS.map(([href, label, Icon]) => (
+            <a key={href} className="btn gap-1.5" href={href}>
+              <Icon className="h-4 w-4 text-gold/80" aria-hidden />
+              {label}
+            </a>
+          ))}
+          <Link className="btn gap-1.5" href="/compare/">
+            <GitCompareArrows className="h-4 w-4 text-gold/80" aria-hidden />
             Compare vehicles
           </Link>
         </nav>
