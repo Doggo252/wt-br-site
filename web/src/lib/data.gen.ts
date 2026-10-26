@@ -274,6 +274,7 @@ export interface UnitDetail {
   patchNotes?: PatchMention[];
   economy?: Economy | null;
   modifications?: Modification[];
+  guns?: Gun[];
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -413,6 +414,43 @@ export interface Modification {
   rp?: number | null;
   sl?: number | null;
   ge?: number | null;
+}
+
+export interface Gun {
+  name: string;
+  caliber?: number | null;
+  ammo: AmmoOption[];
+}
+/**
+ * A shell, or for autocannons a belt, that a gun can load.
+ */
+
+export interface AmmoOption {
+  mod?: string | null;
+  tier?: number | null;
+  rp?: number | null;
+  perShell?: number | null;
+  rounds: Round[];
+}
+/**
+ * One projectile. Penetration is flat-plate RHA in mm, as the game reports it.
+ */
+
+export interface Round {
+  name: string;
+  type: string;
+  typeName?: string | null;
+  mass?: number | null;
+  speed?: number | null;
+  explosive?: number | null;
+  explosiveType?: string | null;
+  tnt?: number | null;
+  pen?: number[] | null;
+  jet?: number | null;
+  hesh?: number | null;
+  frag?: number | null;
+  range?: number | null;
+  guidance?: string | null;
 }
 
 /**

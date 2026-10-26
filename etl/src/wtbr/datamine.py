@@ -18,6 +18,8 @@ UNITS_CSV = "lang.vromfs.bin_u/lang/units.csv"
 WEAPONRY_CSV = "lang.vromfs.bin_u/lang/units_weaponry.csv"
 MODIFICATIONS_CSV = "lang.vromfs.bin_u/lang/units_modifications.csv"
 TANKMODELS = "aces.vromfs.bin_u/gamedata/units/tankmodels"
+GROUND_WEAPONS = "aces.vromfs.bin_u/gamedata/weapons/groundmodels_weapons"
+EXPLOSIVE = "aces.vromfs.bin_u/gamedata/damage_model/explosive.blkx"
 COUNTRY_ICONS = "atlases.vromfs.bin_u/gameuiskin"
 VERSION = "version"
 
@@ -30,6 +32,8 @@ SPARSE_PATHS = [
     WEAPONRY_CSV,
     MODIFICATIONS_CSV,
     f"{TANKMODELS}/*",
+    f"{GROUND_WEAPONS}/*",
+    EXPLOSIVE,
     f"{COUNTRY_ICONS}/country_*.svg",
 ]
 
@@ -81,6 +85,12 @@ class Datamine:
 
     def read_text(self, rel: str) -> str:
         return (self.path / rel).read_text(encoding="utf-8")
+
+    def weapon(self, blk: str) -> dict | None:
+        """'gameData/Weapons/groundModels_weapons/88mm_KwK36_user_cannon.blk' -> its .blkx."""
+        stem = blk.rsplit("/", 1)[-1].lower().removesuffix(".blk")
+        f = self.path / GROUND_WEAPONS / f"{stem}.blkx"
+        return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
 
     def tankmodel(self, unit_id: str) -> dict | None:
         """Tank model files are lower-case, unlike wpcost IDs."""

@@ -177,6 +177,41 @@ class Modification(Model):
     ge: int | None = None  # cost to buy outright with Golden Eagles
 
 
+class Round(Model):
+    """One projectile. Penetration is flat-plate RHA in mm, as the game reports it."""
+
+    name: str
+    type: str  # short label: APFSDS, HEAT, HE...
+    typeName: str | None = None  # the game's long name for the type
+    mass: float | None = None  # kg
+    speed: float | None = None  # muzzle velocity, m/s
+    explosive: float | None = None  # filler, kg
+    explosiveType: str | None = None
+    tnt: float | None = None  # TNT equivalent, kg
+    pen: list[int] | None = None  # kinetic, at ammo.DISTANCES
+    jet: int | None = None  # HEAT jet, any range
+    hesh: int | None = None  # thickest plate HESH still damages behind
+    frag: float | None = None  # what the blast and fragments go through
+    range: int | None = None  # guided missiles, m
+    guidance: str | None = None
+
+
+class AmmoOption(Model):
+    """A shell, or for autocannons a belt, that a gun can load."""
+
+    mod: str | None = None  # the shell's modification id; None = the gun's default shell
+    tier: int | None = None  # tier of the modification that unlocks it; None = stock
+    rp: int | None = None  # research cost of that modification
+    perShell: int | None = None  # Silver Lions per shell
+    rounds: list[Round]
+
+
+class Gun(Model):
+    name: str
+    caliber: float | None = None  # mm
+    ammo: list[AmmoOption]
+
+
 class PatchMention(Model):
     """A patch note item naming this vehicle."""
 
@@ -204,6 +239,7 @@ class UnitDetail(UnitSummary):
     patchNotes: list[PatchMention] = []  # newest first, capped
     economy: Economy | None = None
     modifications: list[Modification] = []
+    guns: list[Gun] = []
 
 
 class BranchCounts(Model):

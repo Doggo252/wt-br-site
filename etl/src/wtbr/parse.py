@@ -183,6 +183,19 @@ def parse_weaponry(text: str) -> dict[str, str]:
     return out
 
 
+def parse_bullet_names(text: str) -> dict[str, str]:
+    """units_weaponry.csv rows other than weapons: shell names keyed by bulletName (as given and
+    lower-cased) and shell type names ("<bulletType>/name", "<bulletType>/name/short")."""
+    out = {}
+    reader = csv.reader(io.StringIO(text), delimiter=";", quotechar='"')
+    next(reader, None)
+    for row in reader:
+        if len(row) >= 2 and row[1] and not row[0].startswith("weapons/"):
+            out[row[0]] = row[1]
+            out.setdefault(row[0].lower(), row[1])
+    return out
+
+
 # --- unittags.blkx ---------------------------------------------------------
 
 

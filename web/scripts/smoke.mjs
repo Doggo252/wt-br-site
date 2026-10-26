@@ -31,6 +31,8 @@ const PAGES = [
   ["/watchlist/", "Watchlist"],
   ["/market/", "Market prices"],
   ["/patch-notes/", "Patch notes"],
+  ["/shells/?br=8.7", "Shell penetration"],
+  ["/vehicle/germ_leopard_2a6/", "DM53"],
 ];
 
 const server = createServer((req, res) => {

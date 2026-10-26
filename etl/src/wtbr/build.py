@@ -9,8 +9,17 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import market, official, parse, patchnotes, paths, records
-from .datamine import MODIFICATIONS_CSV, SHOP, UNITS_CSV, UNITTAGS, WEAPONRY_CSV, WPCOST, Datamine
+from . import ammo, market, official, parse, patchnotes, paths, records
+from .datamine import (
+    EXPLOSIVE,
+    MODIFICATIONS_CSV,
+    SHOP,
+    UNITS_CSV,
+    UNITTAGS,
+    WEAPONRY_CSV,
+    WPCOST,
+    Datamine,
+)
 from .history_build import HistoryResult, major_of
 from .models import (
     Absence,
@@ -20,6 +29,7 @@ from .models import (
     DevPreview,
     DevUnit,
     Economy,
+    Gun,
     HistoryPoint,
     MarketData,
     MarketEntry,
@@ -114,11 +124,20 @@ def build_current(
     shop = dm.read_json(SHOP)
     unittags = dm.read_json(UNITTAGS)
     lang = parse.parse_lang(dm.read_text(UNITS_CSV))
-    weaponry = parse.parse_weaponry(dm.read_text(WEAPONRY_CSV))
+    weaponry_csv = dm.read_text(WEAPONRY_CSV)
+    weaponry = parse.parse_weaponry(weaponry_csv)
     try:
         mod_names = parse.parse_mod_names(dm.read_text(MODIFICATIONS_CSV))
     except FileNotFoundError:  # older sparse checkouts; `wtbr fetch` adds the file
         mod_names = {}
+    try:
+        explosives = ammo.Explosives.parse(dm.read_json(EXPLOSIVE))
+    except FileNotFoundError:
+        explosives = ammo.Explosives({}, [])
+    bullet_names = parse.parse_bullet_names(weaponry_csv)
+
+    def arsenal(model: dict, wp: dict) -> list[Gun]:
+        return ammo.guns(model, wp, dm.weapon, bullet_names, explosives, weaponry)
 
     details: dict[str, UnitDetail] = {}
     shop_trees: list[tuple[str, parse.ShopTree]] = []
@@ -130,12 +149,14 @@ def build_current(
             if uid not in ranks or uid in details:
                 continue
             details[uid] = _current_unit(
-                dm, uid, branch, su, wpcost[uid], ranks[uid], unittags, lang, weaponry, images
-            )
+                dm, uid, branch, su, wpcost[uid], ranks[uid], unittags, lang, weaponry, images,
+                arsenal,
+            )  # fmt: skip
             details[uid].economy = Economy(**parse.parse_economy(wpcost[uid]))
             details[uid].modifications = [
                 Modification(**m) for m in parse.parse_modifications(wpcost[uid], mod_names)
             ]
+            _name_ammo_packs(details[uid], wpcost[uid])
 
     if hist:
         _drop_event_units(hist, details, lang)
@@ -240,14 +261,33 @@ def build_current(
     return meta
 
 
-def _current_unit(dm, uid, branch, su, wp, ranks, unittags, lang, weaponry, images) -> UnitDetail:
+def _name_ammo_packs(d: UnitDetail, wp: dict) -> None:
+    """Ammo research steps have no names of their own ("120mm DM APDS FS ammo pack"); call them
+    after the shells they unlock ("DM53 (APFSDS)")."""
+    mods = wp.get("modifications") or {}
+    packs: dict[str, str] = {}
+    for gun in d.guns:
+        for opt in gun.ammo:
+            pack = (mods.get(opt.mod) or {}).get("reqModification") if opt.mod else None
+            if pack:
+                packs[pack] = ", ".join(f"{r.name} ({r.type})" for r in opt.rounds)
+    for m in d.modifications:
+        if m.id in packs and m.name == m.id.replace("_", " "):
+            m.name = packs[m.id]
+
+
+def _current_unit(
+    dm, uid, branch, su, wp, ranks, unittags, lang, weaponry, images, arsenal
+) -> UnitDetail:
     unittag = unittags.get(uid) or {}
     tags = unittag.get("tags") or {}
     name = lang.get(f"{uid}_shop") or lang.get(f"{uid}_0") or uid
+    guns: list[Gun] = []
     if branch == "ground":
         model = dm.tankmodel(uid) or {}
         sights = parse.parse_sights(model)
         stats = parse.parse_stats(model, wp, unittag, weaponry)
+        guns = arsenal(model, wp)
     else:
         sights = {}
         stats = parse.parse_air_stats(unittag, wp)
@@ -272,6 +312,7 @@ def _current_unit(dm, uid, branch, su, wp, ranks, unittags, lang, weaponry, imag
         marketName=market_name(su.flags.get("marketplaceItemdefId"), name, su.nation),
         groundBattleRb=wp.get("economicRankTankHistorical") if branch != "ground" else None,
         groundBattleSb=wp.get("economicRankTankSimulation") if branch != "ground" else None,
+        guns=guns,
     )
 
 

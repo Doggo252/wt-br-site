@@ -28,6 +28,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "@/components/Link";
+import { AmmoTable } from "@/components/AmmoTable";
 import { BrStepChart } from "@/components/BrStepChart";
 import { BranchIcon } from "@/components/BranchIcon";
 import { ChangeLog } from "@/components/ChangeLog";
@@ -234,6 +235,7 @@ export default async function VehiclePage({ params }: Params) {
           u.branch === "ground" && "Night vision",
           u.record && "RB kill record",
           "Battle Rating history",
+          (u.guns ?? []).length > 0 && "Ammunition",
           announced.length > 0 && "Official announcements",
           line && "In the tech tree",
           rivals.length > 0 && "Counterparts",
@@ -328,6 +330,12 @@ export default async function VehiclePage({ params }: Params) {
           </p>
         )}
       </Section>
+
+      {(u.guns ?? []).length > 0 && (
+        <Section title="Ammunition">
+          <AmmoTable guns={u.guns!} rank={u.removedIn ? undefined : u.br.rb} />
+        </Section>
+      )}
 
       {announced.length > 0 && (
         <Section title="Official announcements">
