@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import ammo, market, official, parse, patchnotes, paths, records
+from . import ammo, market, official, parse, patchnotes, paths, records, store
 from .datamine import (
     EXPLOSIVE,
     MODIFICATIONS_CSV,
@@ -48,6 +48,8 @@ from .models import (
     RecordRow,
     Sight,
     Stats,
+    StoreData,
+    StorePack,
     TimeMachine,
     TimeMachineUnit,
     TreeCell,
@@ -166,6 +168,7 @@ def build_current(
     if record_rows is not None:
         _attach_records(details, record_rows, lang)
     market_data = _attach_market(details, paths.MANUAL / "market")
+    store_data = _attach_store(details, paths.CACHE / "store")
     notes = _patch_notes(
         details,
         patchnotes.load(paths.CACHE / "patchnotes"),
@@ -239,6 +242,8 @@ def build_current(
         (out / "dev.json").unlink(missing_ok=True)
     if market_data:
         _write(out / "market.json", market_data)
+    if store_data:
+        _write(out / "store.json", store_data)
     if notes:
         _write(
             out / "patchnotes" / "index.json",
@@ -259,6 +264,14 @@ def build_current(
         ]  # fmt: skip
         _write(out / "records.json", rows)
     return meta
+
+
+def _ge_cost(wp: dict, flags: dict, uid: str) -> int | None:
+    """Golden Eagle price of a premium sold in game. Store-pack vehicles (`gift` in shop.blkx)
+    carry a costGold too, but it isn't offered."""
+    if status_of(wp, flags, uid) != "premium" or flags.get("gift"):
+        return None
+    return wp.get("costGold") or None
 
 
 def _name_ammo_packs(d: UnitDetail, wp: dict) -> None:
@@ -310,6 +323,8 @@ def _current_unit(
         eventName=su.flags.get("event") or wp.get("event"),
         marketItemId=su.flags.get("marketplaceItemdefId"),
         marketName=market_name(su.flags.get("marketplaceItemdefId"), name, su.nation),
+        geCost=_ge_cost(wp, su.flags, uid),
+        pack=status_of(wp, su.flags, uid) == "premium" and bool(su.flags.get("gift")),
         groundBattleRb=wp.get("economicRankTankHistorical") if branch != "ground" else None,
         groundBattleSb=wp.get("economicRankTankSimulation") if branch != "ground" else None,
         guns=guns,
@@ -370,6 +385,42 @@ def validate(meta: Meta, previous: Path, details: dict[str, UnitDetail]) -> None
                 problems.append(f"{nation}: {count} -> {new} vehicles (more than a 5% drop)")
     if problems and not os.environ.get("WTBR_SKIP_VALIDATION"):
         raise ValidationError("data validation failed:\n  " + "\n  ".join(problems[:50]))
+
+
+def _attach_store(details: dict[str, UnitDetail], cache: Path) -> StoreData | None:
+    """Gaijin Store packs onto the vehicles they contain."""
+    loaded = store.load(cache)
+    if not loaded:
+        return None
+    fetched, products = loaded
+    vehicles = [
+        (uid, d.branch, d.nation, [d.name, d.fullName])
+        for uid, d in details.items()
+        if not d.removedIn and d.status == "premium"
+    ]
+    units = store.match_vehicles(products, vehicles)
+    packs = [
+        StorePack(
+            id=p.id,
+            title=p.title,
+            url=p.url,
+            image=p.image,
+            price=p.price,
+            oldPrice=p.oldPrice,
+            currency=p.currency or "$",
+            endsAt=p.endsAt,
+            units=units.get(p.id, []),
+            contents=p.contents,
+        )
+        for p in products
+    ]
+    for pack in packs:
+        for uid in pack.units:
+            d = details[uid]
+            d.storePacks.append(pack.model_copy(update={"contents": []}))
+            if pack.price and (d.storePrice is None or pack.price < d.storePrice):
+                d.storePrice = pack.price
+    return StoreData(fetched=fetched, packs=packs)
 
 
 def _attach_market(details: dict[str, UnitDetail], folder: Path) -> MarketData | None:

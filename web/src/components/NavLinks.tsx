@@ -5,7 +5,7 @@ import { Compass, History, Megaphone, Store, Swords, Trophy } from "lucide-react
 import { usePathname } from "next/navigation";
 import { BranchIcon } from "./BranchIcon";
 
-const NAV: { href: string; label: string; icon: React.ReactNode }[] = [
+const NAV: { href: string; label: string; icon: React.ReactNode; also?: string[] }[] = [
   { href: "/ground/", label: "Ground", icon: <BranchIcon branch="ground" className="h-4 w-4" /> },
   { href: "/air/", label: "Air", icon: <BranchIcon branch="air" className="h-4 w-4" /> },
   { href: "/helicopters/", label: "Helis", icon: <BranchIcon branch="heli" className="h-4 w-4" /> },
@@ -13,7 +13,7 @@ const NAV: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: "/announcements/", label: "Planned", icon: <Megaphone className="h-4 w-4" /> },
   { href: "/records/", label: "Records", icon: <Trophy className="h-4 w-4" /> },
   { href: "/lineup/", label: "Lineup", icon: <Swords className="h-4 w-4" /> },
-  { href: "/market/", label: "Market", icon: <Store className="h-4 w-4" /> },
+  { href: "/premiums/", label: "Shop", icon: <Store className="h-4 w-4" />, also: ["/deals/", "/market/"] },
   { href: "/explore/", label: "Explore", icon: <Compass className="h-4 w-4" /> },
 ];
 
@@ -22,7 +22,7 @@ export function NavLinks() {
   return (
     <nav aria-label="Main" className="-mb-px flex min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] [mask-image:linear-gradient(90deg,#000_85%,transparent)] sm:flex-none sm:[mask-image:none]">
       {NAV.map((item) => {
-        const active = path.startsWith(item.href);
+        const active = [item.href, ...(item.also ?? [])].some((h) => path.startsWith(h));
         return (
           <Link
             key={item.href}

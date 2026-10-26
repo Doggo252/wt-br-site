@@ -88,6 +88,11 @@ class UnitSummary(Model):
     marketItemId: int | None = None
     marketName: str | None = None
     marketPrice: float | None = None
+    # Premiums: Golden Eagle price when sold in game, or `pack` when sold for money on the Gaijin
+    # Store instead, with the lowest current price of a store pack that includes it (US dollars).
+    geCost: int | None = None
+    pack: bool = False
+    storePrice: float | None = None
     added: str | None = None  # version first seen; None if already in the first snapshot (2020-03)
     removedIn: str | None = None  # set when the vehicle is no longer in the game
     changes: int = 0  # number of updates that changed its BR in any mode
@@ -177,6 +182,21 @@ class Modification(Model):
     ge: int | None = None  # cost to buy outright with Golden Eagles
 
 
+class StorePack(Model):
+    """A War Thunder product on the Gaijin Store."""
+
+    id: int  # store.gaijin.net/story.php?id=<id>
+    title: str
+    url: str
+    image: str | None = None
+    price: float | None = None
+    oldPrice: float | None = None  # before the current discount
+    currency: str = "$"
+    endsAt: int | None = None  # discount end, unix seconds
+    units: list[str] = []  # vehicles in the pack
+    contents: list[str] = []  # everything else (premium time, Golden Eagles, decals...)
+
+
 class Round(Model):
     """One projectile. Penetration is flat-plate RHA in mm, as the game reports it."""
 
@@ -240,6 +260,7 @@ class UnitDetail(UnitSummary):
     economy: Economy | None = None
     modifications: list[Modification] = []
     guns: list[Gun] = []
+    storePacks: list[StorePack] = []
 
 
 class BranchCounts(Model):
@@ -385,6 +406,13 @@ class MarketEntry(MarketQuote):
     unit: str | None = None  # vehicle id, for vehicles and matched skins
     country: str | None = None
     history: list[MarketPoint] = []
+
+
+class StoreData(Model):
+    """data/store.json."""
+
+    fetched: str
+    packs: list[StorePack]
 
 
 class MarketData(Model):

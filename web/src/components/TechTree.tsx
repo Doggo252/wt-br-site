@@ -18,6 +18,8 @@ export type TreeUnit = {
   hidden?: boolean;
   /** Lowest Gaijin Market offer in GJN: hidden event vehicles you can still buy there. */
   price?: number;
+  /** Premiums: "$59.99" for a store pack or "6,590 GE" in game. */
+  cost?: string;
   br: Ranks;
   image?: boolean;
   type?: string;
@@ -402,6 +404,8 @@ function TreeCard({ id, unit, mode }: { id: string; unit: TreeUnit; mode: Mode }
       status={unit.status}
       availability={unit.hidden && unit.price == null ? "unobtainable" : "current"}
       price={unit.price}
+      cost={unit.cost}
+      costTitle={unit.cost?.startsWith("$") ? "Cheapest Gaijin Store pack with this vehicle" : "Golden Eagles in the in-game shop"}
       image={unit.image ? `/img/units/${id}.webp` : undefined}
       href={`/vehicle/${id}/`}
       type={unit.type}

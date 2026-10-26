@@ -198,6 +198,31 @@ export interface RecordRow {
 }
 
 /**
+ * data/store.json.
+ */
+
+export interface StoreData {
+  fetched: string;
+  packs: StorePack[];
+}
+/**
+ * A War Thunder product on the Gaijin Store.
+ */
+
+export interface StorePack {
+  id: number;
+  title: string;
+  url: string;
+  image?: string | null;
+  price?: number | null;
+  oldPrice?: number | null;
+  currency?: string;
+  endsAt?: number | null;
+  units?: string[];
+  contents?: string[];
+}
+
+/**
  * data/public/timemachine/<branch>/<nation>.json, fetched by the tech tree's patch slider.
  * Version indexes refer to data/versions.json.
  */
@@ -254,6 +279,9 @@ export interface UnitDetail {
   marketItemId?: number | null;
   marketName?: string | null;
   marketPrice?: number | null;
+  geCost?: number | null;
+  pack?: boolean;
+  storePrice?: number | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
@@ -275,6 +303,7 @@ export interface UnitDetail {
   economy?: Economy | null;
   modifications?: Modification[];
   guns?: Gun[];
+  storePacks?: StorePack[];
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -452,6 +481,9 @@ export interface Round {
   range?: number | null;
   guidance?: string | null;
 }
+/**
+ * A War Thunder product on the Gaijin Store.
+ */
 
 /**
  * One row of data/units/index.json.
@@ -486,6 +518,9 @@ export interface UnitSummary {
   marketItemId?: number | null;
   marketName?: string | null;
   marketPrice?: number | null;
+  geCost?: number | null;
+  pack?: boolean;
+  storePrice?: number | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;

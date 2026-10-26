@@ -103,6 +103,9 @@ export function NationTreePage({ branch, nation }: { branch: Branch; nation: str
     const planned = getPlannedRanks().get(u.id);
     units[u.id] = { name: u.name, status: u.status, hidden: u.hidden, br: u.br, image: u.image, type: u.type };
     if (u.marketPrice != null) units[u.id].price = u.marketPrice;
+    // Premiums: the store pack price, else Golden Eagles.
+    else if (u.storePrice != null) units[u.id].cost = `$${u.storePrice}`;
+    else if (u.geCost != null && !u.hidden) units[u.id].cost = `${u.geCost.toLocaleString("en")} GE`;
     if (planned) units[u.id].planned = planned;
   }
   const meta = getMeta();

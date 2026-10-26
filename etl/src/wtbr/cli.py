@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from . import images, official, patchnotes, paths, records
+from . import images, official, patchnotes, paths, records, store
 from .build import build_current
 from .datamine import COUNTRY_ICONS, SHOP, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
@@ -17,6 +17,7 @@ from .models import (
     PatchNote,
     PatchNoteSummary,
     RecordRow,
+    StoreData,
     TimeMachine,
     UnitDetail,
     UnitSummary,
@@ -39,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("official", help="download Gaijin's BR change announcements")
     pn = sub.add_parser("patchnotes", help="download the warthunder.com changelog (patch notes)")
     pn.add_argument("--full", action="store_true", help="re-read the whole index to fill gaps")
+    sub.add_parser("store", help="download Gaijin Store pack prices")
     sub.add_parser("all", help="every step above, then build and schema")
     args = parser.parse_args(argv)
 
@@ -92,6 +94,11 @@ def main(argv: list[str] | None = None) -> int:
         full = getattr(args, "full", False)
         n = len(patchnotes.fetch(paths.CACHE / "patchnotes", full=full))
         print(f"patchnotes: {n} changelog entries")
+    if args.cmd in ("store", "all"):
+        try:
+            print(f"store: {len(store.fetch(paths.CACHE / 'store'))} products")
+        except OSError as e:  # the store is a nice-to-have; keep the last catalog
+            print(f"store: fetch failed ({e}), keeping the cached catalog")
     if args.cmd in ("build", "all"):
         rec_dir = paths.CACHE / "records"
         record_rows = (
@@ -136,6 +143,7 @@ def write_schema() -> None:
         MarketData,
         PatchNote,
         PatchNoteSummary,
+        StoreData,
     ):  # fmt: skip
         schema = model.model_json_schema(mode="serialization")
         (out / f"{model.__name__}.json").write_text(json.dumps(schema, indent=2))

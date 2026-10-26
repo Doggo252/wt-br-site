@@ -10,8 +10,10 @@ import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { Logo } from "@/components/Logo";
 import {
+  BadgePercent,
   Compass,
   Crosshair,
+  Gem,
   GitCompareArrows,
   Code,
   History,
@@ -76,6 +78,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/updates/" className={FOOT}><History className={ICON} aria-hidden />Updates</Link>
               <Link href="/patch-notes/" className={FOOT}><ScrollText className={ICON} aria-hidden />Patch notes</Link>
               <Link href="/market/" className={FOOT}><Store className={ICON} aria-hidden />Market prices</Link>
+              <Link href="/premiums/" className={FOOT}><Gem className={ICON} aria-hidden />Premium vehicles</Link>
+              <Link href="/deals/" className={FOOT}><BadgePercent className={ICON} aria-hidden />Deals</Link>
               <Link href="/announcements/" className={FOOT}><Megaphone className={ICON} aria-hidden />Planned changes</Link>
               <Link href="/compare/" className={FOOT}><GitCompareArrows className={ICON} aria-hidden />Compare</Link>
               <Link href="/lineup/" className={FOOT}><Swords className={ICON} aria-hidden />Lineup planner</Link>

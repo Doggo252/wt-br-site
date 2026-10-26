@@ -12,6 +12,7 @@ import {
   Shield,
   ShieldHalf,
   Store,
+  ShoppingCart,
   Package,
   MoveHorizontal,
   MoveVertical,
@@ -197,6 +198,38 @@ export default async function VehiclePage({ params }: Params) {
                   Gaijin Market
                   {u.market?.price != null && <span className="tabular normal-case text-gold">{gjn(u.market.price)}</span>}
                 </a>
+              )}
+              {(u.storePacks ?? []).map((p) => (
+                <a
+                  key={p.id}
+                  href={p.url}
+                  rel="noopener"
+                  target="_blank"
+                  className="btn gap-1.5 px-2 py-0.5 text-xs uppercase tracking-wider"
+                  title={`${p.title} on the Gaijin Store`}
+                >
+                  <ShoppingCart className="h-3.5 w-3.5" aria-hidden />
+                  {(u.storePacks ?? []).length > 1 ? p.title : "Gaijin Store"}
+                  <span className="tabular normal-case text-gold">
+                    {p.oldPrice != null && (
+                      <s className="mr-1 text-fg-3">
+                        {p.currency ?? "$"}
+                        {p.oldPrice}
+                      </s>
+                    )}
+                    {p.currency ?? "$"}
+                    {p.price}
+                  </span>
+                </a>
+              ))}
+              {u.geCost != null && !u.hidden && (
+                <span
+                  className="inline-flex items-center gap-1.5 border border-card-border px-2 py-0.5 font-display text-xs uppercase tracking-wider text-fg-2"
+                  title="Price in Golden Eagles in the in-game shop"
+                >
+                  <Coins className="h-3.5 w-3.5" aria-hidden />
+                  In game <span className="tabular normal-case text-gold">{u.geCost.toLocaleString("en")} GE</span>
+                </span>
               )}
             </p>
             <dl className="mt-6 grid max-w-md grid-cols-3 gap-2">

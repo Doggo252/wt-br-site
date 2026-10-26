@@ -11,6 +11,7 @@ import type {
   Announcement,
   DevPreview,
   MarketData,
+  StoreData,
   Meta,
   PatchNote,
   PatchNoteSummary,
@@ -147,6 +148,11 @@ export const getPlannedRanks = cache(() => {
 /** Gaijin Market snapshot (data/market.json), or null before the first snapshot. */
 export const getMarket = cache((): MarketData | null =>
   existsSync(join(DATA, "market.json")) ? read<MarketData>("market.json") : null,
+);
+
+/** Gaijin Store catalog (data/store.json), or null before the first fetch. */
+export const getStore = cache((): StoreData | null =>
+  existsSync(join(DATA, "store.json")) ? read<StoreData>("store.json") : null,
 );
 
 /** Changelog entries (data/patchnotes/index.json), newest first; empty before the first fetch. */
