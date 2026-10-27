@@ -43,7 +43,17 @@ import { ThermalChip } from "@/components/ThermalChip";
 import { TreeLineStrip } from "@/components/TreeLineStrip";
 import { UnitCard } from "@/components/UnitCard";
 import { MODES, MODE_LABEL, MODE_NAME, formatBr, type Mode } from "@/lib/br";
-import { getAnnouncementsByUnit, getDev, getIndex, getMarket, getMeta, getTree, getUnit, getUnitMap } from "@/lib/data";
+import {
+  getAnnouncementsByUnit,
+  getDev,
+  getIndex,
+  getMarket,
+  getMeta,
+  getPlannedRanks,
+  getTree,
+  getUnit,
+  getUnitMap,
+} from "@/lib/data";
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { treeHref } from "@/lib/branches";
 import { plainName, plural } from "@/lib/format";
@@ -65,7 +75,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: `${plainName(u.name)} (${titleQualifier(u)}) BR history`,
     description: `${plainName(u.fullName)} (${nationName(u.nation)}): Battle Rating ${formatBr(u.br.ab)} AB / ${formatBr(u.br.rb)} RB / ${formatBr(u.br.sb)} SB, with stats and night vision.`,
-    openGraph: u.image ? { images: [`/img/units/${id}.webp`] } : undefined,
+    openGraph: {
+      siteName: "Uptier",
+      type: "website",
+      images: [{ url: `/og/vehicle/${id}.png`, width: 1200, height: 630, alt: `${plainName(u.name)} Battle Ratings` }],
+    },
+    twitter: { card: "summary_large_image", images: [`/og/vehicle/${id}.png`] },
   };
 }
 
@@ -304,19 +319,26 @@ export default async function VehiclePage({ params }: Params) {
       )}
 
       {plannedNow && (
-        <Link
-          href={`/announcements/${plannedNow.a.id}/`}
-          className="callout-gold block px-4 py-3 text-sm hover:brightness-110"
-        >
-          <span className="eyebrow">Planned by Gaijin</span>{" "}
-          <span className="text-fg">
-            {(["ab", "rb", "sb"] as const)
-              .filter((m) => plannedNow.change.outcome?.[m] === "pending" && plannedNow.change[m])
-              .map((m) => `${MODE_NAME[m]} ${formatBr(plannedNow.change[m]![0])} → ${formatBr(plannedNow.change[m]![1])}`)
-              .join(", ")}
-            . Announced {plannedNow.a.date}, not live yet.
-          </span>
-        </Link>
+        <div className="callout-gold flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 text-sm">
+          <Link href={`/announcements/${plannedNow.a.id}/`} className="no-underline hover:brightness-110">
+            <span className="eyebrow">Planned by Gaijin</span>{" "}
+            <span className="text-fg">
+              {(["ab", "rb", "sb"] as const)
+                .filter((m) => plannedNow.change.outcome?.[m] === "pending" && plannedNow.change[m])
+                .map((m) => `${MODE_NAME[m]} ${formatBr(plannedNow.change[m]![0])} → ${formatBr(plannedNow.change[m]![1])}`)
+                .join(", ")}
+              . Announced {plannedNow.a.date}, not live yet.
+            </span>
+          </Link>
+          {getPlannedRanks().has(u.id) && !u.removedIn && (
+            <Link
+              href={`/lineup/?b=${u.branch}&n=${u.nation}&br=${formatBr(getPlannedRanks().get(u.id)!.rb ?? u.br.rb)}&planned=1`}
+              className="btn text-xs"
+            >
+              Lineups at the new BR →
+            </Link>
+          )}
+        </div>
       )}
 
 

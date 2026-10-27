@@ -58,16 +58,18 @@ export default function AnnouncementsPage() {
       </header>
 
       {pending && (
-        <Link
-          href={`/announcements/${pending.a.id}/`}
-          className="callout-gold block p-4 hover:brightness-110"
-        >
-          <span className="eyebrow">Coming soon</span>
-          <span className="mt-1 block text-lg text-fg">{pending.a.title}</span>
-          <span className="text-sm text-fg-2">
-            {plural(pending.pending.length, "vehicle")} with BR changes not live yet · posted {pending.a.date}
-          </span>
-        </Link>
+        <div className="callout-gold flex flex-wrap items-center justify-between gap-3 p-4">
+          <Link href={`/announcements/${pending.a.id}/`} className="block no-underline hover:brightness-110">
+            <span className="eyebrow">Coming soon</span>
+            <span className="mt-1 block text-lg text-fg">{pending.a.title}</span>
+            <span className="text-sm text-fg-2">
+              {plural(pending.pending.length, "vehicle")} with BR changes not live yet · posted {pending.a.date}
+            </span>
+          </Link>
+          <Link href="/lineup/?planned=1" className="btn">
+            Plan lineups with these BRs →
+          </Link>
+        </div>
       )}
 
       <ul className="panel divide-y divide-[#262f35]">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { OfficialChangeTable, rowOutcome } from "@/components/OfficialChanges";
 import { BRANCHES, BRANCH_NAME } from "@/lib/branches";
-import { getAnnouncements, getUnitMap } from "@/lib/data";
+import { getAnnouncements, getPendingPlan, getUnitMap } from "@/lib/data";
 import { plural } from "@/lib/format";
 
 export const dynamicParams = false;
@@ -45,7 +45,14 @@ export default async function AnnouncementPage({ params }: Params) {
           </a>
         </p>
         {planned && pending > 0 && (
-          <p className="mt-2 text-sm text-gold">{plural(pending, "change")} not live yet.</p>
+          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gold">
+            {plural(pending, "change")} not live yet.
+            {getPendingPlan()?.a.id === a.id && (
+              <Link href="/lineup/?planned=1" className="btn text-xs">
+                Plan lineups with these BRs →
+              </Link>
+            )}
+          </p>
         )}
       </header>
       {BRANCHES.map((b) => {
