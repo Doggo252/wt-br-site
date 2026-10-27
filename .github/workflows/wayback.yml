@@ -1,0 +1,27 @@
+name: Wayback captures
+
+# One-off: download the old wiki's battle rating lists from the Internet Archive (pre-2020 BR
+# history) and keep them as an artifact for parsing. Run by hand.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Download captures
+        working-directory: etl
+        run: |
+          uv sync
+          uv run wtbr wayback --out ../wayback
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wayback
+          path: wayback
+          retention-days: 14

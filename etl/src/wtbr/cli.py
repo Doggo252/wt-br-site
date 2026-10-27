@@ -2,8 +2,9 @@
 
 import argparse
 import json
+from pathlib import Path
 
-from . import images, news, official, patchnotes, paths, records, store
+from . import images, news, official, patchnotes, paths, records, store, wayback
 from .build import build_current
 from .datamine import COUNTRY_ICONS, SHOP, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
@@ -45,8 +46,14 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("store", help="download Gaijin Store pack prices")
     nw = sub.add_parser("news", help="download the warthunder.com news index")
     nw.add_argument("--full", action="store_true", help="re-read every index page")
+    wb = sub.add_parser("wayback", help="download old wiki BR lists from the Internet Archive")
+    wb.add_argument("--out", default=str(paths.CACHE / "wayback"), help="folder for the captures")
     sub.add_parser("all", help="every step above, then build and schema")
     args = parser.parse_args(argv)
+
+    if args.cmd == "wayback":
+        print(f"wayback: {wayback.fetch(Path(args.out))} new captures")
+        return 0
 
     dm = Datamine(paths.CACHE / "datamine")
     hist = History(paths.CACHE / "history.git")
