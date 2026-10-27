@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "@/components/Link";
-import { Compass, History, Megaphone, Newspaper, Store, Swords, Trophy } from "lucide-react";
+import { BookOpen, Compass, History, Megaphone, Newspaper, Store, Swords, Trophy } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { BranchIcon } from "./BranchIcon";
 
@@ -11,6 +11,7 @@ const NAV: { href: string; label: string; icon: React.ReactNode; also?: string[]
   { href: "/helicopters/", label: "Helis", icon: <BranchIcon branch="heli" className="h-4 w-4" /> },
   { href: "/updates/", label: "Updates", icon: <History className="h-4 w-4" />, also: ["/patch-notes/"] },
   { href: "/news/", label: "News", icon: <Newspaper className="h-4 w-4" /> },
+  { href: "/guide/", label: "Guide", icon: <BookOpen className="h-4 w-4" /> },
   { href: "/announcements/", label: "Planned", icon: <Megaphone className="h-4 w-4" /> },
   { href: "/rankings/", label: "Rankings", icon: <Trophy className="h-4 w-4" />, also: ["/records/", "/shells/"] },
   { href: "/lineup/", label: "Tools", icon: <Swords className="h-4 w-4" />, also: ["/research/", "/hangar/", "/economy/", "/compare/", "/watchlist/"] },
@@ -33,8 +34,8 @@ export function NavLinks() {
               active ? "border-gold text-fg" : "border-transparent text-fg-2 hover:text-fg"
             }`}
           >
-            {/* Icons from lg up; on smaller screens the row already scrolls. */}
-            <span aria-hidden className={`hidden lg:inline ${active ? "text-gold" : "text-fg-3 group-hover:text-fg-2"}`}>
+            {/* Icons from xl up; on smaller screens the row already scrolls. */}
+            <span aria-hidden className={`hidden xl:inline ${active ? "text-gold" : "text-fg-3 group-hover:text-fg-2"}`}>
               {item.icon}
             </span>
             {item.label}

@@ -47,6 +47,9 @@ const PAGES = [
   ["/rankings/?b=ground&br=6.7", "Best gun depression"],
   ["/deals/", "Deals"],
   ["/vehicle/ussr_is_6/", "Gaijin Store"],
+  ["/guide/", "How War Thunder works"],
+  ["/guide/mechanics/matchmaking/", "Battle rating"],
+  ["/vehicle/germ_pzkpfw_VI_ausf_b_tiger_IIh/", "Camouflages"],
 ];
 
 const server = createServer((req, res) => {
