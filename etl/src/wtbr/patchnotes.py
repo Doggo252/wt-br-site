@@ -290,3 +290,93 @@ def lead_names(lead: str) -> list[tuple[str, str | None]]:
             part = part[: m.start()].strip()
         out.append((part, nation))
     return out
+
+
+# --- battle rating changes in old changelogs ---------------------------------------------
+# Before the datamine (March 2020) the changelogs are the only record of BR changes. They come
+# as "AMX-30 (1972) - BR in all modes has been reduced from 7.7 to 7.3", "BR for the Cromwell
+# Mk V has been increased from 2.7 to 3.0 in all game modes", or a vehicle name followed by
+# "AB: 3.0 → 3.3" lines.
+
+_NUM = r"(\d{1,2}\.\d)"
+_ARROW = r"\s*(?:→|->|>|to)\s*"
+_MODE_WORDS = {
+    "ab": "ab", "arcade": "ab", "rb": "rb", "realistic": "rb", "historical": "rb",
+    "sb": "sb", "simulator": "sb", "simulation": "sb", "full real": "sb",
+}  # fmt: skip
+_MODE = r"(AB|RB|SB|arcade|realistic|historical|simulator|simulation|full real)"
+_MODE_PAIR = re.compile(_MODE + r"\b[^0-9]{0,40}?" + _NUM + _ARROW + _NUM, re.I)
+_FROM_TO = re.compile(r"from\s+" + _NUM + r"\s+to\s+" + _NUM, re.I)
+_ALL_MODES = re.compile(r"\ball\b[^.;]{0,20}\bmodes?\b|\bin all\b", re.I)
+_BR = r"(?:BR|battle ratings?|economic rank)"
+_NAME_FIRST = re.compile(
+    r"^(?P<names>[^.]+?)\s*(?:[-–—:]|\bhas\b|\bhave\b)\s*(?:the\s+)?" + _BR, re.I
+)
+_BR_OF = re.compile(
+    _BR + r"\s+(?:for|of)\s+(?:the\s+)?(?P<names>.+?)\s+(?:has|have)\s+been\b", re.I
+)
+_DROP = re.compile(
+    r"\((?:and )?(?:its|their) premium (?:counterparts?|versions?)\)|\bgerman\s+", re.I
+)
+
+
+def _plain_text(fragment: str) -> str:
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", fragment)).split())
+
+
+def _modes(text: str) -> dict[str, tuple[float, float]]:
+    """Mode -> (was, now) for every change a sentence states; "br" when no mode is named."""
+    out: dict[str, tuple[float, float]] = {}
+    for m in _MODE_PAIR.finditer(text):
+        out[_MODE_WORDS[m.group(1).lower()]] = (float(m.group(2)), float(m.group(3)))
+    if out:
+        return out
+    m = _FROM_TO.search(text)
+    if not m:
+        return {}
+    pair = (float(m.group(1)), float(m.group(2)))
+    if _ALL_MODES.search(text):
+        return {"ab": pair, "rb": pair, "sb": pair}
+    return {"br": pair}
+
+
+_STARTS_WITH_MODE = re.compile(r"^\s*" + _MODE + r"\b", re.I)
+
+
+def br_changes(sections: list[Section]) -> list[tuple[list[tuple[str, str | None]], dict]]:
+    """(vehicle names, {mode: (was, now)}) for each BR change stated in a changelog. A line
+    holding only names ("P-47D-25:") names the vehicle for the "AB: 3.0 → 3.3" lines after it."""
+    out: list[tuple[list[tuple[str, str | None]], dict]] = []
+    current: list[tuple[str, str | None]] = []
+    for sec in sections:
+        for it in sec.items:
+            text = _plain_text(it.html)
+            rest = (
+                text[len(it.lead) :].strip(" :-–—")
+                if it.lead and text.startswith(it.lead)
+                else text
+            )
+            if it.lead and not rest:
+                current = lead_names(it.lead)
+                continue
+            modes = _modes(text)
+            if not modes:
+                if len(text) < 60 and not re.search(r"\d\.\d", text) and text.endswith(":"):
+                    current = lead_names(text)
+                continue
+            names = None
+            if _STARTS_WITH_MODE.match(text):
+                names = current
+            elif m := _NAME_FIRST.search(text):
+                names = lead_names(_DROP.sub("", m.group("names")))
+            elif (m := _BR_OF.search(text)) and not m.group("names").lower().startswith("all "):
+                names = lead_names(_DROP.sub("", m.group("names")))
+            elif it.lead:
+                names = lead_names(it.lead)
+            if not names:
+                continue
+            if out and out[-1][0] == names and not set(out[-1][1]) & set(modes):
+                out[-1][1].update(modes)
+            else:
+                out.append((names, dict(modes)))
+    return out

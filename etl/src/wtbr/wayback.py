@@ -105,3 +105,71 @@ def fetch(out: Path) -> int:
                 print(f"wayback: {c['timestamp']} {c['original']}: {e}")
     (out / "index.json").write_text(json.dumps(index, indent=1))
     return new
+
+
+# --- vehicle pages -------------------------------------------------------------------------
+# The archive holds about 10,000 captures of wiki vehicle pages from 2019 (almost none before).
+# Each page's infobox shows the BR at capture time; only that part is kept.
+
+SNIPPET_CHARS = 4000
+WORKERS = 4
+
+
+def _vehicle_page(url: str) -> str | None:
+    path = urllib.parse.unquote(urllib.parse.urlsplit(url).path.lstrip("/"))
+    if urllib.parse.urlsplit(url).query or not path or ":" in path:
+        return None
+    if path.startswith(("index.php", "images", "load.php", "skins", "extensions", "api.php")):
+        return None
+    return path
+
+
+def _snippet(page: str) -> str | None:
+    """The infobox part of a vehicle page: from the first "Battle rating" on."""
+    i = page.find("Battle rating")
+    if i < 0:
+        i = page.find("battle rating")
+    return page[max(0, i - 500) : i + SNIPPET_CHARS] if i >= 0 else None
+
+
+def fetch_pages(out: Path) -> int:
+    """Infobox snippets of every pre-2020 wiki page capture into out/pages.jsonl."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    out.mkdir(parents=True, exist_ok=True)
+    query = urllib.parse.urlencode(
+        {
+            "url": "wiki.warthunder.com/*",
+            "fl": "timestamp,original",
+            "filter": ["statuscode:200", "mimetype:text/html"],
+            "collapse": "digest",
+            "to": BEFORE,
+        },
+        doseq=True,
+    )
+    rows = [line.split() for line in _get(f"{CDX}?{query}").decode().splitlines() if line.strip()]
+    todo = [(ts, url, p) for ts, url in rows if (p := _vehicle_page(url))]
+    done_path = out / "pages.jsonl"
+    done = set()
+    if done_path.exists():
+        done = {(r["ts"], r["page"]) for r in map(json.loads, done_path.read_text().splitlines())}
+    todo = [t for t in todo if (t[0], t[2]) not in done]
+    print(f"wayback: {len(todo)} page captures to fetch")
+
+    def one(t: tuple[str, str, str]) -> dict | None:
+        ts, url, page = t
+        time.sleep(DELAY_S / 2)
+        try:
+            body = _get(RAW.format(timestamp=ts, url=url)).decode("utf-8", "replace")
+        except OSError:
+            return None
+        snip = _snippet(body)
+        return {"ts": ts, "page": page, "snippet": snip} if snip else {"ts": ts, "page": page}
+
+    n = 0
+    with ThreadPoolExecutor(WORKERS) as pool, done_path.open("a") as f:
+        for rec in pool.map(one, todo):
+            if rec:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                n += 1
+    return n

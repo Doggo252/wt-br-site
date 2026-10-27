@@ -49,12 +49,15 @@ def main(argv: list[str] | None = None) -> int:
     wb = sub.add_parser("wayback", help="download old wiki BR lists from the Internet Archive")
     wb.add_argument("--out", default=str(paths.CACHE / "wayback"), help="folder for the captures")
     wb.add_argument("--probe", action="store_true", help="only list what the archive holds")
+    wb.add_argument("--pages", action="store_true", help="vehicle page infoboxes instead of lists")
     sub.add_parser("all", help="every step above, then build and schema")
     args = parser.parse_args(argv)
 
     if args.cmd == "wayback":
         if args.probe:
             wayback.probe(Path(args.out))
+        elif args.pages:
+            print(f"wayback: {wayback.fetch_pages(Path(args.out))} page captures")
         else:
             print(f"wayback: {wayback.fetch(Path(args.out))} new captures")
         return 0
