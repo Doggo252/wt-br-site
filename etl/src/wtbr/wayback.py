@@ -288,9 +288,10 @@ def forum_br_topics() -> list[str]:
     return sorted(f"https://forum.warthunder.com/index.php?/topic/{t}/" for t in topics if t)
 
 
-def fetch_urls(listing: Path, out: Path) -> int:
+def fetch_urls(listing: Path, out: Path, discover: bool = True) -> int:
     """Save the latest archived copy of each URL in `listing` (tab-separated date, note id, URL;
-    # comments) and of every old-forum BR thread into out/, indexed in out/urls.json."""
+    # comments) and, with `discover`, of every old-forum BR thread into out/, indexed in
+    out/urls.json."""
     out.mkdir(parents=True, exist_ok=True)
     rows = [
         line.split("\t")
@@ -299,7 +300,7 @@ def fetch_urls(listing: Path, out: Path) -> int:
     ]
     wanted = [(date, note, url) for date, note, url in rows]
     try:
-        wanted += [("", "", u) for u in forum_br_topics()]
+        wanted += [("", "", u) for u in forum_br_topics()] if discover else []
     except OSError as e:
         print(f"wayback: forum topic search failed: {e}", flush=True)
     index, n = [], 0

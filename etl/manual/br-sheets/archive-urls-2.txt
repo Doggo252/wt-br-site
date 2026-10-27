@@ -1,0 +1,26 @@
+# Official BR change sheets embedded in old-forum BR threads (2014-2019) that are no longer
+# public: fetched from the Internet Archive by .github/workflows/wayback.yml (urls mode).
+# Columns: post date, forum topic id, sheet URL as embedded.
+2014-09-29	forum-148131	https://docs.google.com/spreadsheets/d/18d-TmzGhbLu2F4_HJ-F5taVfk_VtBq3A2cnlbWqkZbU/pubhtml
+2014-09-29	forum-148131	https://docs.google.com/spreadsheets/d/1103MACB1CER2VRJ9uMMdWjXRhUAEi5EUCZc64VPBXOg/pubhtml
+2014-07-30	forum-164299	https://docs.google.com/spreadsheets/d/19U8uVhGD610qD4HckFVA5d8AXcZzcGymz73VKzzzoIE/pubhtml?widget=true&headers=false
+2014-07-30	forum-164360	https://docs.google.com/spreadsheets/d/1PiW8gZhSd48NwdLwfwQg3hupRbXLFQO4bmO38sOgniY/pubhtml
+2014-10-15	forum-184035	https://docs.google.com/spreadsheets/d/17zVIfJo5_262Zb9RtcXX0Cr1A9KKJIJFUPDPRDXxL0M/pubhtml
+2015-04-16	forum-232319	https://docs.google.com/spreadsheets/d/1fNPP1gYigRzdN5gC50w_CEpTRMCXBr7JyJJ0GRgHf2w/pubhtml?gid=0
+2015-04-16	forum-232319	https://docs.google.com/spreadsheets/d/12ueOQVCb5eKaLVImwwAmjtw14cVKBLKm2zyRjOLtO_E/pubhtml?gid=0
+2015-04-16	forum-232319	https://docs.google.com/spreadsheets/d/1IEIhfX6M-TOp_rIlQUc2ZP1ebjYCeMXuKPYZABCzHqg/pubhtml?gid=0
+2015-06-15	forum-245885	https://docs.google.com/spreadsheets/d/1LePa2_MJF8kvpgx5dFmOpOzXuLDaDpwqNtlehUy19RE/pubhtml?gid=0&single=true&widget=true&headers=false
+2016-01-04	forum-247308	https://docs.google.com/spreadsheets/d/1FxmV2SttI1s8mu3IZT7zsufOL2P8zZMlZHiIV6MDyV8/pubhtml?gid=0&single=true&widget=true&headers=false
+2015-09-07	forum-265437	https://docs.google.com/spreadsheets/d/1HjIpaVmNEbAUzQMjTkZXlXaffbirowk0oKjnSiiNNH4/pubhtml?gid=0
+2015-09-07	forum-265437	https://docs.google.com/spreadsheets/d/1ULnVJSmDlJSbgI9hCOXPK66zW-9a7KCzhkXCIgE_adM/pubhtml?widget=true
+2015-09-23	forum-267615	https://docs.google.com/spreadsheets/d/1s46WUU8NKh9yVo4X7fCpb99FyZufBTCbppyELWPalh0/pubhtml?widget=true
+2015-09-23	forum-267615	https://docs.google.com/spreadsheets/d/1S6VoxovdYD4wwyfY6udFukauX4788EnieFvNR15lojE/pubhtml?widget=true
+2015-10-08	forum-270236	https://docs.google.com/spreadsheets/d/14g4j2NKzp6uDr6GP4qA7kA15tVUvVHmSQIUkg4iBC-I/
+2016-10-24	forum-335950	https://docs.google.com/spreadsheets/d/1uZn9av0sJ7_g09eLP-BOQ75GrrnYlC4osHvP3UqK-FA/pubhtml?gid=0&single=true
+2017-10-17	forum-383200	https://docs.google.com/spreadsheets/d/e/2PACX-1vQSonYT8e_e2XJh3PArF_k-_JU7rO59DqhjebzYlN4FjtK-0bcjWQAsPZoCLA28_R-Yc4yjQ3fSo170/pubhtml
+2018-04-10	forum-407594	https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vR2oG6s9u3k2J8nSwzgsweZhDpch64g8lop-GTvNpEhJOcStJaHG_63vba89YOUThZEQadpHRmkoAiE/pubhtml?widget=true&headers=false
+2018-11-28	forum-433463	https://docs.google.com/spreadsheets/d/e/2PACX-1vTSeFw8Dtx4I17dDNgwpdlceVSi0SMJ2RSrf3InGhQmCpzRcahRbu1B-sweI8Gc6KxEmk-YbVW1ofuv/pubhtml?widget=true&headers=false
+2019-02-22	forum-443334	https://docs.google.com/spreadsheets/d/e/2PACX-1vSN09tNh15swCshHa_qKwSgOPHI8UfFG1wvkc-GOCpQU4VIO8h7eWZMv8WVdPa_mhuwbR_IEgcRfrgF/pubhtml?gid=0&single=false
+2019-07-09	forum-456417	https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vSOePPKMr4Tir9Jm-tK3LptMZfCoUcC3GwWS2YA4X4I91U-DgAJsRBfT2tgEiYg-r7H_1Qpd0cI2Him/pubhtml?gid=0&single=false
+2019-07-09	forum-456417	https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vQH6Ll2HbYp3AZ9xDie4tTdlCJ3KKTWpsprH_1pASNr_beRDP_AERRWIWVzI19czh7vI79a_odGMQu-/pubhtml?gid=0&single=false
+2019-10-18	forum-466251	https://docs.google.com/spreadsheets/d/e/2PACX-1vRBsYM7rSnReQXLKqAbgGs4IPUvV8AXaHgqslcnaGzjINWpaq0yGvHRBFFoX2_TDdXyG_FFkvg5g-Ju/pubhtml?gid=0&single=false

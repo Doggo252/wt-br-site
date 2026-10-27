@@ -53,6 +53,9 @@ def main(argv: list[str] | None = None) -> int:
     wb.add_argument("--probe", action="store_true", help="only list what the archive holds")
     wb.add_argument("--pages", action="store_true", help="vehicle page infoboxes instead of lists")
     wb.add_argument("--urls", help="save archived copies of the URLs listed in this file")
+    wb.add_argument(
+        "--no-discover", action="store_true", help="with --urls: don't search for old-forum threads"
+    )
     wb.add_argument("--after", help="with --pages: resume after this page")
     wb.add_argument("--shard", type=int, default=0, help="with --pages: this shard (0-based)")
     wb.add_argument("--shards", type=int, default=1, help="with --pages: how many shards")
@@ -111,7 +114,8 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"wayback: {len(series)} wiki pages with a BR")
         elif args.urls:
-            print(f"wayback: {wayback.fetch_urls(Path(args.urls), Path(args.out))} pages saved")
+            n = wayback.fetch_urls(Path(args.urls), Path(args.out), not args.no_discover)
+            print(f"wayback: {n} pages saved")
         elif args.probe:
             wayback.probe(Path(args.out))
         elif args.pages:

@@ -13,6 +13,10 @@ on:
         description: Archived BR change lists (etl/manual/br-sheets/archive-urls.txt and old-forum BR threads)
         type: boolean
         default: false
+      urls_file:
+        description: With urls, the list to fetch (other lists skip the old-forum search)
+        type: string
+        default: manual/br-sheets/archive-urls.txt
       pages:
         description: Vehicle page infoboxes (slow; split into four jobs)
         type: boolean
@@ -37,7 +41,7 @@ jobs:
         working-directory: etl
         run: |
           uv sync
-          uv run wtbr wayback --out ../wayback ${{ inputs.probe && '--probe' || '' }} ${{ inputs.urls && '--urls manual/br-sheets/archive-urls.txt' || '' }}
+          uv run wtbr wayback --out ../wayback ${{ inputs.probe && '--probe' || '' }} ${{ inputs.urls && format('--urls {0}', inputs.urls_file) || '' }} ${{ inputs.urls && inputs.urls_file != 'manual/br-sheets/archive-urls.txt' && '--no-discover' || '' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
