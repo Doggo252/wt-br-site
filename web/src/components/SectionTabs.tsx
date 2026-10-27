@@ -36,6 +36,7 @@ export const TOOL_TABS = [
   { href: "/lineup/", label: "Lineup planner" },
   { href: "/research/", label: "Research planner" },
   { href: "/hangar/", label: "My hangar" },
+  { href: "/economy/", label: "SL calculator" },
   { href: "/compare/", label: "Compare" },
   { href: "/watchlist/", label: "Watchlist" },
 ] as const;

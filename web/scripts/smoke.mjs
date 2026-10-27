@@ -43,6 +43,7 @@ const PAGES = [
   ["/vehicle/saab_j35a/", "In the news"],
   ["/research/?id=germ_leopard_2a6", "Rank VIII"],
   ["/hangar/?b=ground&n=germany", "Rank IV"],
+  ["/economy/?b=ground&br=6.7", "Fully upgraded repair cost"],
   ["/rankings/?b=ground&br=6.7", "Best gun depression"],
   ["/deals/", "Deals"],
   ["/vehicle/ussr_is_6/", "Gaijin Store"],
