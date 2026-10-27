@@ -690,6 +690,9 @@ function NightVision({ sights }: { sights: Record<string, Sight[]> }) {
 
 type StatRow = [LucideIcon, string, string | null];
 
+/** A basic crew turns the turret and gun at 70% of an aced crew's speed (matches the in-game card). */
+const BASIC_CREW = 0.7;
+
 function StatGrid({ u }: { u: UnitDetail }) {
   const s = u.stats ?? {};
   if (u.branch !== "ground") return <AirStatGrid u={u} />;
@@ -702,14 +705,14 @@ function StatGrid({ u }: { u: UnitDetail }) {
       MoveHorizontal,
       "Turret traverse",
       s.traverseDegS != null
-        ? `${s.traverseDegS.toFixed(1)}°/s${s.traverseLimits ? ` (${s.traverseLimits[0]}° to +${s.traverseLimits[1]}°)` : ""}`
+        ? `${(s.traverseDegS * BASIC_CREW).toFixed(1)} → ${s.traverseDegS.toFixed(1)}°/s${s.traverseLimits ? ` (${s.traverseLimits[0]}° to +${s.traverseLimits[1]}°)` : ""}`
         : null,
     ],
     [
       MoveVertical,
       "Gun elevation",
       s.gunDepression != null && s.gunElevation != null
-        ? `${s.gunDepression}° / +${s.gunElevation}°${s.elevationDegS != null ? ` · ${s.elevationDegS.toFixed(1)}°/s` : ""}`
+        ? `${s.gunDepression}° / +${s.gunElevation}°${s.elevationDegS != null ? ` · ${(s.elevationDegS * BASIC_CREW).toFixed(1)} → ${s.elevationDegS.toFixed(1)}°/s` : ""}`
         : null,
     ],
     [Users, "Crew", s.crew != null ? String(s.crew) : null],
@@ -729,8 +732,8 @@ function StatGrid({ u }: { u: UnitDetail }) {
     <>
       <StatTiles rows={rows} />
       <p className="mt-2 text-xs text-fg-3">
-        Armor is front / side / rear. Speeds are forward / reverse in realistic battles (arcade is about 10% faster). Reload is basic crew → aced crew. Traverse and
-        elevation are for a stock vehicle.
+        Armor is front / side / rear. Speeds are forward / reverse in realistic battles (arcade is about 10% faster). Reload, traverse and elevation speed are basic crew → aced crew on an upgraded vehicle; before the drive
+        modifications traverse is 15% slower and elevation 20% slower.
       </p>
     </>
   );
