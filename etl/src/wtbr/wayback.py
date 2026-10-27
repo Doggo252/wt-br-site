@@ -173,3 +173,34 @@ def fetch_pages(out: Path) -> int:
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 n += 1
     return n
+
+
+# --- parsing --------------------------------------------------------------------------------
+
+WIKI_COUNTRIES = {
+    "USA": "usa", "Germany": "germany", "USSR": "ussr", "Great Britain": "britain",
+    "Britain": "britain", "Japan": "japan", "Italy": "italy", "France": "france",
+    "China": "china", "Sweden": "sweden", "Israel": "israel",
+}  # fmt: skip
+
+
+def parse_list(page: str) -> list[list]:
+    """The wiki list page's tables -> [[nation, name, ab, rb, sb], ...] (BR as numbers)."""
+    import html as html_lib
+    import re
+
+    out = []
+    for table in re.findall(r"<table.*?</table>", page, re.S):
+        for row in re.findall(r"<tr.*?</tr>", table, re.S):
+            cells = [
+                " ".join(html_lib.unescape(re.sub(r"<[^>]+>", " ", c)).split())
+                for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", row, re.S)
+            ]
+            if len(cells) < 5 or cells[0] not in WIKI_COUNTRIES:
+                continue
+            try:
+                brs = [float(c) for c in cells[2:5]]
+            except ValueError:
+                continue
+            out.append([WIKI_COUNTRIES[cells[0]], cells[1], *brs])
+    return out

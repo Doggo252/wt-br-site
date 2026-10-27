@@ -29,6 +29,7 @@ from .models import (
     BrChange,
     DevPreview,
     DevUnit,
+    EarlyBr,
     Economy,
     Gun,
     HistoryPoint,
@@ -183,9 +184,11 @@ def build_current(
     market_data = _attach_market(details, paths.MANUAL / "market")
     store_data = _attach_store(details, paths.CACHE / "store")
     news_posts = _attach_news(details, news.load(paths.CACHE / "news"))
+    note_entries = patchnotes.load(paths.CACHE / "patchnotes")
+    _early_history(details, note_entries, paths.MANUAL / "wiki")
     notes = _patch_notes(
         details,
-        patchnotes.load(paths.CACHE / "patchnotes"),
+        note_entries,
         [(v.version, v.date[:10]) for v in hist.versions] if hist else [],
     )
 
@@ -616,6 +619,51 @@ def _patch_notes(
         d.patchNotes.sort(key=lambda m: (m.date, m.id), reverse=True)
         del d.patchNotes[MENTIONS_PER_UNIT:]
     return out
+
+
+DATAMINE_START = "2020-03-10"
+
+
+def _early_history(details: dict[str, UnitDetail], entries: list[dict], wiki: Path) -> None:
+    """BR data from before the datamine: archived wiki list snapshots (manual/wiki/<date>.json)
+    and changes stated in changelogs. Names are matched within the vehicle's tree nation."""
+    from .records import loose
+
+    by_name: dict[str, list[str]] = {}
+    for uid, d in details.items():
+        for n in {d.name, d.fullName}:
+            if n:
+                by_name.setdefault(loose(n), []).append(uid)
+
+    def ids(name: str, nation: str | None) -> list[str]:
+        found = by_name.get(loose(name), [])
+        if nation:
+            return [u for u in found if details[u].nation == nation]
+        return found if len(found) == 1 else []
+
+    for f in sorted(wiki.glob("*.json")) if wiki.exists() else []:
+        snap = json.loads(f.read_text(encoding="utf-8"))
+        for nation, name, ab, rb, sb in snap["rows"]:
+            for uid in ids(name, nation):
+                details[uid].early.append(
+                    EarlyBr(
+                        date=snap["date"],
+                        source="wiki",
+                        br={"ab": ab, "rb": rb, "sb": sb},
+                        url=snap.get("source"),
+                    )
+                )
+    for e in entries:
+        if e["date"] >= DATAMINE_START:
+            continue
+        for names, modes in patchnotes.br_changes(patchnotes.parse_article(e["html"])):
+            for name, nation in names:
+                for uid in ids(name, nation):
+                    details[uid].early.append(
+                        EarlyBr(date=e["date"], source="changelog", change=modes, noteId=e["id"])
+                    )
+    for d in details.values():
+        d.early.sort(key=lambda x: x.date, reverse=True)
 
 
 def _attach_records(details: dict[str, UnitDetail], rows: list, lang: dict) -> None:

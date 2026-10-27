@@ -336,6 +336,7 @@ export interface UnitDetail {
   guns?: Gun[];
   storePacks?: StorePack[];
   news?: NewsRef[];
+  early?: EarlyBr[];
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -523,6 +524,27 @@ export interface NewsRef {
   date: string;
   kind: string;
   url: string;
+}
+/**
+ * A BR data point from before the datamine (March 2020): a wiki snapshot of the BR in each
+ * mode, or a change stated in an official changelog.
+ */
+
+export interface EarlyBr {
+  date: string;
+  source: string;
+  br?: {
+    [k: string]: number;
+  };
+  change?: {
+    /**
+     * @minItems 2
+     * @maxItems 2
+     */
+    [k: string]: [number, number];
+  };
+  url?: string | null;
+  noteId?: number | null;
 }
 
 /**

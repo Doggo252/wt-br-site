@@ -35,6 +35,8 @@ const PAGES = [
   ["/vehicle/germ_leopard_2a6/", "DM53"],
   ["/premiums/", "Premium vehicles"],
   ["/news/", "News and devblogs"],
+  ["/updates/calendar/", "Next major update"],
+  ["/vehicle/do_217j_1/", "Before March 2020"],
   ["/news/devblogs/", "Devblogs"],
   ["/vehicle/saab_j35a/", "In the news"],
   ["/research/?id=germ_leopard_2a6", "Rank VIII"],

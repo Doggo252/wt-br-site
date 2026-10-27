@@ -5,6 +5,7 @@ warthunder.com; the site links to them. The index lists about 18 posts a page, n
 is re-read until a batch of pages brings nothing new (or, with `full`, to the end).
 """
 
+import functools
 import json
 import re
 import time
@@ -143,11 +144,16 @@ VEHICLE_KINDS = {"devblog", "event", "shop", "special", "update", "news"}
 
 def mentions(title: str, names: dict[str, str]) -> list[str]:
     """Vehicles named in a headline, longest names first so "Leopard 2A4M" beats "Leopard 2A4"."""
-    text = " " + _plain(title).lower() + " "
+    pattern = _pattern(tuple(sorted(names, key=len, reverse=True)))
     found: list[str] = []
-    for key in sorted(names, key=len, reverse=True):
-        m = re.search(r"(?<![\w-])" + re.escape(key) + r"(?![\w-])", text)
-        if m and names[key] not in found:
-            found.append(names[key])
-            text = text[: m.start()] + " " * len(key) + text[m.end() :]
+    for m in pattern.finditer(" " + _plain(title).lower() + " "):
+        uid = names[m.group(1)]
+        if uid not in found:
+            found.append(uid)
     return found
+
+
+@functools.cache
+def _pattern(keys: tuple[str, ...]) -> re.Pattern:
+    """One alternation of every name (longest first), so a headline is scanned once."""
+    return re.compile(r"(?<![\w-])(" + "|".join(map(re.escape, keys)) + r")(?![\w-])")

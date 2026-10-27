@@ -37,7 +37,8 @@ export default function UpdatesPage() {
       <h1 className="mt-1 text-4xl font-bold">Updates</h1>
       <p className="mt-2 max-w-2xl text-fg-2">
         Every game version since March 2020 that changed a Battle Rating, or added or removed a vehicle. Counts are
-        Realistic Battles uptiers and downtiers. Dates are when the version appeared in the datamine.
+        Realistic Battles uptiers and downtiers. Dates are when the version appeared in the datamine. See also the{" "}
+        <Link href="/updates/calendar/">update calendar</Link> and <Link href="/patch-notes/">patch notes</Link>.
       </p>
       <div className="mt-8 space-y-8">
         {[...byMajor.entries()].map(([major, list]) => (

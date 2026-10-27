@@ -183,6 +183,18 @@ class Modification(Model):
     ge: int | None = None  # cost to buy outright with Golden Eagles
 
 
+class EarlyBr(Model):
+    """A BR data point from before the datamine (March 2020): a wiki snapshot of the BR in each
+    mode, or a change stated in an official changelog."""
+
+    date: str
+    source: str  # "wiki" or "changelog"
+    br: dict[str, float] = {}  # wiki: mode -> BR
+    change: dict[str, tuple[float, float]] = {}  # changelog: mode, or "br" if unnamed -> (was, now)
+    url: str | None = None  # the archived wiki page
+    noteId: int | None = None  # the changelog entry
+
+
 class NewsRef(Model):
     """A warthunder.com news post that names this vehicle."""
 
@@ -281,6 +293,7 @@ class UnitDetail(UnitSummary):
     guns: list[Gun] = []
     storePacks: list[StorePack] = []
     news: list[NewsRef] = []
+    early: list[EarlyBr] = []  # newest first
 
 
 class BranchCounts(Model):

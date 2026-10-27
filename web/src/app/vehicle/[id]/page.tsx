@@ -33,6 +33,7 @@ import { AmmoTable } from "@/components/AmmoTable";
 import { BrStepChart } from "@/components/BrStepChart";
 import { BranchIcon } from "@/components/BranchIcon";
 import { ChangeLog } from "@/components/ChangeLog";
+import { EarlyHistory } from "@/components/EarlyHistory";
 import { Flag } from "@/components/Flag";
 import { ChangeCell, OutcomeChip, rowOutcome } from "@/components/OfficialChanges";
 import { SameBrStrip } from "@/components/SameBrStrip";
@@ -358,6 +359,7 @@ export default async function VehiclePage({ params }: Params) {
             </div>
             <BrStepChart history={u.history} asOf={meta.date} planned={plannedForChart} />
             <ChangeLog history={u.history} absences={u.absences} added={u.added} from={u.id} />
+            {(u.early ?? []).length > 0 && <EarlyHistory early={u.early!} />}
           </div>
         ) : (
           <p className="panel p-5 text-sm text-fg-2">
