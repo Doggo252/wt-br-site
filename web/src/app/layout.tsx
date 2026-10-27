@@ -29,6 +29,7 @@ import {
   Star,
   Store,
   Swords,
+  Warehouse,
 } from "lucide-react";
 import { RandomVehicle } from "@/components/RandomVehicle";
 import { NavLinks } from "@/components/NavLinks";
@@ -90,6 +91,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/compare/" className={FOOT}><GitCompareArrows className={ICON} aria-hidden />Compare</Link>
               <Link href="/lineup/" className={FOOT}><Swords className={ICON} aria-hidden />Lineup planner</Link>
               <Link href="/research/" className={FOOT}><FlaskConical className={ICON} aria-hidden />Research planner</Link>
+              <Link href="/hangar/" className={FOOT}><Warehouse className={ICON} aria-hidden />My hangar</Link>
               <Link href="/shells/" className={FOOT}><Crosshair className={ICON} aria-hidden />Shell penetration</Link>
               <Link href="/rankings/" className={FOOT}><Medal className={ICON} aria-hidden />Rankings</Link>
               <Link href="/watchlist/" className={FOOT}><Star className={ICON} aria-hidden />Your watchlist</Link>
