@@ -4,9 +4,9 @@ import argparse
 import json
 from pathlib import Path
 
-from . import images, news, official, patchnotes, paths, records, store, wayback
+from . import images, news, official, parse, patchnotes, paths, records, store, wayback
 from .build import build_current
-from .datamine import COUNTRY_ICONS, SHOP, WPCOST, Datamine
+from .datamine import COUNTRY_ICONS, SHOP, UNITS_CSV, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
 from .history_build import build_history, diff_states, state_at
 from .models import (
@@ -54,6 +54,11 @@ def main(argv: list[str] | None = None) -> int:
     wb.add_argument("--shard", type=int, default=0, help="with --pages: this shard (0-based)")
     wb.add_argument("--shards", type=int, default=1, help="with --pages: how many shards")
     wb.add_argument(
+        "--names",
+        action="store_true",
+        help="write manual/names-2020.json: vehicle names in March 2020 that have changed since",
+    )
+    wb.add_argument(
         "--parse",
         nargs="+",
         metavar="PAGES_JSONL",
@@ -63,7 +68,26 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.cmd == "wayback":
-        if args.parse:
+        if args.names:
+            # The 2019 wiki used the names of the time; the history's first units.csv is close.
+            hist = History(paths.CACHE / "history.git")
+            then = parse.parse_lang(hist.first_version_of(UNITS_CSV))
+            now = parse.parse_lang(Datamine(paths.CACHE / "datamine").read_text(UNITS_CSV))
+            renamed: dict[str, list[str]] = {}
+            # Shop name first: it is the one the wiki used.
+            for suffix in ("shop", "0", "1"):
+                for key, name in then.items():
+                    uid, _, end = key.rpartition("_")
+                    if end == suffix and name and name != now.get(key):
+                        if name not in renamed.setdefault(uid, []):
+                            renamed[uid].append(name)
+            lines = ",\n".join(
+                f"{json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}"
+                for k, v in sorted(renamed.items())
+            )
+            (paths.MANUAL / "names-2020.json").write_text("{\n" + lines + "\n}\n", encoding="utf-8")
+            print(f"wayback: {len(renamed)} vehicles renamed since March 2020")
+        elif args.parse:
             target = paths.MANUAL / "wiki-pages.json"
             known = json.loads(target.read_text())["pages"] if target.exists() else {}
             captured = [

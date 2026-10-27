@@ -140,6 +140,13 @@ class History:
             for i, (_, sha, date, _) in enumerate(rows)
         ]
 
+    def first_version_of(self, path: str) -> str:
+        """The file as the history first has it (blobs are fetched on demand)."""
+        added = _git(self.path, "log", "--diff-filter=A", "--format=%H", "HEAD", "--", path)
+        blob = _git(self.path, "rev-parse", f"{added.split()[-1]}:{path}").strip()
+        self.fetch_blobs([blob])
+        return _git(self.path, "cat-file", "blob", blob)
+
     def fetch_blobs(self, blobs: list[str]) -> None:
         for i in range(0, len(blobs), FETCH_BATCH):
             _git(

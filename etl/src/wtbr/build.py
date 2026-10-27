@@ -5,6 +5,7 @@ import json
 import os
 import re
 import shutil
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -662,42 +663,70 @@ def _patch_notes(
 DATAMINE_START = "2020-03-10"
 
 
-def _early_names(details: dict[str, UnitDetail]):
-    """Wiki name (and nation, if known) -> the one vehicle it is. The wiki of 2019 used older
-    names ("Churchill Mk I", now "Churchill I"), so "Mk" and quote styles are ignored on a
-    second try. Several matches narrow to the vehicle shown in the trees, present in March
-    2020, and without a country glyph (the original, not a copy)."""
+def _early_names(details: dict[str, UnitDetail], old_names: dict[str, list[str]] | None = None):
+    """Wiki name (and nation, if known, and BR) -> the one vehicle it is.
+
+    The wiki of 2019 used the names of the time: `old_names` has those the game has changed since
+    March 2020 ("Tu-2", now "Tu-2 (5)"). Keys are tried strictest first: the name as written
+    ("T-28" is not "T28"), then without punctuation, then without "Mk" or quote styles
+    ("Churchill Mk I", now "Churchill I"); today's names before old ones. Several matches narrow
+    to the vehicle shown in the trees, present in March 2020, without a country glyph (the
+    original, not a copy), and finally the one whose March 2020 BR is nearest."""
     from .records import GLYPHS, loose
+
+    def strict(name: str) -> str:
+        return " ".join(GLYPHS.sub("", name).replace("\u00a0", " ").casefold().split())
 
     def alias(name: str) -> str:
         name = name.replace("\u201c", '"').replace("\u201d", '"')
         return loose(re.sub(r"\b(?:Mk|Mark)\b\.?", "", name, flags=re.I))
 
-    exact: dict[str, list[str]] = {}
-    loosest: dict[str, list[str]] = {}
-    for uid, d in details.items():
-        for n in {d.name, d.fullName} - {None, ""}:
-            exact.setdefault(loose(n), []).append(uid)
-            loosest.setdefault(alias(n), []).append(uid)
+    # Today's names, then the old shop name, then other old names (short and full).
+    sources = (
+        lambda uid, d: [d.name, d.fullName],
+        lambda uid, d: (old_names or {}).get(uid, [])[:1],
+        lambda uid, d: (old_names or {}).get(uid, [])[1:],
+    )
+    tiers: list[tuple[Callable[[str], str], dict[str, list[str]]]] = []
+    for key in (strict, loose, alias):
+        for names_of in sources:
+            index: dict[str, list[str]] = {}
+            for uid, d in details.items():
+                for n in set(names_of(uid, d)) - {None, ""}:
+                    index.setdefault(key(n), []).append(uid)
+            tiers.append((key, index))
     narrowing = (
-        lambda u: not details[u].hidden,
-        lambda u: details[u].added is None,
-        lambda u: not GLYPHS.search(details[u].name),
+        lambda u, _: details[u].added is None,
+        lambda u, _: not details[u].hidden,
+        lambda u, _: not GLYPHS.search(details[u].name),
+        lambda u, br: br is None or _br_gap(details[u], br) < 1.5,
     )
 
-    def ids(name: str, nation: str | None) -> list[str]:
-        found: list[str] = []
-        for key, index in ((loose(name), exact), (alias(name), loosest)):
-            found = [u for u in index.get(key, []) if not nation or details[u].nation == nation]
-            if found:
-                break
-        found = list(dict.fromkeys(found))
-        for keep in narrowing:
-            if len(found) > 1:
-                found = [u for u in found if keep(u)] or found
-        return found if len(found) == 1 else []
+    def ids(name: str, nation: str | None, br: tuple[float, ...] | None = None) -> list[str]:
+        for key, index in tiers:
+            found = list(dict.fromkeys(index.get(key(name), [])))
+            found = [u for u in found if not nation or details[u].nation == nation]
+            if not found:
+                continue
+            for keep in narrowing:
+                if len(found) > 1:
+                    found = [u for u in found if keep(u, br)] or found
+            if len(found) > 1 and br is not None:
+                gaps = sorted((_br_gap(details[u], br), u) for u in found)
+                if gaps[0][0] < gaps[1][0]:
+                    found = [gaps[0][1]]
+            return found if len(found) == 1 else []
+        return []
 
     return ids
+
+
+def _br_gap(d: UnitDetail, br: tuple[float, ...]) -> float:
+    """How far a wiki BR (ab, rb, sb) is from the vehicle's first BR in the history."""
+    if not d.history:
+        return 99.0
+    h = d.history[0]
+    return sum(abs(b - (r / 3 + 1)) for b, r in zip(br, (h.ab, h.rb, h.sb), strict=True)) / 3
 
 
 def _early_history(details: dict[str, UnitDetail], entries: list[dict], manual: Path) -> None:
@@ -707,13 +736,14 @@ def _early_history(details: dict[str, UnitDetail], entries: list[dict], manual: 
 
     The wiki captures make one sequence per vehicle: its first BR, then each change, dated to
     between the captures either side of it."""
-    ids = _early_names(details)
+    renamed = manual / "names-2020.json"
+    ids = _early_names(details, json.loads(renamed.read_text()) if renamed.exists() else None)
     seen: dict[str, dict[str, tuple[tuple, str | None]]] = {}  # id -> date -> (ab, rb, sb), url
     wiki = manual / "wiki"
     for f in sorted(wiki.glob("*.json")) if wiki.exists() else []:
         snap = json.loads(f.read_text(encoding="utf-8"))
         for nation, name, ab, rb, sb in snap["rows"]:
-            for uid in ids(name, nation):
+            for uid in ids(name, nation, (ab, rb, sb)):
                 seen.setdefault(uid, {})[snap["date"]] = ((ab, rb, sb), snap.get("source"))
     pages = manual / "wiki-pages.json"
     if pages.exists():
@@ -722,7 +752,7 @@ def _early_history(details: dict[str, UnitDetail], entries: list[dict], manual: 
             name = page.replace("_", " ")
             m = re.fullmatch(r"(.*) \(([^()]+)\)", name)
             nation = wayback.WIKI_COUNTRIES.get(m[2]) if m else None
-            for uid in ids(m[1] if nation else name, nation):
+            for uid in ids(m[1] if nation else name, nation, tuple(rows[-1][1:])):
                 for ts, ab, rb, sb in rows:
                     url = data["url"].format(ts=ts, page=quote(page, safe="/_().,'-!"))
                     seen.setdefault(uid, {})[f"{ts[:4]}-{ts[4:6]}-{ts[6:8]}"] = ((ab, rb, sb), url)

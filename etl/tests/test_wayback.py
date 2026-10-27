@@ -1,8 +1,8 @@
 import json
 
 from wtbr import wayback
-from wtbr.build import _early_history
-from wtbr.models import Ranks, UnitDetail
+from wtbr.build import _early_history, _early_names
+from wtbr.models import HistoryPoint, Ranks, UnitDetail
 
 SEP = '</span><span class="ttx-unvisible ttx-value">/</span>'
 INFOBOX = (
@@ -113,3 +113,26 @@ def test_early_history_from_wiki_captures(tmp_path):
     assert newest.url == "20191211000000/Ariete"
     [only] = details["churchill"].early
     assert (only.date, only.br["ab"]) == ("2019-03-01", 3.0)
+
+
+def test_early_names_old_names_strictness_and_br():
+    history = [HistoryPoint(v="1.95.1.7", d="2020-03-09", ab=8, rb=8, sb=8)]  # BR 3.7
+    details = {
+        "ussr_t_28": unit("ussr_t_28", "T-28", nation="ussr", history=history),
+        "us_t28": unit("us_t28", "T28", nation="usa", status="premium"),
+        "tu2": unit("tu2", "Tu-2 (5)", nation="ussr"),
+        # Moved to another tree: the 2019 vehicle is the one now hidden, not the 2025 one.
+        "us_merkava": unit("us_merkava", "▃Merkava Mk.1", nation="usa", hidden=True),
+        "il_merkava": unit("il_merkava", "Merkava Mk.1", nation="israel", added="2.52.0.30"),
+        # Same name, different trees: the BR decides.
+        "b18_us": unit("b18_us", "B-18A", nation="usa", history=history),
+        "b18_sw": unit("b18_sw", "B18A", nation="sweden",
+                       history=[HistoryPoint(v="1.95.1.7", d="2020-03-09", ab=5, rb=5, sb=5)]),
+    }  # fmt: skip
+    ids = _early_names(details, {"tu2": ["Tu-2"]})
+    assert ids("T-28", None) == ["ussr_t_28"]
+    assert ids("T28", None) == ["us_t28"]
+    assert ids("Tu-2", None) == ["tu2"]
+    assert ids("Merkava MK1", None) == ["us_merkava"]
+    assert ids("B-18A", None, (3.7, 3.7, 3.7)) == ["b18_us"]
+    assert ids("B 18A", None, (2.7, 2.7, 2.7)) == ["b18_sw"]
