@@ -266,3 +266,12 @@ def test_rank_unlocks():
         "air": {"germany": {8: 3}},
         "heli": {"germany": {5: 1}},
     }
+
+
+def test_mod_effect_reads_stock_penalties():
+    engine = {"invertEnableLogic": True, "effects": {"mulHorsePowers": 0.9, "rcostMul": 0.96}}
+    assert parse.mod_effect(engine) == "+11% engine power"
+    cover = {"invertEnableLogic": True, "effects": {"damageReceivedMult": 1.05}}
+    assert parse.mod_effect(cover) == "−5% damage taken"
+    assert parse.mod_effect({"effects": {"enableNightVision": True}}) == "adds night vision"
+    assert parse.mod_effect({"effects": {"bulletMod": "x"}}) is None

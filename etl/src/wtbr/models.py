@@ -181,6 +181,7 @@ class Modification(Model):
     rp: int | None = None
     sl: int | None = None
     ge: int | None = None  # cost to buy outright with Golden Eagles
+    effect: str | None = None  # what researching it does ("+11% engine power")
 
 
 class EarlyBr(Model):

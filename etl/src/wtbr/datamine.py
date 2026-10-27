@@ -15,6 +15,7 @@ WPCOST = "char.vromfs.bin_u/config/wpcost.blkx"
 SHOP = "char.vromfs.bin_u/config/shop.blkx"
 UNITTAGS = "char.vromfs.bin_u/config/unittags.blkx"
 RANK = "char.vromfs.bin_u/config/rank.blkx"
+MODIFICATIONS = "char.vromfs.bin_u/config/modifications.blkx"
 UNITS_CSV = "lang.vromfs.bin_u/lang/units.csv"
 WEAPONRY_CSV = "lang.vromfs.bin_u/lang/units_weaponry.csv"
 MODIFICATIONS_CSV = "lang.vromfs.bin_u/lang/units_modifications.csv"
@@ -32,6 +33,7 @@ SPARSE_PATHS = [
     SHOP,
     UNITTAGS,
     RANK,
+    MODIFICATIONS,
     UNITS_CSV,
     WEAPONRY_CSV,
     MODIFICATIONS_CSV,

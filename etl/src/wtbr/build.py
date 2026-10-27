@@ -13,6 +13,7 @@ from . import ammo, armament, market, news, official, parse, patchnotes, paths, 
 from .datamine import (
     CONTAINERS,
     EXPLOSIVE,
+    MODIFICATIONS,
     MODIFICATIONS_CSV,
     RANK,
     SHOP,
@@ -145,6 +146,10 @@ def build_current(
     except FileNotFoundError:
         explosives = ammo.Explosives({}, [])
     bullet_names = parse.parse_bullet_names(weaponry_csv)
+    try:
+        mod_config = dm.read_json(MODIFICATIONS).get("modifications") or {}
+    except FileNotFoundError:  # older sparse checkouts; `wtbr fetch` adds the file
+        mod_config = {}
 
     def arsenal(model: dict, wp: dict) -> list[Gun]:
         return ammo.guns(model, wp, dm.weapon, bullet_names, explosives, weaponry)
@@ -176,7 +181,8 @@ def build_current(
             )  # fmt: skip
             details[uid].economy = Economy(**parse.parse_economy(wpcost[uid]))
             details[uid].modifications = [
-                Modification(**m) for m in parse.parse_modifications(wpcost[uid], mod_names)
+                Modification(**m)
+                for m in parse.parse_modifications(wpcost[uid], mod_names, mod_config)
             ]
             _name_ammo_packs(details[uid], wpcost[uid])
             if branch != "ground":

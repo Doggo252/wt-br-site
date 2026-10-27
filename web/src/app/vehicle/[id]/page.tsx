@@ -865,7 +865,10 @@ function ModificationList({ mods }: { mods: NonNullable<UnitDetail["modification
                 .filter((m) => (m.tier ?? 0) === t)
                 .map((m) => (
                   <li key={m.id} className="flex items-baseline justify-between gap-2 px-3 py-1.5">
-                    <span className="min-w-0 text-fg-2">{m.name}</span>
+                    <span className="min-w-0 text-fg-2">
+                      {m.name}
+                      {m.effect && <span className="block text-xs text-fg-3">{m.effect}</span>}
+                    </span>
                     <span className="shrink-0 text-right text-xs tabular text-fg-3">
                       {m.rp ? `${fmt(m.rp)} RP` : ""}
                       {m.sl ? <span className="block">{fmt(m.sl)} SL</span> : null}

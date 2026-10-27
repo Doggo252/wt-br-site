@@ -533,7 +533,54 @@ def parse_economy(wp: dict) -> dict:
     }
 
 
-def parse_modifications(wp: dict, names: dict[str, str]) -> list[dict]:
+# Effect keys in modifications.blkx -> what they change.
+MOD_EFFECTS = {
+    "mulHorsePowers": "engine power",
+    "thrustMult": "thrust",
+    "mulSpeedYaw": "turret traverse",
+    "mulSpeedPitch": "gun elevation speed",
+    "mulTransmissionEfficiency": "transmission efficiency",
+    "mulMaxSpeed": "top speed",
+    "mulMaxReverseSpeed": "reverse speed",
+    "mulCompressorMaxP": "supercharger boost",
+    "radiatorEffMul": "cooling",
+    "mulCdmin": "drag",
+    "mulCdminFusel": "fuselage drag",
+    "mulCdminTail": "tail drag",
+    "mulCdminMainRotor": "rotor drag",
+    "damageReceivedMult": "damage taken",
+    "mulMass": "mass",
+}
+MOD_FEATURES = {
+    "enableNightVision": "adds night vision",
+    "rangefinderMounted": "adds a rangefinder",
+    "smokeScreenCount": "adds smoke grenades",
+    "repairAvailable": "allows field repairs",
+    "extinguisherActivationCount": "adds a fire extinguisher",
+}
+
+
+def mod_effect(mod: dict | None) -> str | None:
+    """What researching a modification does, from its effects in modifications.blkx. Most mods
+    use invertEnableLogic: the effect is the stock penalty the mod removes."""
+    if not isinstance(mod, dict):
+        return None
+    effects = mod.get("effects") or {}
+    invert = bool(mod.get("invertEnableLogic"))
+    parts = []
+    for key, what in MOD_EFFECTS.items():
+        v = effects.get(key)
+        if not isinstance(v, (int, float)) or v <= 0 or v == 1:
+            continue
+        change = (1 / v - 1) if invert else (v - 1)
+        if abs(change) < 0.005:
+            continue
+        parts.append(f"{'+' if change > 0 else '−'}{abs(change) * 100:.0f}% {what}")
+    parts += [text for key, text in MOD_FEATURES.items() if effects.get(key)]
+    return ", ".join(parts) or None
+
+
+def parse_modifications(wp: dict, names: dict[str, str], config: dict | None = None) -> list[dict]:
     """Researchable modifications with their tier and costs, in research order."""
     out = []
     for mod_id, m in (wp.get("modifications") or {}).items():
@@ -549,6 +596,7 @@ def parse_modifications(wp: dict, names: dict[str, str]) -> list[dict]:
                 "rp": m.get("reqExp") or None,
                 "sl": m.get("value") or None,
                 "ge": m.get("openCostGold") or m.get("costGold") or None,
+                "effect": mod_effect((config or {}).get(mod_id)),
             }
         )
     return sorted(out, key=lambda m: (m["tier"] or 99, m["rp"] or 0))

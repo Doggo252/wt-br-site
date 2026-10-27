@@ -478,6 +478,7 @@ export interface Modification {
   rp?: number | null;
   sl?: number | null;
   ge?: number | null;
+  effect?: string | null;
 }
 
 export interface Gun {
