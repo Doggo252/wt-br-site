@@ -571,8 +571,8 @@ export interface NewsRef {
   url: string;
 }
 /**
- * A BR data point from before the datamine (March 2020): a wiki snapshot of the BR in each
- * mode, or a change stated in an official changelog.
+ * A BR data point from before the datamine (March 2020): what the wiki showed (the BR in
+ * each mode, or a change between two captures), or a change stated in an official changelog.
  */
 
 export interface EarlyBr {
@@ -589,6 +589,7 @@ export interface EarlyBr {
     [k: string]: [number, number];
   };
   url?: string | null;
+  after?: string | null;
   noteId?: number | null;
 }
 

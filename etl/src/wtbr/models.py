@@ -185,14 +185,15 @@ class Modification(Model):
 
 
 class EarlyBr(Model):
-    """A BR data point from before the datamine (March 2020): a wiki snapshot of the BR in each
-    mode, or a change stated in an official changelog."""
+    """A BR data point from before the datamine (March 2020): what the wiki showed (the BR in
+    each mode, or a change between two captures), or a change stated in an official changelog."""
 
     date: str
     source: str  # "wiki" or "changelog"
     br: dict[str, float] = {}  # wiki: mode -> BR
     change: dict[str, tuple[float, float]] = {}  # changelog: mode, or "br" if unnamed -> (was, now)
     url: str | None = None  # the archived wiki page
+    after: str | None = None  # a wiki change: the last capture still showing the old BR
     noteId: int | None = None  # the changelog entry
 
 

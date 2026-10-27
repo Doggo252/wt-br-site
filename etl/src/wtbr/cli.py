@@ -50,14 +50,44 @@ def main(argv: list[str] | None = None) -> int:
     wb.add_argument("--out", default=str(paths.CACHE / "wayback"), help="folder for the captures")
     wb.add_argument("--probe", action="store_true", help="only list what the archive holds")
     wb.add_argument("--pages", action="store_true", help="vehicle page infoboxes instead of lists")
+    wb.add_argument("--after", help="with --pages: resume after this page")
+    wb.add_argument("--shard", type=int, default=0, help="with --pages: this shard (0-based)")
+    wb.add_argument("--shards", type=int, default=1, help="with --pages: how many shards")
+    wb.add_argument(
+        "--parse",
+        nargs="+",
+        metavar="PAGES_JSONL",
+        help="read page captures into manual/wiki-pages.json (merged with what is there)",
+    )
     sub.add_parser("all", help="every step above, then build and schema")
     args = parser.parse_args(argv)
 
     if args.cmd == "wayback":
-        if args.probe:
+        if args.parse:
+            target = paths.MANUAL / "wiki-pages.json"
+            known = json.loads(target.read_text())["pages"] if target.exists() else {}
+            captured = [
+                json.loads(line)
+                for f in args.parse
+                for line in Path(f).read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+            series = wayback.page_series(captured, known)
+            # One page a line, so a new run's diff shows what changed.
+            lines = ",\n".join(
+                f"{json.dumps(page, ensure_ascii=False)}: {json.dumps(rows)}"
+                for page, rows in series.items()
+            )
+            target.write_text(
+                f'{{"url": {json.dumps(wayback.PAGE_URL)},\n"pages": {{\n{lines}\n}}}}\n',
+                encoding="utf-8",
+            )
+            print(f"wayback: {len(series)} wiki pages with a BR")
+        elif args.probe:
             wayback.probe(Path(args.out))
         elif args.pages:
-            print(f"wayback: {wayback.fetch_pages(Path(args.out))} page captures")
+            n = wayback.fetch_pages(Path(args.out), args.after, args.shard, args.shards)
+            print(f"wayback: {n} page captures")
         else:
             print(f"wayback: {wayback.fetch(Path(args.out))} new captures")
         return 0

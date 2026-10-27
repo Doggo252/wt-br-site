@@ -8,6 +8,7 @@ once (see .github/workflows/wayback.yml) and the result is committed.
 """
 
 import json
+import re
 import time
 import urllib.parse
 import urllib.request
@@ -109,15 +110,19 @@ def fetch(out: Path) -> int:
 
 # --- vehicle pages -------------------------------------------------------------------------
 # The archive holds about 10,000 captures of wiki vehicle pages from 2019 (almost none before).
-# Each page's infobox shows the BR at capture time; only that part is kept.
+# Each page's infobox shows the BR at capture time; only that part is kept. The archive is slow
+# (about 7 pages a minute from one machine), so the work can be split into shards that run side
+# by side, and resumed after a page.
 
 SNIPPET_CHARS = 4000
 WORKERS = 4
+# Wiki pages that are not vehicles: guns, torpedoes and bombs ("2A26 (125 mm)"), maps.
+NOT_VEHICLE = re.compile(r"_\(\d+(?:[.,]\d+)?_(?:mm|kg|lb)\)$|_Map$")
 
 
 def _vehicle_page(url: str) -> str | None:
     path = urllib.parse.unquote(urllib.parse.urlsplit(url).path.lstrip("/"))
-    if urllib.parse.urlsplit(url).query or not path or ":" in path:
+    if urllib.parse.urlsplit(url).query or not path or ":" in path or NOT_VEHICLE.search(path):
         return None
     if path.startswith(("index.php", "images", "load.php", "skins", "extensions", "api.php")):
         return None
@@ -132,8 +137,27 @@ def _snippet(page: str) -> str | None:
     return page[max(0, i - 500) : i + SNIPPET_CHARS] if i >= 0 else None
 
 
-def fetch_pages(out: Path) -> int:
-    """Infobox snippets of every pre-2020 wiki page capture into out/pages.jsonl."""
+def page_captures(rows: list[list[str]], after: str | None = None) -> list[tuple[str, str, str]]:
+    """CDX rows (timestamp, url) -> (timestamp, url, page) for vehicle pages, one capture per
+    page and month, in the archive's order. With `after`, only the pages listed after it."""
+    todo, seen = [], set()
+    for ts, url in rows:
+        page = _vehicle_page(url)
+        if page and (page, ts[:6]) not in seen:
+            seen.add((page, ts[:6]))
+            todo.append((ts, url, page))
+    if after:
+        last = max((i for i, t in enumerate(todo) if t[2] == after), default=None)
+        if last is None:
+            print(f"wayback: {after!r} is not in the capture list; fetching everything")
+        else:
+            todo = todo[last + 1 :]
+    return todo
+
+
+def fetch_pages(out: Path, after: str | None = None, shard: int = 0, shards: int = 1) -> int:
+    """Infobox snippets of pre-2020 wiki page captures into out/pages.jsonl: this shard's share
+    of the pages (split by page, so one page's captures stay together)."""
     from concurrent.futures import ThreadPoolExecutor
 
     out.mkdir(parents=True, exist_ok=True)
@@ -148,13 +172,16 @@ def fetch_pages(out: Path) -> int:
         doseq=True,
     )
     rows = [line.split() for line in _get(f"{CDX}?{query}").decode().splitlines() if line.strip()]
-    todo = [(ts, url, p) for ts, url in rows if (p := _vehicle_page(url))]
+    todo = page_captures([r for r in rows if len(r) == 2], after)
+    pages = sorted({t[2] for t in todo})
+    mine = {p for i, p in enumerate(pages) if i % shards == shard}
+    todo = [t for t in todo if t[2] in mine]
     done_path = out / "pages.jsonl"
     done = set()
     if done_path.exists():
         done = {(r["ts"], r["page"]) for r in map(json.loads, done_path.read_text().splitlines())}
     todo = [t for t in todo if (t[0], t[2]) not in done]
-    print(f"wayback: {len(todo)} page captures to fetch")
+    print(f"wayback: {len(todo)} page captures to fetch", flush=True)
 
     def one(t: tuple[str, str, str]) -> dict | None:
         ts, url, page = t
@@ -171,8 +198,49 @@ def fetch_pages(out: Path) -> int:
         for rec in pool.map(one, todo):
             if rec:
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                f.flush()  # a job stopped at its time limit keeps what it has
                 n += 1
+                if n % 100 == 0:
+                    print(f"wayback: {n} of {len(todo)}", flush=True)
     return n
+
+
+_SEP = r'</span><span class="ttx-unvisible ttx-value">/</span>'
+INFOBOX_BR = re.compile(
+    rf'ttx-sb ttx-value">([\d.]+){_SEP}<span class="ttx-rb ttx-value">([\d.]+){_SEP}'
+    r'<span class="ttx-ab ttx-value">([\d.]+)</span><span class="ttx-name">'
+    r'<span title="Battle ratings"'
+)
+PAGE_URL = "https://web.archive.org/web/{ts}/https://wiki.warthunder.com/{page}"
+
+
+def parse_infobox(snippet: str) -> tuple[float, float, float] | None:
+    """The infobox's BR line -> (ab, rb, sb). The wiki lays the modes out right to left."""
+    m = INFOBOX_BR.search(snippet)
+    return (float(m[3]), float(m[2]), float(m[1])) if m else None
+
+
+def _runs(seq: list[tuple[str, tuple]]) -> list[list]:
+    """Sorted (timestamp, br) -> the first and last capture of each run with the same BR."""
+    return [
+        [ts, *br]
+        for i, (ts, br) in enumerate(seq)
+        if i in (0, len(seq) - 1) or seq[i - 1][1] != br or seq[i + 1][1] != br
+    ]
+
+
+def page_series(records: list[dict], known: dict[str, list[list]] | None = None) -> dict:
+    """pages.jsonl records -> {page: [[timestamp, ab, rb, sb], ...]}, oldest first, merged into
+    `known` (an earlier result). Of each run of captures with the same BR only the first and
+    last are kept: enough to date a change to the time between them."""
+    obs: dict[str, dict[str, tuple]] = {}
+    for page, rows in (known or {}).items():
+        obs[page] = {ts: tuple(br) for ts, *br in rows}
+    for r in records:
+        br = parse_infobox(r.get("snippet") or "")
+        if br:
+            obs.setdefault(r["page"], {})[r["ts"]] = br
+    return {page: _runs(sorted(by_ts.items())) for page, by_ts in sorted(obs.items())}
 
 
 # --- parsing --------------------------------------------------------------------------------
@@ -187,7 +255,6 @@ WIKI_COUNTRIES = {
 def parse_list(page: str) -> list[list]:
     """The wiki list page's tables -> [[nation, name, ab, rb, sb], ...] (BR as numbers)."""
     import html as html_lib
-    import re
 
     out = []
     for table in re.findall(r"<table.*?</table>", page, re.S):

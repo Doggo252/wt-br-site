@@ -1,15 +1,29 @@
 """Build data/: current vehicles, plus BR history when a HistoryResult is given."""
 
+import itertools
 import json
 import os
 import re
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import quote
 
 from pydantic import BaseModel
 
-from . import ammo, armament, market, news, official, parse, patchnotes, paths, records, store
+from . import (
+    ammo,
+    armament,
+    market,
+    news,
+    official,
+    parse,
+    patchnotes,
+    paths,
+    records,
+    store,
+    wayback,
+)
 from .datamine import (
     CONTAINERS,
     EXPLOSIVE,
@@ -206,7 +220,7 @@ def build_current(
     store_data = _attach_store(details, paths.CACHE / "store")
     news_posts = _attach_news(details, news.load(paths.CACHE / "news"))
     note_entries = patchnotes.load(paths.CACHE / "patchnotes")
-    _early_history(details, note_entries, paths.MANUAL / "wiki")
+    _early_history(details, note_entries, paths.MANUAL)
     notes = _patch_notes(
         details,
         note_entries,
@@ -648,43 +662,100 @@ def _patch_notes(
 DATAMINE_START = "2020-03-10"
 
 
-def _early_history(details: dict[str, UnitDetail], entries: list[dict], wiki: Path) -> None:
-    """BR data from before the datamine: archived wiki list snapshots (manual/wiki/<date>.json)
-    and changes stated in changelogs. Names are matched within the vehicle's tree nation."""
-    from .records import loose
+def _early_names(details: dict[str, UnitDetail]):
+    """Wiki name (and nation, if known) -> the one vehicle it is. The wiki of 2019 used older
+    names ("Churchill Mk I", now "Churchill I"), so "Mk" and quote styles are ignored on a
+    second try. Several matches narrow to the vehicle shown in the trees, present in March
+    2020, and without a country glyph (the original, not a copy)."""
+    from .records import GLYPHS, loose
 
-    by_name: dict[str, list[str]] = {}
+    def alias(name: str) -> str:
+        name = name.replace("\u201c", '"').replace("\u201d", '"')
+        return loose(re.sub(r"\b(?:Mk|Mark)\b\.?", "", name, flags=re.I))
+
+    exact: dict[str, list[str]] = {}
+    loosest: dict[str, list[str]] = {}
     for uid, d in details.items():
-        for n in {d.name, d.fullName}:
-            if n:
-                by_name.setdefault(loose(n), []).append(uid)
+        for n in {d.name, d.fullName} - {None, ""}:
+            exact.setdefault(loose(n), []).append(uid)
+            loosest.setdefault(alias(n), []).append(uid)
+    narrowing = (
+        lambda u: not details[u].hidden,
+        lambda u: details[u].added is None,
+        lambda u: not GLYPHS.search(details[u].name),
+    )
 
     def ids(name: str, nation: str | None) -> list[str]:
-        found = by_name.get(loose(name), [])
-        if nation:
-            return [u for u in found if details[u].nation == nation]
+        found: list[str] = []
+        for key, index in ((loose(name), exact), (alias(name), loosest)):
+            found = [u for u in index.get(key, []) if not nation or details[u].nation == nation]
+            if found:
+                break
+        found = list(dict.fromkeys(found))
+        for keep in narrowing:
+            if len(found) > 1:
+                found = [u for u in found if keep(u)] or found
         return found if len(found) == 1 else []
 
+    return ids
+
+
+def _early_history(details: dict[str, UnitDetail], entries: list[dict], manual: Path) -> None:
+    """BR data from before the datamine, March 2020: what the wiki showed when the Internet
+    Archive saved it (the BR list, manual/wiki/<date>.json, and vehicle pages,
+    manual/wiki-pages.json), and changes stated in changelogs.
+
+    The wiki captures make one sequence per vehicle: its first BR, then each change, dated to
+    between the captures either side of it."""
+    ids = _early_names(details)
+    seen: dict[str, dict[str, tuple[tuple, str | None]]] = {}  # id -> date -> (ab, rb, sb), url
+    wiki = manual / "wiki"
     for f in sorted(wiki.glob("*.json")) if wiki.exists() else []:
         snap = json.loads(f.read_text(encoding="utf-8"))
         for nation, name, ab, rb, sb in snap["rows"]:
             for uid in ids(name, nation):
-                details[uid].early.append(
-                    EarlyBr(
-                        date=snap["date"],
-                        source="wiki",
-                        br={"ab": ab, "rb": rb, "sb": sb},
-                        url=snap.get("source"),
-                    )
+                seen.setdefault(uid, {})[snap["date"]] = ((ab, rb, sb), snap.get("source"))
+    pages = manual / "wiki-pages.json"
+    if pages.exists():
+        data = json.loads(pages.read_text(encoding="utf-8"))
+        for page, rows in data["pages"].items():
+            name = page.replace("_", " ")
+            m = re.fullmatch(r"(.*) \(([^()]+)\)", name)
+            nation = wayback.WIKI_COUNTRIES.get(m[2]) if m else None
+            for uid in ids(m[1] if nation else name, nation):
+                for ts, ab, rb, sb in rows:
+                    url = data["url"].format(ts=ts, page=quote(page, safe="/_().,'-!"))
+                    seen.setdefault(uid, {})[f"{ts[:4]}-{ts[4:6]}-{ts[6:8]}"] = ((ab, rb, sb), url)
+
+    modes = ("ab", "rb", "sb")
+    for uid, by_date in seen.items():
+        seq = sorted(by_date.items())
+        # A capture that disagrees with the ones either side, which agree, is a slip in the wiki.
+        seq = [
+            x
+            for i, x in enumerate(seq)
+            if not (0 < i < len(seq) - 1 and seq[i - 1][1][0] == seq[i + 1][1][0] != x[1][0])
+        ]
+        (date, (br, url)), early = seq[0], details[uid].early
+        br_of = dict(zip(modes, br, strict=True))
+        early.append(EarlyBr(date=date, source="wiki", br=br_of, url=url))
+        for (was_date, (was, _)), (date, (now, url)) in itertools.pairwise(seq):
+            if now != was:
+                change = {m: (a, b) for m, a, b in zip(modes, was, now, strict=True) if a != b}
+                early.append(
+                    EarlyBr(date=date, source="wiki", change=change, after=was_date, url=url)
                 )
+
     for e in entries:
         if e["date"] >= DATAMINE_START:
             continue
-        for names, modes in patchnotes.br_changes(patchnotes.parse_article(e["html"])):
+        for names, modes_changed in patchnotes.br_changes(patchnotes.parse_article(e["html"])):
             for name, nation in names:
                 for uid in ids(name, nation):
                     details[uid].early.append(
-                        EarlyBr(date=e["date"], source="changelog", change=modes, noteId=e["id"])
+                        EarlyBr(
+                            date=e["date"], source="changelog", change=modes_changed, noteId=e["id"]
+                        )
                     )
     for d in details.values():
         d.early.sort(key=lambda x: x.date, reverse=True)

@@ -4,13 +4,24 @@ import type { EarlyBr } from "@/lib/data.gen";
 
 const MODE_SHORT: Record<string, string> = { ab: "AB", rb: "RB", sb: "SB", br: "BR" };
 const fmt = (v: number) => v.toFixed(1);
+/** One entry per mode, or a single "BR" one when all three modes agree. */
+const perMode = <T,>(byMode: Record<string, T>, text: (v: T) => string) => {
+  const entries = Object.entries(byMode);
+  const texts = entries.map(([, v]) => text(v));
+  return entries.length === 3 && new Set(texts).size === 1
+    ? `BR ${texts[0]}`
+    : entries.map(([m], i) => `${MODE_SHORT[m]} ${texts[i]}`).join(" · ");
+};
+const brText = (br: Record<string, number>) => perMode(br, fmt);
+const changeText = (change: Record<string, [number, number]>) =>
+  perMode(change, ([was, now]) => `${fmt(was)} → ${fmt(now)}`);
 const dateFmt = (d: string) =>
   new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 /**
  * BR data from before the datamine starts (March 2020): what the official changelogs said
- * changed, and the wiki's list as archived. Shown as a list, not on the chart, because the
- * record has gaps: changes Gaijin announced elsewhere aren't in it.
+ * changed, and what the wiki showed when the Internet Archive saved it (a change is dated to
+ * the first capture showing it). Shown as a list, not on the chart, because the record has gaps.
  */
 export function EarlyHistory({ early }: { early: EarlyBr[] }) {
   return (
@@ -26,21 +37,16 @@ export function EarlyHistory({ early }: { early: EarlyBr[] }) {
             {e.source === "wiki" ? (
               <>
                 <span className="tabular text-fg">
-                  {Object.entries(e.br ?? {})
-                    .map(([m, v]) => `${MODE_SHORT[m]} ${fmt(v)}`)
-                    .join(" · ")}
+                  {e.change && Object.keys(e.change).length ? changeText(e.change) : brText(e.br ?? {})}
                 </span>
+                {e.after && <span className="text-xs text-fg-3">changed after {dateFmt(e.after)}</span>}
                 <a href={e.url ?? undefined} rel="noopener" target="_blank" className="text-xs text-fg-3">
-                  Wiki list, archived
+                  Wiki, archived
                 </a>
               </>
             ) : (
               <>
-                <span className="tabular text-fg">
-                  {Object.entries(e.change ?? {})
-                    .map(([m, [was, now]]) => `${MODE_SHORT[m]} ${fmt(was)} → ${fmt(now)}`)
-                    .join(" · ")}
-                </span>
+                <span className="tabular text-fg">{changeText(e.change ?? {})}</span>
                 {e.noteId != null && (
                   <Link href={`/patch-notes/${e.noteId}/`} className="text-xs text-fg-3">
                     Changelog
@@ -53,8 +59,8 @@ export function EarlyHistory({ early }: { early: EarlyBr[] }) {
       </ul>
       <p className="border-t border-card-border px-3 py-2 text-xs text-fg-3">
         The game files we read start in March 2020. Earlier, this is what the official changelogs recorded and what the
-        War Thunder wiki listed when the Internet Archive saved it. Gaijin announced many BR changes elsewhere, so there
-        are gaps.
+        War Thunder wiki showed when the Internet Archive saved it, mostly during 2019. The wiki was edited by hand and
+        sometimes lagged the game, and Gaijin announced many BR changes elsewhere, so there are gaps.
       </p>
     </div>
   );
