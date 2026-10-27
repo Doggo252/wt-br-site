@@ -39,7 +39,8 @@ export default function PremiumsPage() {
         <p className="mt-2 max-w-2xl text-fg-2">
           Every premium and what it costs: Golden Eagles in the in-game shop, a pack on the Gaijin Store, or an offer on
           the Gaijin Market. Packs usually include premium time and Golden Eagles too.{" "}
-          <Link href="/deals/">See current discounts →</Link>
+          <Link href="/deals/">See current discounts →</Link> Which earns the most?{" "}
+          <Link href="/economy/">Compare their Silver Lion multipliers →</Link>
         </p>
       </header>
       <SectionTabs label="Shop" tabs={SHOP_TABS} current="/premiums/" />

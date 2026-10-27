@@ -36,6 +36,7 @@ export function EconomyBrowser() {
   const [branch, setBranch] = useState<Branch>("ground");
   const [rank, setRank] = useState<number | null>(null);
   const [nation, setNation] = useState("");
+  const [status, setStatus] = useState(-1); // index into tree, premium, squadron, event; -1 = all
   const [earn, setEarn] = useState(8000);
   const [deaths, setDeaths] = useState(1);
   const [premium, setPremium] = useState(false);
@@ -68,6 +69,7 @@ export function EconomyBrowser() {
         (r) =>
           r[3] === branch &&
           (!nation || r[2] === nation) &&
+          (status < 0 || r[8] === status) &&
           (rank === null || Math.abs(num(r, col) - rank) <= 3) &&
           num(r, 9 + m) > 0,
       )
@@ -81,7 +83,7 @@ export function EconomyBrowser() {
               ? a.repair - b.repair
               : a.breakeven - b.breakeven,
       );
-  }, [rows, branch, nation, rank, col, m, earn, deaths, premium, upgraded, sort]);
+  }, [rows, branch, nation, status, rank, col, m, earn, deaths, premium, upgraded, sort]);
 
   if (!rows.length) return <p className="text-sm text-fg-3">Loading the economy…</p>;
 
@@ -123,6 +125,16 @@ export function EconomyBrowser() {
                 {formatBr(r)}
               </option>
             ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-fg-3">
+          Vehicles
+          <select value={status} onChange={(e) => setStatus(Number(e.target.value))} className={INPUT}>
+            <option value={-1}>All</option>
+            <option value={0}>Tech tree</option>
+            <option value={1}>Premium</option>
+            <option value={2}>Squadron</option>
+            <option value={3}>Event</option>
           </select>
         </label>
         <label className="flex flex-col gap-1 text-xs text-fg-3">
