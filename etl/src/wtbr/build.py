@@ -227,6 +227,7 @@ def build_current(
         details[uid].requires = req
     market_data = _attach_market(details, paths.MANUAL / "market")
     _attach_camos(details, dm, lang)
+    _attach_descriptions(details, paths.MANUAL / "descriptions")
     store_data = _attach_store(details, paths.CACHE / "store")
     news_posts = _attach_news(details, news.load(paths.CACHE / "news"))
     note_entries = patchnotes.load(paths.CACHE / "patchnotes")
@@ -525,6 +526,25 @@ def _attach_store(details: dict[str, UnitDetail], cache: Path) -> StoreData | No
             if pack.price and (d.storePrice is None or pack.price < d.storePrice):
                 d.storePrice = pack.price
     return StoreData(fetched=fetched, packs=packs)
+
+
+def _attach_descriptions(details: dict[str, UnitDetail], folder: Path) -> None:
+    """Short descriptions written for the site from the wiki's facts (manual/descriptions/*.json,
+    each {vehicle id: text}). Unknown ids are reported, not fatal: vehicles come and go."""
+    unknown = []
+    for f in sorted(folder.glob("*.json")) if folder.exists() else []:
+        try:
+            batch = json.loads(f.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            print(f"descriptions: skipping {f.name} ({e})")
+            continue
+        for uid, text in batch.items():
+            if uid in details and text.strip():
+                details[uid].about = text.strip()
+            elif uid not in details:
+                unknown.append(uid)
+    if unknown:
+        print(f"descriptions: {len(unknown)} for unknown vehicles, e.g. {unknown[:3]}")
 
 
 def _attach_camos(details: dict[str, UnitDetail], dm: Datamine, lang: dict[str, str]) -> None:

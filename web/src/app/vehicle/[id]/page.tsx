@@ -351,6 +351,20 @@ export default async function VehiclePage({ params }: Params) {
       )}
 
 
+      {u.about && (
+        <p className="max-w-3xl text-base leading-relaxed text-fg-2">
+          {u.about}{" "}
+          <a
+            href={`https://wiki.warthunder.com/unit/${u.id}`}
+            rel="noopener"
+            target="_blank"
+            className="whitespace-nowrap text-sm text-fg-3"
+          >
+            Wiki page
+          </a>
+        </p>
+      )}
+
       <Section title={u.branch === "ground" ? "Stats" : "Flight performance"}>
         <StatGrid u={u} />
         {u.branch !== "ground" && (

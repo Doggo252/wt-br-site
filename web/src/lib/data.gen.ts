@@ -332,6 +332,7 @@ export interface UnitDetail {
   skins?: MarketQuote[];
   camos?: Camo[];
   wiki?: WikiFacts | null;
+  about?: string | null;
   patchNotes?: PatchMention[];
   economy?: Economy | null;
   modifications?: Modification[];

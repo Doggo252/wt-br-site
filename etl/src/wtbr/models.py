@@ -377,6 +377,7 @@ class UnitDetail(UnitSummary):
     skins: list[MarketQuote] = []  # its skins on the Gaijin Market, cheapest first
     camos: list[Camo] = []  # the game's camouflages, then Marketplace ones
     wiki: WikiFacts | None = None
+    about: str | None = None  # a short description written for the site (manual/descriptions)
     patchNotes: list[PatchMention] = []  # newest first, capped
     economy: Economy | None = None
     modifications: list[Modification] = []
