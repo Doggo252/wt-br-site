@@ -257,6 +257,35 @@ class AmmoOption(Model):
     rounds: list[Round]
 
 
+class WeaponCount(Model):
+    name: str
+    count: int  # barrels for guns; bombs, rockets or missiles for stores
+    ammo: int | None = None  # rounds per barrel (guns)
+
+
+class Loadout(Model):
+    """A loadout preset (older aircraft) or one store option on a pylon."""
+
+    name: str | None = None  # the game's id for it
+    items: list[WeaponCount]
+    tier: int | None = None  # modification tier that unlocks it
+
+
+class Pylon(Model):
+    index: int
+    options: list[Loadout]
+
+
+class Armament(Model):
+    """Aircraft and helicopters."""
+
+    guns: list[WeaponCount] = []  # fixed, pilot-fired
+    turrets: list[WeaponCount] = []  # defensive or gunner-operated
+    countermeasures: int | None = None  # flares and chaff carried
+    presets: list[Loadout] = []  # whole loadouts (older aircraft)
+    pylons: list[Pylon] = []  # per-pylon choices (newer aircraft and helicopters)
+
+
 class Gun(Model):
     name: str
     caliber: float | None = None  # mm
@@ -291,6 +320,7 @@ class UnitDetail(UnitSummary):
     economy: Economy | None = None
     modifications: list[Modification] = []
     guns: list[Gun] = []
+    armament: Armament | None = None
     storePacks: list[StorePack] = []
     news: list[NewsRef] = []
     early: list[EarlyBr] = []  # newest first

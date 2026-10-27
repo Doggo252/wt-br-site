@@ -9,8 +9,9 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import ammo, market, news, official, parse, patchnotes, paths, records, store
+from . import ammo, armament, market, news, official, parse, patchnotes, paths, records, store
 from .datamine import (
+    CONTAINERS,
     EXPLOSIVE,
     MODIFICATIONS_CSV,
     RANK,
@@ -25,6 +26,7 @@ from .history_build import HistoryResult, major_of
 from .models import (
     Absence,
     Announcement,
+    Armament,
     BranchCounts,
     BrChange,
     DevPreview,
@@ -146,6 +148,16 @@ def build_current(
     def arsenal(model: dict, wp: dict) -> list[Gun]:
         return ammo.guns(model, wp, dm.weapon, bullet_names, explosives, weaponry)
 
+    air_arsenal = armament.Arsenal(
+        weaponry, parse.parse_weapon_short_names(weaponry_csv), dm.path / CONTAINERS
+    )
+
+    def air_armament(uid: str, wp: dict) -> Armament | None:
+        fm = dm.flightmodel(uid)
+        if not fm:
+            return None
+        return armament.armament(fm, air_arsenal, dm.weapon_preset, wp.get("modifications") or {})
+
     details: dict[str, UnitDetail] = {}
     shop_trees: list[tuple[str, parse.ShopTree]] = []
     all_shop_units: dict[str, parse.ShopUnit] = {}
@@ -166,6 +178,8 @@ def build_current(
                 Modification(**m) for m in parse.parse_modifications(wpcost[uid], mod_names)
             ]
             _name_ammo_packs(details[uid], wpcost[uid])
+            if branch != "ground":
+                details[uid].armament = air_armament(uid, wpcost[uid])
 
     if hist:
         _drop_event_units(hist, details, lang)

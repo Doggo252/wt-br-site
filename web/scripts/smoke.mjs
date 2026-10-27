@@ -17,6 +17,7 @@ const PAGES = [
   ["/air/usa/", "USA"],
   ["/vehicle/germ_pzkpfw_VI_ausf_h1_tiger/", "Battle Rating history"],
   ["/vehicle/p-51d-5/", "Flight performance"],
+  ["/vehicle/a_10a_late/", "Pylons"],
   ["/updates/", "Updates"],
   ["/updates/2.57.1.72/", "Update 2.57.1.72"],
   ["/ground/", "Ground forces"],

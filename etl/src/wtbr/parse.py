@@ -218,6 +218,17 @@ def parse_weaponry(text: str) -> dict[str, str]:
     return out
 
 
+def parse_weapon_short_names(text: str) -> dict[str, str]:
+    """Short weapon names ("weapons/<id>/short" rows: "AIM-9L", "SC50"), keyed by lower id."""
+    out = {}
+    reader = csv.reader(io.StringIO(text), delimiter=";", quotechar='"')
+    next(reader, None)
+    for row in reader:
+        if len(row) >= 2 and row[1] and row[0].startswith("weapons/") and row[0].endswith("/short"):
+            out[row[0].removeprefix("weapons/").removesuffix("/short").lower()] = row[1]
+    return out
+
+
 def parse_bullet_names(text: str) -> dict[str, str]:
     """units_weaponry.csv rows other than weapons: shell names keyed by bulletName (as given and
     lower-cased) and shell type names ("<bulletType>/name", "<bulletType>/name/short")."""

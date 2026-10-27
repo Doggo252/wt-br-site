@@ -29,6 +29,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "@/components/Link";
+import { AirArmament } from "@/components/AirArmament";
 import { AmmoTable } from "@/components/AmmoTable";
 import { BrStepChart } from "@/components/BrStepChart";
 import { BranchIcon } from "@/components/BranchIcon";
@@ -286,6 +287,7 @@ export default async function VehiclePage({ params }: Params) {
           u.record && "RB kill record",
           "Battle Rating history",
           (u.guns ?? []).length > 0 && "Ammunition",
+          u.armament && "Armament",
           announced.length > 0 && "Official announcements",
           line && "In the tech tree",
           rivals.length > 0 && "Counterparts",
@@ -389,6 +391,12 @@ export default async function VehiclePage({ params }: Params) {
           </p>
         )}
       </Section>
+
+      {u.armament && (
+        <Section title="Armament">
+          <AirArmament a={u.armament} />
+        </Section>
+      )}
 
       {(u.guns ?? []).length > 0 && (
         <Section title="Ammunition">

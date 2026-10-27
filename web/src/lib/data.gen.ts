@@ -334,6 +334,7 @@ export interface UnitDetail {
   economy?: Economy | null;
   modifications?: Modification[];
   guns?: Gun[];
+  armament?: Armament | null;
   storePacks?: StorePack[];
   news?: NewsRef[];
   early?: EarlyBr[];
@@ -513,6 +514,37 @@ export interface Round {
   frag?: number | null;
   range?: number | null;
   guidance?: string | null;
+}
+/**
+ * Aircraft and helicopters.
+ */
+
+export interface Armament {
+  guns?: WeaponCount[];
+  turrets?: WeaponCount[];
+  countermeasures?: number | null;
+  presets?: Loadout[];
+  pylons?: Pylon[];
+}
+
+export interface WeaponCount {
+  name: string;
+  count: number;
+  ammo?: number | null;
+}
+/**
+ * A loadout preset (older aircraft) or one store option on a pylon.
+ */
+
+export interface Loadout {
+  name?: string | null;
+  items: WeaponCount[];
+  tier?: number | null;
+}
+
+export interface Pylon {
+  index: number;
+  options: Loadout[];
 }
 /**
  * A War Thunder product on the Gaijin Store.
