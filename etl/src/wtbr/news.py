@@ -17,7 +17,9 @@ from .patchnotes import SITE, _get, _text
 from .records import CYRILLIC_LOOKALIKES, GLYPHS
 
 INDEX_URL = SITE + "/en/news/?page={page}"
-MAX_PAGES = 120  # about three years of posts
+MAX_PAGES = 400  # the index pages back to 2016
+# A cache smaller than this hasn't been read to the end yet: do it once.
+FULL_BELOW = 4000
 DELAY_S = 0.3
 WORKERS = 8
 
@@ -81,6 +83,7 @@ def fetch(cache: Path, max_pages: int = MAX_PAGES, full: bool = False) -> list[d
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / "index.json"
     index = {e["id"]: e for e in json.loads(path.read_text())} if path.exists() else {}
+    full = full or len(index) < FULL_BELOW
 
     def page_entries(page: int) -> list[dict]:
         # An empty page normally means the end, but a failed request looks the same: retry.
