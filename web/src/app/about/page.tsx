@@ -71,6 +71,30 @@ export default function AboutPage() {
             </a>
             , which collects and verifies them.
           </li>
+          <li>
+            <strong className="text-fg">Patch notes and news</strong> are read from{" "}
+            <a href="https://warthunder.com/en/game/changelog">warthunder.com</a>. Changelogs are shown in full; news
+            posts are listed with a link back.
+          </li>
+          <li>
+            <strong className="text-fg">Planned BR changes</strong> come from Gaijin&apos;s announcement posts on the{" "}
+            <a href="https://forum.warthunder.com/tag/br-changes">official forum</a>.
+          </li>
+          <li>
+            <strong className="text-fg">Prices</strong> come from the <a href="https://store.gaijin.net">Gaijin Store</a>{" "}
+            catalog (read daily, US dollars) and snapshots of the{" "}
+            <a href="https://trade.gaijin.net/market/1067">Gaijin Market</a>.
+          </li>
+          <li>
+            <strong className="text-fg">BRs before March 2020</strong> come from the BR changes recorded in the official
+            changelogs and from the War Thunder wiki&apos;s battle rating list as saved by the{" "}
+            <a href="https://web.archive.org">Internet Archive</a>. That record has gaps.
+          </li>
+          <li>
+            <strong className="text-fg">Penetration</strong> is computed from the shell data the way the game does
+            (de Marre for full-calibre and sub-calibre shot, Lanz-Odermatt for long rods) and checked against the
+            in-game ammo cards.
+          </li>
         </ul>
         <p className="mt-3 text-sm text-fg-3">
           Current data: update <span className="tabular">{meta.version}</span>, rebuilt daily.
