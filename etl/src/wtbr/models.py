@@ -183,6 +183,24 @@ class Modification(Model):
     ge: int | None = None  # cost to buy outright with Golden Eagles
 
 
+class NewsRef(Model):
+    """A warthunder.com news post that names this vehicle."""
+
+    id: int
+    title: str
+    date: str
+    kind: str
+    url: str
+
+
+class NewsPost(NewsRef):
+    """One row of data/news.json."""
+
+    summary: str = ""
+    image: str | None = None
+    units: list[str] = []
+
+
 class StorePack(Model):
     """A War Thunder product on the Gaijin Store."""
 
@@ -262,6 +280,7 @@ class UnitDetail(UnitSummary):
     modifications: list[Modification] = []
     guns: list[Gun] = []
     storePacks: list[StorePack] = []
+    news: list[NewsRef] = []
 
 
 class BranchCounts(Model):

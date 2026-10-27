@@ -46,6 +46,7 @@ import { getAnnouncementsByUnit, getDev, getIndex, getMarket, getMeta, getTree, 
 import type { Sight, UnitDetail, UnitSummary } from "@/lib/data.gen";
 import { treeHref } from "@/lib/branches";
 import { plainName, plural } from "@/lib/format";
+import { KIND_LABEL } from "@/lib/news";
 import { TYPE_NAME, nationName, roman } from "@/lib/nations";
 import { CREW_LABEL, type CrewRole, type Sight as ChipSight } from "@/lib/units";
 
@@ -275,6 +276,7 @@ export default async function VehiclePage({ params }: Params) {
           (u.market || (u.skins ?? []).length > 0) && "Gaijin Market",
           (u.modifications ?? []).length > 0 && "Modifications",
           (u.patchNotes ?? []).length > 0 && "Patch notes",
+          (u.news ?? []).length > 0 && "In the news",
           "Same Battle Rating",
         ]
           .filter((t): t is string => Boolean(t))
@@ -506,6 +508,28 @@ export default async function VehiclePage({ params }: Params) {
             ))}
           </ul>
           <p className="mt-2 text-xs text-fg-3">Changes that name this vehicle in the official changelog, newest first.</p>
+        </Section>
+      )}
+
+      {(u.news ?? []).length > 0 && (
+        <Section title="In the news">
+          <ul className="divide-y divide-card-border panel text-sm">
+            {u.news!.map((n) => (
+              <li key={n.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-3 py-2">
+                <span className="tabular text-xs text-fg-3">{n.date}</span>
+                <span className="font-display text-xs uppercase tracking-wider text-gold/90">
+                  {KIND_LABEL[n.kind] ?? n.kind}
+                </span>
+                <a href={n.url} rel="noopener" target="_blank" className="min-w-0">
+                  {n.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-fg-3">
+            Posts on warthunder.com whose headline names this vehicle: devblogs, events and discounts.{" "}
+            <Link href="/news/">All news →</Link>
+          </p>
         </Section>
       )}
 

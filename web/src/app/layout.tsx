@@ -21,6 +21,7 @@ import {
   Info,
   Medal,
   Megaphone,
+  Newspaper,
   Palette,
   Rss,
   ScrollText,
@@ -79,6 +80,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <span className="eyebrow mb-1 text-fg-3">Browse</span>
               <Link href="/updates/" className={FOOT}><History className={ICON} aria-hidden />Updates</Link>
               <Link href="/patch-notes/" className={FOOT}><ScrollText className={ICON} aria-hidden />Patch notes</Link>
+              <Link href="/news/" className={FOOT}><Newspaper className={ICON} aria-hidden />News and devblogs</Link>
               <Link href="/market/" className={FOOT}><Store className={ICON} aria-hidden />Market prices</Link>
               <Link href="/premiums/" className={FOOT}><Gem className={ICON} aria-hidden />Premium vehicles</Link>
               <Link href="/deals/" className={FOOT}><BadgePercent className={ICON} aria-hidden />Deals</Link>

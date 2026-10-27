@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "@/components/Link";
-import { Compass, History, Megaphone, Store, Swords, Trophy } from "lucide-react";
+import { Compass, History, Megaphone, Newspaper, Store, Swords, Trophy } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { BranchIcon } from "./BranchIcon";
 
@@ -9,7 +9,8 @@ const NAV: { href: string; label: string; icon: React.ReactNode; also?: string[]
   { href: "/ground/", label: "Ground", icon: <BranchIcon branch="ground" className="h-4 w-4" /> },
   { href: "/air/", label: "Air", icon: <BranchIcon branch="air" className="h-4 w-4" /> },
   { href: "/helicopters/", label: "Helis", icon: <BranchIcon branch="heli" className="h-4 w-4" /> },
-  { href: "/updates/", label: "Updates", icon: <History className="h-4 w-4" /> },
+  { href: "/updates/", label: "Updates", icon: <History className="h-4 w-4" />, also: ["/patch-notes/"] },
+  { href: "/news/", label: "News", icon: <Newspaper className="h-4 w-4" /> },
   { href: "/announcements/", label: "Planned", icon: <Megaphone className="h-4 w-4" /> },
   { href: "/rankings/", label: "Rankings", icon: <Trophy className="h-4 w-4" />, also: ["/records/", "/shells/"] },
   { href: "/lineup/", label: "Tools", icon: <Swords className="h-4 w-4" />, also: ["/research/", "/compare/", "/watchlist/"] },

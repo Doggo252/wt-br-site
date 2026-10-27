@@ -141,6 +141,21 @@ export interface TreeCell {
 }
 
 /**
+ * One row of data/news.json.
+ */
+
+export interface NewsPost {
+  id: number;
+  title: string;
+  date: string;
+  kind: string;
+  url: string;
+  summary?: string;
+  image?: string | null;
+  units?: string[];
+}
+
+/**
  * data/patchnotes/<id>.json: one warthunder.com changelog entry.
  */
 
@@ -320,6 +335,7 @@ export interface UnitDetail {
   modifications?: Modification[];
   guns?: Gun[];
   storePacks?: StorePack[];
+  news?: NewsRef[];
 }
 /**
  * Raw economic ranks. BR = rank / 3 + 1.
@@ -500,6 +516,14 @@ export interface Round {
 /**
  * A War Thunder product on the Gaijin Store.
  */
+
+export interface NewsRef {
+  id: number;
+  title: string;
+  date: string;
+  kind: string;
+  url: string;
+}
 
 /**
  * One row of data/units/index.json.

@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from . import images, official, patchnotes, paths, records, store
+from . import images, news, official, patchnotes, paths, records, store
 from .build import build_current
 from .datamine import COUNTRY_ICONS, SHOP, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
@@ -14,6 +14,7 @@ from .models import (
     MarketData,
     Meta,
     NationTree,
+    NewsPost,
     PatchNote,
     PatchNoteSummary,
     RecordRow,
@@ -42,6 +43,8 @@ def main(argv: list[str] | None = None) -> int:
     pn = sub.add_parser("patchnotes", help="download the warthunder.com changelog (patch notes)")
     pn.add_argument("--full", action="store_true", help="re-read the whole index to fill gaps")
     sub.add_parser("store", help="download Gaijin Store pack prices")
+    nw = sub.add_parser("news", help="download the warthunder.com news index")
+    nw.add_argument("--full", action="store_true", help="re-read every index page")
     sub.add_parser("all", help="every step above, then build and schema")
     args = parser.parse_args(argv)
 
@@ -95,6 +98,12 @@ def main(argv: list[str] | None = None) -> int:
         full = getattr(args, "full", False)
         n = len(patchnotes.fetch(paths.CACHE / "patchnotes", full=full))
         print(f"patchnotes: {n} changelog entries")
+    if args.cmd in ("news", "all"):
+        try:
+            full = getattr(args, "full", False)
+            print(f"news: {len(news.fetch(paths.CACHE / 'news', full=full))} posts")
+        except OSError as e:
+            print(f"news: fetch failed ({e}), keeping the cached index")
     if args.cmd in ("store", "all"):
         try:
             print(f"store: {len(store.fetch(paths.CACHE / 'store'))} products")
@@ -146,6 +155,7 @@ def write_schema() -> None:
         PatchNoteSummary,
         StoreData,
         ResearchRules,
+        NewsPost,
     ):  # fmt: skip
         schema = model.model_json_schema(mode="serialization")
         (out / f"{model.__name__}.json").write_text(json.dumps(schema, indent=2))

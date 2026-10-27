@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from . import ammo, market, official, parse, patchnotes, paths, records, store
+from . import ammo, market, news, official, parse, patchnotes, paths, records, store
 from .datamine import (
     EXPLOSIVE,
     MODIFICATIONS_CSV,
@@ -39,6 +39,8 @@ from .models import (
     Meta,
     Modification,
     NationTree,
+    NewsPost,
+    NewsRef,
     OfficialChange,
     PatchMention,
     PatchNote,
@@ -180,6 +182,7 @@ def build_current(
         details[uid].requires = req
     market_data = _attach_market(details, paths.MANUAL / "market")
     store_data = _attach_store(details, paths.CACHE / "store")
+    news_posts = _attach_news(details, news.load(paths.CACHE / "news"))
     notes = _patch_notes(
         details,
         patchnotes.load(paths.CACHE / "patchnotes"),
@@ -255,6 +258,8 @@ def build_current(
         _write(out / "market.json", market_data)
     if store_data:
         _write(out / "store.json", store_data)
+    if news_posts:
+        _write(out / "news.json", news_posts)
     try:
         _write(out / "research.json", ResearchRules(unlocks=parse.rank_unlocks(dm.read_json(RANK))))
     except FileNotFoundError:  # older sparse checkouts; `wtbr fetch` adds rank.blkx
@@ -400,6 +405,39 @@ def validate(meta: Meta, previous: Path, details: dict[str, UnitDetail]) -> None
                 problems.append(f"{nation}: {count} -> {new} vehicles (more than a 5% drop)")
     if problems and not os.environ.get("WTBR_SKIP_VALIDATION"):
         raise ValidationError("data validation failed:\n  " + "\n  ".join(problems[:50]))
+
+
+NEWS_PER_UNIT = 12
+NEWS_SUMMARY_CHARS = 280
+
+
+def _attach_news(details: dict[str, UnitDetail], posts: list[dict]) -> list[NewsPost]:
+    """warthunder.com posts, newest first, with the vehicles their headlines name; each vehicle
+    gets its newest mentions."""
+    names = news.vehicle_names([(uid, d.name) for uid, d in details.items() if not d.removedIn])
+    out = []
+    for p in posts:
+        units = news.mentions(p["title"], names) if p["kind"] in news.VEHICLE_KINDS else []
+        summary = p.get("summary") or ""
+        if len(summary) > NEWS_SUMMARY_CHARS:
+            summary = summary[:NEWS_SUMMARY_CHARS].rsplit(" ", 1)[0] + "…"
+        post = NewsPost(
+            id=p["id"],
+            title=p["title"],
+            date=p["date"],
+            kind=p["kind"],
+            url=f"{patchnotes.SITE}/en/news/{p['id']}-{p['slug']}",
+            summary=summary,
+            image=p.get("image"),
+            units=units,
+        )
+        out.append(post)
+        for uid in units:
+            if len(details[uid].news) < NEWS_PER_UNIT:
+                details[uid].news.append(
+                    NewsRef(**post.model_dump(include=set(NewsRef.model_fields)))
+                )
+    return out
 
 
 def _attach_store(details: dict[str, UnitDetail], cache: Path) -> StoreData | None:

@@ -12,6 +12,7 @@ import type {
   DevPreview,
   MarketData,
   StoreData,
+  NewsPost,
   ResearchRules,
   Meta,
   PatchNote,
@@ -149,6 +150,11 @@ export const getPlannedRanks = cache(() => {
 /** Gaijin Market snapshot (data/market.json), or null before the first snapshot. */
 export const getMarket = cache((): MarketData | null =>
   existsSync(join(DATA, "market.json")) ? read<MarketData>("market.json") : null,
+);
+
+/** warthunder.com news posts (data/news.json), newest first; empty before the first fetch. */
+export const getNews = cache((): NewsPost[] =>
+  existsSync(join(DATA, "news.json")) ? read<NewsPost[]>("news.json") : [],
 );
 
 /** Rank unlock thresholds (data/research.json). */
