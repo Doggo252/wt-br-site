@@ -243,6 +243,93 @@ def page_series(records: list[dict], known: dict[str, list[list]] | None = None)
     return {page: _runs(sorted(by_ts.items())) for page, by_ts in sorted(obs.items())}
 
 
+# --- BR change lists ------------------------------------------------------------------------
+# Before 2020 most BR changes were published as Google Sheets or old-forum threads linked from
+# the changelog. Many sheets have since been made private and the old forum is gone, but the
+# archive kept copies. `fetch_urls` saves the latest pre-2021 capture of each listed URL, plus
+# every archived old-forum thread whose address says it is about battle ratings.
+
+FORUM_TOPICS = "forum.warthunder.com/index.php?/topic/*"
+FORUM_BR = r".*topic/[0-9]+-[^/]*(battle-rating|br-change|br-and|planned-br|-brs-)[^/]*/?$"
+
+
+def _latest(url: str) -> dict | None:
+    """The newest successful capture of exactly this URL before 2021."""
+    query = urllib.parse.urlencode(
+        {"url": url, "output": "json", "fl": "timestamp,original", "filter": "statuscode:200",
+         "to": "2021", "limit": "-1"},
+        doseq=True,
+    )  # fmt: skip
+    rows = json.loads(_get(f"{CDX}?{query}") or b"[]")
+    return dict(zip(rows[0], rows[-1], strict=True)) if len(rows) > 1 else None
+
+
+def _variants(url: str) -> list[str]:
+    """Sheet links were shared with and without a "/u/N" account part; try both."""
+    bare = re.sub(r"/spreadsheets/u/\d+/", "/spreadsheets/", url)
+    return list(dict.fromkeys([url, bare, bare.split("?")[0]]))
+
+
+def forum_br_topics() -> list[str]:
+    query = urllib.parse.urlencode(
+        {
+            "url": FORUM_TOPICS,
+            "fl": "original",
+            "filter": ["statuscode:200", f"original:{FORUM_BR}"],
+            "collapse": "urlkey",
+            "to": "2021",
+        },
+        doseq=True,
+    )
+    lines = _get(f"{CDX}?{query}").decode().splitlines()
+    topics = {
+        line.strip().split("?/topic/")[-1].split("/")[0] for line in lines if "?/topic/" in line
+    }
+    return sorted(f"https://forum.warthunder.com/index.php?/topic/{t}/" for t in topics if t)
+
+
+def fetch_urls(listing: Path, out: Path) -> int:
+    """Save the latest archived copy of each URL in `listing` (tab-separated date, note id, URL;
+    # comments) and of every old-forum BR thread into out/, indexed in out/urls.json."""
+    out.mkdir(parents=True, exist_ok=True)
+    rows = [
+        line.split("\t")
+        for line in listing.read_text().splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+    wanted = [(date, note, url) for date, note, url in rows]
+    try:
+        wanted += [("", "", u) for u in forum_br_topics()]
+    except OSError as e:
+        print(f"wayback: forum topic search failed: {e}", flush=True)
+    index, n = [], 0
+    for date, note, url in wanted:
+        cap = None
+        for v in _variants(url):
+            try:
+                cap = _latest(v)
+            except OSError as e:
+                print(f"wayback: {v}: {e}", flush=True)
+            if cap:
+                break
+            time.sleep(DELAY_S)
+        entry = {"date": date, "note": note, "url": url}
+        if cap:
+            name = re.sub(r"[^A-Za-z0-9]+", "_", url.split("//", 1)[-1])[:150] + ".html"
+            try:
+                body = _get(RAW.format(timestamp=cap["timestamp"], url=cap["original"]))
+                (out / name).write_bytes(body)
+                entry.update(file=name, timestamp=cap["timestamp"])
+                n += 1
+            except OSError as e:
+                print(f"wayback: {url}: {e}", flush=True)
+        index.append(entry)
+        print(f"wayback: {'saved' if 'file' in entry else 'no capture'} {url}", flush=True)
+        time.sleep(DELAY_S)
+    (out / "urls.json").write_text(json.dumps(index, indent=1))
+    return n
+
+
 # --- parsing --------------------------------------------------------------------------------
 
 WIKI_COUNTRIES = {

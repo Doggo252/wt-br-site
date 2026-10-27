@@ -1,0 +1,25 @@
+# Official BR change lists linked from pre-2020 changelogs that are no longer public:
+# fetched from the Internet Archive by .github/workflows/wayback.yml (urls mode).
+2014-04-15	331	https://forum.warthunder.com/index.php?/topic/126766-br-changes-139-full-list/
+2014-05-15	341	https://forum.warthunder.com/index.php?/topic/137338-br-price-changes/
+2014-06-05	348	https://forum.warthunder.com/index.php?/topic/148131-br-price-changes-in-141-5th-june/
+2014-07-23	356	https://forum.warthunder.com/index.php?/topic/161856-aircraft-br-and-economy-changes-in-14129/
+2014-07-23	356	https://forum.warthunder.com/index.php?/topic/161857-ground-vehicles-matchmaking-system-changes-in-update-14129/
+2014-10-15	373	https://forum.warthunder.com/index.php?/topic/183966-br-changes-to-ground-forces/
+2014-10-30	374	https://forum.warthunder.com/index.php?/topic/187566-battle-ratings-for-ground-forces/
+2014-10-30	374	https://forum.warthunder.com/index.php?/topic/187567-battle-ratings-for-aircrafts-in-ab/
+2015-10-08	494	https://forum.warthunder.com/index.php?/topic/270236-planned-changes-to-br-and-mm/
+2015-10-08	494	https://forum.warthunder.com/index.php?/topic/270375-global-changes-for-matchmaking/
+2016-10-25	629	https://docs.google.com/spreadsheets/u/2/d/1uZn9av0sJ7_g09eLP-BOQ75GrrnYlC4osHvP3UqK-FA/pubhtml?gid=0&single=true
+2016-11-23	637	https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vTHcM0YSUpwgIZla8AEPpqgGxe1KcB9SLcmcYVEyzHAkUxTPS5J1WvrB_29tn0B28xxrOw1f5fZ6qte/pubhtml?gid=1691800678&single=true
+2016-12-29	654	https://forum.warthunder.com/index.php?/topic/344755-planned-br-changes-for-aircraft-and-ground-vehicles-december-2016/
+2017-02-14	667	https://forum.warthunder.com/index.php?/topic/350924-planned-changes-for-battle-ratings-february-2017/
+2017-10-17	762	https://forum.warthunder.com/index.php?/topic/383200-changes-to-vehicle-battle-ratings-and-economy-17th-october-2017/
+2018-04-12	815	https://forum.warthunder.com/index.php?/topic/407594-changes-to-vehicle-battle-ratings-april-2018/
+2018-07-12	853	https://forum.warthunder.com/index.php?/topic/418995-battle-rating-changes-july-2018/
+2018-11-28	904	https://forum.warthunder.com/index.php?/topic/433463-planned-battle-rating-changes-november-2018/
+2019-02-25	939	https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vSN09tNh15swCshHa_qKwSgOPHI8UfFG1wvkc-GOCpQU4VIO8h7eWZMv8WVdPa_mhuwbR_IEgcRfrgF/pubhtml
+2019-07-09	996	https://docs.google.com/spreadsheets/d/e/2PACX-1vQH6Ll2HbYp3AZ9xDie4tTdlCJ3KKTWpsprH_1pASNr_beRDP_AERRWIWVzI19czh7vI79a_odGMQu-/pubhtml
+2019-10-22	1031	https://docs.google.com/spreadsheets/d/e/2PACX-1vTGkybY83OZ9j1yEufozXUNah83IimfuptdxC7oUtNqf0hGRjbILw8moxtG96-8IqU9nHQSTIGkhewD/pubhtml
+2019-10-22	1031	https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vRBsYM7rSnReQXLKqAbgGs4IPUvV8AXaHgqslcnaGzjINWpaq0yGvHRBFFoX2_TDdXyG_FFkvg5g-Ju/pubhtml
+2020-01-31	1071	https://docs.google.com/spreadsheets/d/e/2PACX-1vRRdKd7S6JVHrkbkEj4oOLYBiAO910aFZCLQVsT5K4J40jtqRv10UikfW6_JkZvsSyiTxk9KIWVHm7E/pubhtml

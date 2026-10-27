@@ -1,12 +1,16 @@
 name: Wayback captures
 
-# One-off: download old wiki pages from the Internet Archive (pre-2020 BR history) and keep them
-# as artifacts for parsing (`wtbr wayback --parse`). Run by hand.
+# One-off: download old wiki pages and BR change lists from the Internet Archive (pre-2020 BR
+# history) and keep them as artifacts for parsing. Run by hand.
 on:
   workflow_dispatch:
     inputs:
       probe:
         description: Only list what the archive holds
+        type: boolean
+        default: false
+      urls:
+        description: Archived BR change lists (etl/manual/br-sheets/archive-urls.txt and old-forum BR threads)
         type: boolean
         default: false
       pages:
@@ -33,7 +37,7 @@ jobs:
         working-directory: etl
         run: |
           uv sync
-          uv run wtbr wayback --out ../wayback ${{ inputs.probe && '--probe' || '' }}
+          uv run wtbr wayback --out ../wayback ${{ inputs.probe && '--probe' || '' }} ${{ inputs.urls && '--urls manual/br-sheets/archive-urls.txt' || '' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
