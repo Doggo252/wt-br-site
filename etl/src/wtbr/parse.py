@@ -372,6 +372,89 @@ def parse_stats(model: dict, wp: dict, tags: dict, weaponry: dict[str, str]) -> 
     return {k: v for k, v in stats.items() if v is not None}
 
 
+_FACES = {"front": "front", "side": "side", "back": "rear", "rear": "rear", "top": "top",
+          "roof": "top", "bottom": "bottom"}  # fmt: skip
+_PLATE = re.compile(
+    r"^(body|superstructure|turret(?:_\d+)?)_(front|side|back|rear|top|roof|bottom)"
+)
+
+
+def _material(cls: str) -> str:
+    c = cls.lower()
+    if c.startswith("rhahh"):
+        return "high_hardness"
+    if c.startswith("rha"):
+        return "rolled"
+    if c.startswith("cha"):
+        return "cast"
+    if "alumin" in c:
+        return "aluminium"
+    if "structural" in c:
+        return "structural"
+    if "rubber" in c or "screen" in c:
+        return "screens"
+    return "composite"
+
+
+def parse_armor(model: dict) -> list[dict]:
+    """Nominal plate thickness by area and face, from the tank model's DamageParts. Thickness
+    only: plate angles live in the 3D model, so effective armour is often much higher."""
+    dp = model.get("DamageParts") or {}
+    default = dp.get("armorClass") if isinstance(dp.get("armorClass"), str) else "RHA_tank"
+    plates: dict[tuple[str, str], list[tuple[float, str]]] = {}
+    skip = (
+        "optic",
+        "gun_barrel",
+        "cannon_breech",
+        "autoloader",
+        "track",
+        "wheel",
+        "commander_pano",
+    )
+    for group, parts in dp.items():
+        if not isinstance(parts, dict):
+            continue
+        gcls = parts.get("armorClass") if isinstance(parts.get("armorClass"), str) else default
+        for name, part in parts.items():
+            if not isinstance(part, dict) or not isinstance(
+                part.get("armorThickness"), (int, float)
+            ):
+                continue
+            key = name.removesuffix("_dm")
+            if any(k in key for k in skip) or group in ("optics", "chassis", "tracks", "gun"):
+                continue
+            mm = float(part["armorThickness"])
+            cls = part.get("armorClass") if isinstance(part.get("armorClass"), str) else gcls
+            if mm <= 0:
+                continue
+            m = _PLATE.match(key)
+            if key.startswith("composite_armor") or _material(cls) == "composite" and not m:
+                area, face = "composite", ""
+            elif key.startswith("ex_armor") or "screen" in key:
+                area, face = "addon", ""
+            elif key.startswith("gun_mask") or "mantlet" in key:
+                area, face = "mantlet", ""
+            elif m:
+                part_area = m.group(1)
+                area = (
+                    "hull_upper" if part_area == "superstructure"
+                    else "hull_lower" if part_area == "body"
+                    else "turret"
+                )  # fmt: skip
+                face = _FACES[m.group(2)]
+            else:
+                continue
+            plates.setdefault((area, face), []).append((mm, _material(cls)))
+    out = []
+    for (area, face), vals in plates.items():
+        mms = [v for v, _ in vals]
+        top = max(vals)  # the thickest plate's material describes the face
+        out.append(
+            {"area": area, "face": face, "min": min(mms), "max": max(mms), "material": top[1]}
+        )
+    return out
+
+
 def _gun_mount(w: dict | None) -> dict:
     """Traverse and elevation speeds, gun limits and ammo for the main gun."""
     if not w:

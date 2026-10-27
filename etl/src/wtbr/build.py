@@ -27,6 +27,7 @@ from .models import (
     Absence,
     Announcement,
     Armament,
+    ArmorPlate,
     BranchCounts,
     BrChange,
     DevPreview,
@@ -333,11 +334,13 @@ def _current_unit(
     tags = unittag.get("tags") or {}
     name = lang.get(f"{uid}_shop") or lang.get(f"{uid}_0") or uid
     guns: list[Gun] = []
+    armor: list[ArmorPlate] = []
     if branch == "ground":
         model = dm.tankmodel(uid) or {}
         sights = parse.parse_sights(model)
         stats = parse.parse_stats(model, wp, unittag, weaponry)
         guns = arsenal(model, wp)
+        armor = [ArmorPlate(**a) for a in parse.parse_armor(model)]
     else:
         sights = {}
         stats = parse.parse_air_stats(unittag, wp)
@@ -365,6 +368,7 @@ def _current_unit(
         groundBattleRb=wp.get("economicRankTankHistorical") if branch != "ground" else None,
         groundBattleSb=wp.get("economicRankTankSimulation") if branch != "ground" else None,
         guns=guns,
+        armor=armor,
     )
 
 

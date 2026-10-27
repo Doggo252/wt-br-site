@@ -257,6 +257,16 @@ class AmmoOption(Model):
     rounds: list[Round]
 
 
+class ArmorPlate(Model):
+    """Nominal thickness of a group of armour plates, in mm (angles not included)."""
+
+    area: str  # "hull_upper", "hull_lower", "turret", "mantlet", "composite", "addon"
+    face: str = ""  # front, side, rear, top, bottom; empty for mantlet, composite, add-on
+    min: float
+    max: float
+    material: str  # rolled, cast, high_hardness, aluminium, structural, composite, ...
+
+
 class WeaponCount(Model):
     name: str
     count: int  # barrels for guns; bombs, rockets or missiles for stores
@@ -320,6 +330,7 @@ class UnitDetail(UnitSummary):
     economy: Economy | None = None
     modifications: list[Modification] = []
     guns: list[Gun] = []
+    armor: list[ArmorPlate] = []
     armament: Armament | None = None
     storePacks: list[StorePack] = []
     news: list[NewsRef] = []

@@ -34,6 +34,7 @@ const PAGES = [
   ["/patch-notes/", "Patch notes"],
   ["/shells/?br=8.7", "Shell penetration"],
   ["/vehicle/germ_leopard_2a6/", "DM53"],
+  ["/vehicle/germ_pzkpfw_VI_ausf_h1_tiger/", "Upper hull"],
   ["/premiums/", "Premium vehicles"],
   ["/news/", "News and devblogs"],
   ["/updates/calendar/", "Next major update"],

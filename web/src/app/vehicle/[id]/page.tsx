@@ -31,6 +31,7 @@ import {
 import Link from "@/components/Link";
 import { AirArmament } from "@/components/AirArmament";
 import { AmmoTable } from "@/components/AmmoTable";
+import { ArmorTable } from "@/components/ArmorTable";
 import { BrStepChart } from "@/components/BrStepChart";
 import { BranchIcon } from "@/components/BranchIcon";
 import { ChangeLog } from "@/components/ChangeLog";
@@ -286,6 +287,7 @@ export default async function VehiclePage({ params }: Params) {
           u.branch === "ground" && "Night vision",
           u.record && "RB kill record",
           "Battle Rating history",
+          (u.armor ?? []).length > 0 && "Armour",
           (u.guns ?? []).length > 0 && "Ammunition",
           u.armament && "Armament",
           announced.length > 0 && "Official announcements",
@@ -391,6 +393,12 @@ export default async function VehiclePage({ params }: Params) {
           </p>
         )}
       </Section>
+
+      {(u.armor ?? []).length > 0 && (
+        <Section title="Armour">
+          <ArmorTable armor={u.armor!} />
+        </Section>
+      )}
 
       {u.armament && (
         <Section title="Armament">

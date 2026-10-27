@@ -334,6 +334,7 @@ export interface UnitDetail {
   economy?: Economy | null;
   modifications?: Modification[];
   guns?: Gun[];
+  armor?: ArmorPlate[];
   armament?: Armament | null;
   storePacks?: StorePack[];
   news?: NewsRef[];
@@ -514,6 +515,17 @@ export interface Round {
   frag?: number | null;
   range?: number | null;
   guidance?: string | null;
+}
+/**
+ * Nominal thickness of a group of armour plates, in mm (angles not included).
+ */
+
+export interface ArmorPlate {
+  area: string;
+  face?: string;
+  min: number;
+  max: number;
+  material: string;
 }
 /**
  * Aircraft and helicopters.
