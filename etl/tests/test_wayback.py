@@ -136,3 +136,36 @@ def test_early_names_old_names_strictness_and_br():
     assert ids("Merkava MK1", None) == ["us_merkava"]
     assert ids("B-18A", None, (3.7, 3.7, 3.7)) == ["b18_us"]
     assert ids("B 18A", None, (2.7, 2.7, 2.7)) == ["b18_sw"]
+
+
+def test_early_sheets_branch_alias_and_sb(tmp_path):
+    from wtbr.build import _early_names, _early_sheets
+
+    (tmp_path / "ground.csv").write_text(
+        "name,ab_old,ab_new,rb_old,rb_new,sb_old,sb_new\n"
+        "Tiger,6.7,7.0,6.7,7.0,,\n"  # no SB column: ground SB followed RB
+        "Bf 109 G-2,3.7,4.0,3.7,4.0,,\n"  # a plane in a ground list: its ground-battle BR
+    )
+    (tmp_path / "air.csv").write_text(
+        "name,ab_old,ab_new,rb_old,rb_new,sb_old,sb_new\nBf-109G-2 (all),,,3.7,4.0,,\n"
+    )
+    cols = {"name": 0, "ab": [1, 2], "rb": [3, 4]}
+    (tmp_path / "index.json").write_text(json.dumps([
+        {"file": "ground.csv", "date": "2017-02-14", "source": "s", "branch": "ground", "columns": cols},
+        {"file": "air.csv", "date": "2019-10-22", "source": "s", "branch": "air", "columns": cols},
+    ]))  # fmt: skip
+    (tmp_path / "aliases.json").write_text(json.dumps({"Bf-109G-2 (all)": ["g2", "g2_hu"]}))
+    details = {
+        "tiger": unit("tiger", "Tiger", nation="germany"),
+        "g2": unit("g2", "Bf 109 G-2", nation="germany"),
+        "g2_hu": unit("g2_hu", "Bf 109 G-2", nation="germany"),
+    }
+    for u in ("g2", "g2_hu"):
+        details[u].branch = "air"
+    _early_sheets(details, _early_names(details), tmp_path)
+
+    [tiger] = details["tiger"].early
+    assert tiger.change == {m: (6.7, 7.0) for m in ("ab", "rb", "sb")}
+    for u in ("g2", "g2_hu"):  # only the air list applies, through the alias
+        [e] = details[u].early
+        assert (e.date, e.change) == ("2019-10-22", {"rb": (3.7, 4.0)})

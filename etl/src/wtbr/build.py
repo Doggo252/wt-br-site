@@ -862,12 +862,17 @@ def _sheet_number(cell: str) -> float | None:
 
 
 def _early_sheets(details: dict[str, UnitDetail], ids: Callable, folder: Path) -> None:
-    """The official BR change sheets linked from 2016-2019 changelogs (manual/br-sheets: the CSVs
-    and index.json, which says which columns hold the old and new BR of each mode). Ground RB
-    and SB shared one BR then, so a ground row without SB columns takes RB's."""
+    """The official BR change lists of 2016-2019 (manual/br-sheets: CSVs from the Google Sheets
+    and forum posts the changelogs linked, and index.json, which gives each one's date, source,
+    branch and the columns holding the old and new BR of each mode). Ground RB and SB shared one
+    BR until about 2018, so a ground row without SB columns takes RB's unless the sheet says
+    otherwise (sbFollowsRb: false)."""
     index = folder / "index.json"
     if not index.exists():
         return
+    # Names in the lists that matching can't place (typos, informal names), checked by hand.
+    alias_file = folder / "aliases.json"
+    aliases = json.loads(alias_file.read_text(encoding="utf-8")) if alias_file.exists() else {}
     found: dict[tuple[str, str], tuple[dict, dict]] = {}  # (id, date) -> modes, sheet
     for sheet in json.loads(index.read_text()):
         cols = sheet["columns"]
@@ -888,8 +893,22 @@ def _early_sheets(details: dict[str, UnitDetail], ids: Callable, folder: Path) -
             m = re.fullmatch(r"(.*?)\s*\(([^()]+)\)", name)
             nation = wayback.WIKI_COUNTRIES.get(m[2]) if m else None
             news = tuple(modes[k][1] for k in MODES if k in modes and modes[k][1] is not None)
-            for uid in ids(m[1] if nation else name, nation, news if len(news) == 3 else None):
-                if details[uid].branch == "ground" and "sb" not in cols and "rb" in modes:
+            alias = aliases.get(name)
+            matched = (
+                [u for u in ([alias] if isinstance(alias, str) else alias) if u in details]
+                if alias
+                else ids(m[1] if nation else name, nation, news if len(news) == 3 else None)
+            )
+            for uid in matched:
+                branch = details[uid].branch
+                if sheet.get("branch") and (branch == "ground") != (sheet["branch"] == "ground"):
+                    continue  # an aircraft's ground-battle BR, or a name shared across branches
+                if (
+                    branch == "ground"
+                    and "sb" not in cols
+                    and "rb" in modes
+                    and sheet.get("sbFollowsRb", True)
+                ):
                     modes = {**modes, "sb": modes["rb"]}
                 seen, _ = found.setdefault((uid, sheet["date"]), ({}, sheet))
                 seen.update(modes)

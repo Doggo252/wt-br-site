@@ -1,5 +1,27 @@
 [
  {
+  "file": "2016-01-27_aircraft.csv",
+  "date": "2016-01-27",
+  "note": 534,
+  "source": "https://docs.google.com/spreadsheets/d/18v5NQflthLG4S1bqBQGfdH8beF4u5movWpXa4RZQygg/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
   "file": "2016-01-27_ground_ab_overview.csv",
   "date": "2016-01-27",
   "note": 534,
@@ -8,24 +30,6 @@
   "columns": {
    "name": 0,
    "ab": [
-    1,
-    2
-   ]
-  }
- },
- {
-  "file": "2016-01-27_ground_rb_overview.csv",
-  "date": "2016-01-27",
-  "note": 534,
-  "source": "https://docs.google.com/spreadsheets/d/1X9vW5iE7C9g9ryWx4IkduRfUZaTQ92v9L_b5mPd3a6g/pubhtml",
-  "branch": "ground",
-  "columns": {
-   "name": 0,
-   "rb": [
-    1,
-    2
-   ],
-   "sb": [
     1,
     2
    ]
@@ -54,24 +58,20 @@
   }
  },
  {
-  "file": "2016-01-27_aircraft.csv",
+  "file": "2016-01-27_ground_rb_overview.csv",
   "date": "2016-01-27",
   "note": 534,
-  "source": "https://docs.google.com/spreadsheets/d/18v5NQflthLG4S1bqBQGfdH8beF4u5movWpXa4RZQygg/pubhtml",
-  "branch": "air",
+  "source": "https://docs.google.com/spreadsheets/d/1X9vW5iE7C9g9ryWx4IkduRfUZaTQ92v9L_b5mPd3a6g/pubhtml",
+  "branch": "ground",
   "columns": {
    "name": 0,
-   "ab": [
+   "rb": [
     1,
     2
    ],
-   "rb": [
-    3,
-    4
-   ],
    "sb": [
-    5,
-    6
+    1,
+    2
    ]
   }
  },
@@ -120,6 +120,82 @@
   }
  },
  {
+  "file": "2016-10-25_sheet_air.csv",
+  "date": "2016-10-25",
+  "note": 629,
+  "source": "https://web.archive.org/web/20170119131931/https://docs.google.com/spreadsheets/u/2/d/1uZn9av0sJ7_g09eLP-BOQ75GrrnYlC4osHvP3UqK-FA/pubhtml?gid=0&single=true",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2016-10-25_sheet_ground.csv",
+  "date": "2016-10-25",
+  "note": 629,
+  "source": "https://web.archive.org/web/20170119131931/https://docs.google.com/spreadsheets/u/2/d/1uZn9av0sJ7_g09eLP-BOQ75GrrnYlC4osHvP3UqK-FA/pubhtml?gid=0&single=true",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ]
+  }
+ },
+ {
+  "file": "2017-02-14_sheet_air.csv",
+  "date": "2017-02-14",
+  "note": 667,
+  "source": "https://docs.google.com/spreadsheets/d/12lqSCS7r2hGdBmWrGzKfOyoFrHB1G343f26Y8YUjU70/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ]
+  }
+ },
+ {
+  "file": "2017-02-14_sheet_ground.csv",
+  "date": "2017-02-14",
+  "note": 667,
+  "source": "https://docs.google.com/spreadsheets/d/12lqSCS7r2hGdBmWrGzKfOyoFrHB1G343f26Y8YUjU70/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ]
+  }
+ },
+ {
   "file": "2017-07-04_planned.csv",
   "date": "2017-07-04",
   "note": 721,
@@ -136,5 +212,222 @@
     4
    ]
   }
+ },
+ {
+  "file": "2017-10-17_sheet_air.csv",
+  "date": "2017-10-17",
+  "note": 762,
+  "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3m7oV9myHZmrvKTso-6vK8g4uMtK-UJsSMwdze1CpAAL2A4W3jxYCTGBa9zGlwuZryvbC81-PyDWf/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2017-10-17_sheet_ground.csv",
+  "date": "2017-10-17",
+  "note": 762,
+  "source": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3m7oV9myHZmrvKTso-6vK8g4uMtK-UJsSMwdze1CpAAL2A4W3jxYCTGBa9zGlwuZryvbC81-PyDWf/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2018-07-12_forum418995_air.csv",
+  "date": "2018-07-12",
+  "note": 853,
+  "source": "https://web.archive.org/web/20210925154218/https://forum.warthunder.com/index.php?/topic/418995-battle-rating-changes-july-2018/",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2018-07-12_forum418995_ground.csv",
+  "date": "2018-07-12",
+  "note": 853,
+  "source": "https://web.archive.org/web/20210925154218/https://forum.warthunder.com/index.php?/topic/418995-battle-rating-changes-july-2018/",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2019-02-25_sheet_air.csv",
+  "date": "2019-02-25",
+  "note": 939,
+  "source": "https://web.archive.org/web/20191211000201/https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vSN09tNh15swCshHa_qKwSgOPHI8UfFG1wvkc-GOCpQU4VIO8h7eWZMv8WVdPa_mhuwbR_IEgcRfrgF/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2019-02-25_sheet_ground.csv",
+  "date": "2019-02-25",
+  "note": 939,
+  "source": "https://web.archive.org/web/20191211000201/https://docs.google.com/spreadsheets/u/2/d/e/2PACX-1vSN09tNh15swCshHa_qKwSgOPHI8UfFG1wvkc-GOCpQU4VIO8h7eWZMv8WVdPa_mhuwbR_IEgcRfrgF/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2019-07-09_sheet_air.csv",
+  "date": "2019-07-09",
+  "note": 996,
+  "source": "https://web.archive.org/web/20201112024907/https://docs.google.com/spreadsheets/d/e/2PACX-1vQH6Ll2HbYp3AZ9xDie4tTdlCJ3KKTWpsprH_1pASNr_beRDP_AERRWIWVzI19czh7vI79a_odGMQu-/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2019-07-09_sheet_ground.csv",
+  "date": "2019-07-09",
+  "note": 996,
+  "source": "https://web.archive.org/web/20201112024907/https://docs.google.com/spreadsheets/d/e/2PACX-1vQH6Ll2HbYp3AZ9xDie4tTdlCJ3KKTWpsprH_1pASNr_beRDP_AERRWIWVzI19czh7vI79a_odGMQu-/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2019-10-22_sheet_air.csv",
+  "date": "2019-10-22",
+  "note": 1031,
+  "source": "https://web.archive.org/web/20201111182627/https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vRBsYM7rSnReQXLKqAbgGs4IPUvV8AXaHgqslcnaGzjINWpaq0yGvHRBFFoX2_TDdXyG_FFkvg5g-Ju/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2019-10-22_sheet_ground.csv",
+  "date": "2019-10-22",
+  "note": 1031,
+  "source": "https://web.archive.org/web/20201111182627/https://docs.google.com/spreadsheets/u/1/d/e/2PACX-1vRBsYM7rSnReQXLKqAbgGs4IPUvV8AXaHgqslcnaGzjINWpaq0yGvHRBFFoX2_TDdXyG_FFkvg5g-Ju/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ]
+  },
+  "sbFollowsRb": false
  }
 ]
