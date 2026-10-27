@@ -3,6 +3,7 @@
 import Link from "@/components/Link";
 import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CompareStats } from "./CompareStats";
 import { ModeToggle } from "./ModeToggle";
 import { SearchBox, loadIndex, type SearchRow } from "./SearchBox";
 import { MODE_NAME, formatBr, rankToBr } from "@/lib/br";
@@ -221,6 +222,10 @@ export function CompareTool({ suggestions = [] }: { suggestions?: { label: strin
             </ResponsiveContainer>
           </div>
         </figure>
+      )}
+
+      {shown.length > 0 && (
+        <CompareStats ids={shown} names={Object.fromEntries(shown.map((id) => [id, units[id].name]))} />
       )}
 
       {shown.length > 0 && (

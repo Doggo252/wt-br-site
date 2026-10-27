@@ -15,8 +15,9 @@ const SUGGESTIONS: { label: string; ids: string[] }[] = [
 ];
 
 export const metadata: Metadata = {
-  title: "Compare BR history",
-  description: "Compare the Battle Rating history of up to five War Thunder vehicles on one chart.",
+  title: "Compare vehicles",
+  description:
+    "Compare up to five War Thunder vehicles side by side: Battle Rating history on one chart, and speed, armour, penetration, reload and more.",
 };
 
 export default function ComparePage() {
@@ -28,8 +29,8 @@ export default function ComparePage() {
         <p className="eyebrow">Side by side</p>
         <h1 className="mt-1 text-4xl font-bold">Compare</h1>
         <p className="mt-2 max-w-2xl text-fg-2">
-          Put up to five vehicles, aircraft or helicopters on one BR chart. The link updates as you go, so you can
-          share it.
+          Put up to five vehicles, aircraft or helicopters side by side: BR history on one chart, then their stats
+          with the best of each picked out. The link updates as you go, so you can share it.
         </p>
         <CopyLink className="mt-3" />
       </header>
