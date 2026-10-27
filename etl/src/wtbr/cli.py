@@ -48,11 +48,15 @@ def main(argv: list[str] | None = None) -> int:
     nw.add_argument("--full", action="store_true", help="re-read every index page")
     wb = sub.add_parser("wayback", help="download old wiki BR lists from the Internet Archive")
     wb.add_argument("--out", default=str(paths.CACHE / "wayback"), help="folder for the captures")
+    wb.add_argument("--probe", action="store_true", help="only list what the archive holds")
     sub.add_parser("all", help="every step above, then build and schema")
     args = parser.parse_args(argv)
 
     if args.cmd == "wayback":
-        print(f"wayback: {wayback.fetch(Path(args.out))} new captures")
+        if args.probe:
+            wayback.probe(Path(args.out))
+        else:
+            print(f"wayback: {wayback.fetch(Path(args.out))} new captures")
         return 0
 
     dm = Datamine(paths.CACHE / "datamine")

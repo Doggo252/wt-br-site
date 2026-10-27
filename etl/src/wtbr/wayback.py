@@ -54,6 +54,37 @@ def captures(pattern: str) -> list[dict]:
     return [c for c in out if "?" not in c["original"] and "action=" not in c["original"]]
 
 
+PROBES = {
+    "list_exact": "wiki.warthunder.com/List_of_vehicle_battle_ratings",
+    "list_prefix": "wiki.warthunder.com/List_of_vehicle_battle_ratings*",
+    "list_index_php": "wiki.warthunder.com/index.php?title=List_of_vehicle_battle_ratings*",
+    "battle_rating": "wiki.warthunder.com/Battle_rating*",
+    "wiki_all": "wiki.warthunder.com/*",
+}
+
+
+def probe(out: Path) -> None:
+    """Dump the raw capture lists (successful HTML captures before BEFORE, deduplicated by
+    content) for a few URL patterns, to see what the archive holds."""
+    out.mkdir(parents=True, exist_ok=True)
+    for name, pattern in PROBES.items():
+        query = urllib.parse.urlencode(
+            {
+                "url": pattern,
+                "fl": "timestamp,original,statuscode,length",
+                "filter": ["statuscode:200"],
+                "collapse": "digest",
+                "to": BEFORE,
+            },
+            doseq=True,
+        )
+        try:
+            (out / f"cdx_{name}.txt").write_bytes(_get(f"{CDX}?{query}"))
+        except OSError as e:
+            print(f"wayback probe {name}: {e}")
+        time.sleep(DELAY_S)
+
+
 def fetch(out: Path) -> int:
     """Download every capture into out/<timestamp>_<page>.html; returns how many are new."""
     out.mkdir(parents=True, exist_ok=True)
