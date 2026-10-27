@@ -151,6 +151,53 @@ class MarketQuote(Model):
     event: str | None = None
 
 
+class StockUpgraded(Model):
+    """A figure stock and fully upgraded: (stock, upgraded) in Arcade and in Realistic/Simulator."""
+
+    ab: tuple[float, float] | None = None
+    rb: tuple[float, float] | None = None
+
+
+class WikiFacts(Model):
+    """Figures from the official wiki's unit page that the game files we read don't give
+    directly: stock as well as upgraded performance, flight limits and a few costs."""
+
+    enginePower: StockUpgraded | None = None  # hp
+    powerToWeight: StockUpgraded | None = None  # hp/t
+    maxSpeed: StockUpgraded | None = None  # aircraft, km/h at maxSpeedAltM
+    maxSpeedAltM: float | None = None
+    climb: StockUpgraded | None = None  # m/s
+    turnTime: StockUpgraded | None = None  # s
+    visibilityPct: int | None = None  # ground: how easy to spot, 100 = average
+    takeoffRunM: float | None = None
+    wingLoading: float | None = None  # kg/m²
+    wingspanM: float | None = None
+    lengthM: float | None = None
+    maxAltitudeM: float | None = None
+    speedLimitKmh: float | None = None  # indicated airspeed that breaks the airframe
+    machLimit: float | None = None
+    gLimit: str | None = None  # "≈ -9/12 G"
+    gearLimitKmh: float | None = None
+    flapLimits: str | None = None  # "280 / 451 / 484 km/h" (landing / takeoff / combat)
+    fuel: str | None = None  # "0.61 t (1h 8m)"
+    talismanGe: int | None = None
+    modsRp: int | None = None  # all modifications
+    modsSl: int | None = None
+
+
+class Camo(Model):
+    """A camouflage: one of the game's (unlocked by playing or bought with Golden Eagles) or a
+    Marketplace one made by players."""
+
+    id: str  # skin id in the game files, or the Marketplace item name
+    name: str
+    how: str | None = None  # how to unlock it in the game, in words
+    gold: int | None = None  # Golden Eagle price in the game
+    market: str | None = None  # Marketplace item name (trade.gaijin.net/market/1067/<market>)
+    price: float | None = None  # lowest sell offer at the last snapshot, GJN
+    image: str | None = None
+
+
 class ModeValues(Model):
     ab: float | None = None
     rb: float | None = None
@@ -328,6 +375,8 @@ class UnitDetail(UnitSummary):
     record: UnitRecord | None = None
     market: MarketQuote | None = None  # the vehicle itself, when tradeable
     skins: list[MarketQuote] = []  # its skins on the Gaijin Market, cheapest first
+    camos: list[Camo] = []  # the game's camouflages, then Marketplace ones
+    wiki: WikiFacts | None = None
     patchNotes: list[PatchMention] = []  # newest first, capped
     economy: Economy | None = None
     modifications: list[Modification] = []

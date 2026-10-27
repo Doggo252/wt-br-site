@@ -1,0 +1,140 @@
+[
+ {
+  "file": "2016-01-27_ground_ab_overview.csv",
+  "date": "2016-01-27",
+  "note": 534,
+  "source": "https://docs.google.com/spreadsheets/d/1X9vW5iE7C9g9ryWx4IkduRfUZaTQ92v9L_b5mPd3a6g/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ]
+  }
+ },
+ {
+  "file": "2016-01-27_ground_rb_overview.csv",
+  "date": "2016-01-27",
+  "note": 534,
+  "source": "https://docs.google.com/spreadsheets/d/1X9vW5iE7C9g9ryWx4IkduRfUZaTQ92v9L_b5mPd3a6g/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "rb": [
+    1,
+    2
+   ],
+   "sb": [
+    1,
+    2
+   ]
+  }
+ },
+ {
+  "file": "2016-01-27_ground_changes.csv",
+  "date": "2016-01-27",
+  "note": 534,
+  "source": "https://docs.google.com/spreadsheets/d/1X9vW5iE7C9g9ryWx4IkduRfUZaTQ92v9L_b5mPd3a6g/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    3,
+    4
+   ]
+  }
+ },
+ {
+  "file": "2016-01-27_aircraft.csv",
+  "date": "2016-01-27",
+  "note": 534,
+  "source": "https://docs.google.com/spreadsheets/d/18v5NQflthLG4S1bqBQGfdH8beF4u5movWpXa4RZQygg/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2016-07-07_aircraft.csv",
+  "date": "2016-07-07",
+  "note": 597,
+  "source": "https://docs.google.com/spreadsheets/u/2/d/1QDWlnuw7xBlQnkaucQR8LD11Z0h_eYHeeQTy3cuLjg8/pubhtml",
+  "branch": "air",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    5,
+    6
+   ]
+  }
+ },
+ {
+  "file": "2016-07-07_ground.csv",
+  "date": "2016-07-07",
+  "note": 597,
+  "source": "https://docs.google.com/spreadsheets/d/1Aiqyrt5FwPaMsm71F0CZb0EEQ3N0lKI1fdNyMO71NME/pubhtml",
+  "branch": "ground",
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ],
+   "sb": [
+    3,
+    4
+   ]
+  }
+ },
+ {
+  "file": "2017-07-04_planned.csv",
+  "date": "2017-07-04",
+  "note": 721,
+  "source": "https://docs.google.com/spreadsheets/u/2/d/1tYkQYbxI0L5w_G-p5T2FUGinO28ErR1Py6nWKxjrNaQ/pubhtml",
+  "branch": null,
+  "columns": {
+   "name": 0,
+   "ab": [
+    1,
+    2
+   ],
+   "rb": [
+    3,
+    4
+   ]
+  }
+ }
+]

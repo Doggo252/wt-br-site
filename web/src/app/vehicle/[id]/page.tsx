@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import {
+  Activity,
   Binoculars,
   Car,
   Cog,
@@ -18,10 +19,12 @@ import {
   MoveVertical,
   Settings2,
   Coins,
+  Fuel,
+  PlaneTakeoff,
+  Sparkles,
   Wrench,
   GraduationCap,
   BookOpen,
-  Paintbrush,
   TimerReset,
   TrendingUp,
   Users,
@@ -34,6 +37,7 @@ import { AmmoTable } from "@/components/AmmoTable";
 import { ArmorTable } from "@/components/ArmorTable";
 import { BrStepChart } from "@/components/BrStepChart";
 import { BranchIcon } from "@/components/BranchIcon";
+import { CamoList } from "@/components/CamoList";
 import { ChangeLog } from "@/components/ChangeLog";
 import { EarlyHistory } from "@/components/EarlyHistory";
 import { Flag } from "@/components/Flag";
@@ -293,7 +297,8 @@ export default async function VehiclePage({ params }: Params) {
           announced.length > 0 && "Official announcements",
           line && "In the tech tree",
           rivals.length > 0 && "Counterparts",
-          (u.market || (u.skins ?? []).length > 0) && "Gaijin Market",
+          u.market && "Gaijin Market",
+          (u.camos ?? []).length > 0 && "Camouflages",
           (u.modifications ?? []).length > 0 && "Modifications",
           (u.patchNotes ?? []).length > 0 && "Patch notes",
           (u.news ?? []).length > 0 && "In the news",
@@ -349,7 +354,9 @@ export default async function VehiclePage({ params }: Params) {
       <Section title={u.branch === "ground" ? "Stats" : "Flight performance"}>
         <StatGrid u={u} />
         {u.branch !== "ground" && (
-          <p className="mt-2 text-xs text-fg-3">From the in-game stat card, stock (unupgraded).</p>
+          <p className="mt-2 text-xs text-fg-3">
+            Tiles are the in-game stat card, stock (unupgraded); the table and the limits are from the official wiki.
+          </p>
         )}
       </Section>
 
@@ -520,9 +527,15 @@ export default async function VehiclePage({ params }: Params) {
         </Section>
       )}
 
-      {(u.market || (u.skins ?? []).length > 0) && (
+      {u.market && (
         <Section title="Gaijin Market">
           <MarketSection u={u} asOf={marketDate} />
+        </Section>
+      )}
+
+      {(u.camos ?? []).length > 0 && (
+        <Section title="Camouflages">
+          <CamoList camos={u.camos!} asOf={marketDate} />
         </Section>
       )}
 
@@ -695,6 +708,7 @@ const BASIC_CREW = 0.7;
 
 function StatGrid({ u }: { u: UnitDetail }) {
   const s = u.stats ?? {};
+  const w = u.wiki;
   if (u.branch !== "ground") return <AirStatGrid u={u} />;
   const rows: StatRow[] = [
     [Crosshair, "Main gun", s.mainGun ?? null],
@@ -717,8 +731,24 @@ function StatGrid({ u }: { u: UnitDetail }) {
     ],
     [Users, "Crew", s.crew != null ? String(s.crew) : null],
     [Weight, "Mass", s.massT != null ? `${s.massT.toFixed(1)} t` : null],
-    [Cog, "Engine", s.enginePowerHp != null ? `${Math.round(s.enginePowerHp)} hp` : null],
-    [Zap, "Power-to-weight", s.powerToWeight != null ? `${s.powerToWeight.toFixed(1)} hp/t` : null],
+    [
+      Cog,
+      "Engine",
+      w?.enginePower?.rb
+        ? `${Math.round(w.enginePower.rb[0])} → ${Math.round(w.enginePower.rb[1])} hp`
+        : s.enginePowerHp != null
+          ? `${Math.round(s.enginePowerHp)} hp`
+          : null,
+    ],
+    [
+      Zap,
+      "Power-to-weight",
+      w?.powerToWeight?.rb
+        ? `${w.powerToWeight.rb[0].toFixed(1)} → ${w.powerToWeight.rb[1].toFixed(1)} hp/t`
+        : s.powerToWeight != null
+          ? `${s.powerToWeight.toFixed(1)} hp/t`
+          : null,
+    ],
     [
       Gauge,
       "Max speed",
@@ -727,11 +757,15 @@ function StatGrid({ u }: { u: UnitDetail }) {
     [Shield, "Hull armor", s.armorHull ? `${s.armorHull.map((x) => Math.round(x)).join(" / ")} mm` : null],
     [ShieldHalf, "Turret armor", s.armorTurret ? `${s.armorTurret.map((x) => Math.round(x)).join(" / ")} mm` : null],
     [Settings2, "Gearbox", s.gearsFwd != null ? `${s.gearsFwd} forward / ${s.gearsRev ?? 0} reverse` : null],
+    [Binoculars, "Visibility", w?.visibilityPct != null ? `${w.visibilityPct}%` : null],
   ];
   return (
     <>
       <StatTiles rows={rows} />
+      {w && <UpgradeTable w={w} ground />}
       <p className="mt-2 text-xs text-fg-3">
+        Engine and power-to-weight are stock → upgraded in realistic battles, from the official wiki; visibility is
+        how easy the vehicle is to spot (100% is average, lower is harder).
         Armor is front / side / rear. Speeds are forward / reverse in realistic battles (arcade is about 10% faster). Reload, traverse and elevation speed are basic crew → aced crew on an upgraded vehicle; before the drive
         modifications traverse is 15% slower and elevation 20% slower.
       </p>
@@ -741,6 +775,7 @@ function StatGrid({ u }: { u: UnitDetail }) {
 
 function AirStatGrid({ u }: { u: UnitDetail }) {
   const s = u.stats ?? {};
+  const w = u.wiki;
   const n = (v: number | null | undefined, unit: string, digits = 0) =>
     v != null ? `${v.toLocaleString("en", { maximumFractionDigits: digits })} ${unit}` : null;
   const rows: StatRow[] = [
@@ -754,8 +789,74 @@ function AirStatGrid({ u }: { u: UnitDetail }) {
     [Repeat, "Roll rate", n(s.rollRate, "°/s")],
     [Mountain, "Ceiling", n(s.ceilingM, "m")],
     [Users, "Crew", s.crew != null ? String(s.crew) : null],
+    [PlaneTakeoff, "Takeoff run", n(w?.takeoffRunM, "m")],
+    [Weight, "Wing loading", n(w?.wingLoading, "kg/m²")],
+    [MoveHorizontal, "Wingspan", n(w?.wingspanM, "m", 1)],
+    [Gauge, "Speed limit (IAS)", n(w?.speedLimitKmh, "km/h")],
+    [Gauge, "Mach limit", w?.machLimit != null ? `M ${w.machLimit}` : null],
+    [Activity, "G limit", w?.gLimit ?? null],
+    [Settings2, "Gear limit (IAS)", n(w?.gearLimitKmh, "km/h")],
+    [Settings2, "Flap limits (IAS)", w?.flapLimits ?? null],
+    [Fuel, "Fuel", w?.fuel ?? null],
   ];
-  return <StatTiles rows={rows} />;
+  return (
+    <>
+      <StatTiles rows={rows} />
+      {w && <UpgradeTable w={w} ground={false} />}
+    </>
+  );
+}
+
+type Upgrade = { ab?: number[] | null; rb?: number[] | null } | null | undefined;
+
+/** Stock → fully upgraded, per mode, from the official wiki's unit page. */
+function UpgradeTable({ w, ground }: { w: NonNullable<UnitDetail["wiki"]>; ground: boolean }) {
+  const rows: [string, Upgrade, string, number][] = ground
+    ? [
+        ["Engine power", w.enginePower, "hp", 0],
+        ["Power-to-weight", w.powerToWeight, "hp/t", 1],
+      ]
+    : [
+        [`Max speed${w.maxSpeedAltM ? ` at ${fmt(w.maxSpeedAltM)} m` : ""}`, w.maxSpeed, "km/h", 0],
+        ["Climb rate", w.climb, "m/s", 1],
+        ["Turn time", w.turnTime, "s", 1],
+      ];
+  const shown = rows.filter(([, v]) => v && (v.ab || v.rb));
+  if (!shown.length) return null;
+  return (
+    <div className="panel mt-3 overflow-x-auto">
+      <table className="data-table w-full min-w-[420px] text-sm">
+        <thead>
+          <tr>
+            <th scope="col">Stock → upgraded</th>
+            <th scope="col" className="text-right">
+              Arcade
+            </th>
+            <th scope="col" className="text-right">
+              Realistic &amp; Simulator
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {shown.map(([label, v, unit, digits]) => (
+            <tr key={label}>
+              <th scope="row" className="text-left font-normal text-fg-2">
+                {label}
+              </th>
+              {(["ab", "rb"] as const).map((m) => {
+                const pair = v?.[m];
+                return (
+                  <td key={m} className="text-right font-display tabular">
+                    {pair ? `${pair[0].toFixed(digits)} → ${pair[1].toFixed(digits)} ${unit}` : "–"}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function StatTiles({ rows }: { rows: StatRow[] }) {
@@ -792,6 +893,12 @@ function EconomyBlock({ u }: { u: UnitDetail }) {
       e.acesGe ? `${fmt(e.acesGe)} GE${e.acesRp ? ` or ${fmt(e.acesRp)} RP` : ""}` : null,
     ],
     [GraduationCap, "Research bonus", e.rpPct ? `${e.rpPct}% RP` : null],
+    [
+      Wrench,
+      "All modifications",
+      u.wiki?.modsRp ? `${fmt(u.wiki.modsRp)} RP${u.wiki.modsSl ? ` · ${fmt(u.wiki.modsSl)} SL` : ""}` : null,
+    ],
+    [Sparkles, "Talisman", u.wiki?.talismanGe ? `${fmt(u.wiki.talismanGe)} GE` : null],
   ];
   return (
     <div className="space-y-4">
@@ -894,11 +1001,8 @@ function gjn(price: number): string {
   return `${price.toLocaleString("en", { maximumFractionDigits: 2 })} GJN`;
 }
 
-const SKINS_SHOWN = 12;
-
 function MarketSection({ u, asOf }: { u: UnitDetail; asOf?: string }) {
   const m = u.market;
-  const skins = u.skins ?? [];
   return (
     <div className="space-y-4">
       {m && (
@@ -924,42 +1028,6 @@ function MarketSection({ u, asOf }: { u: UnitDetail; asOf?: string }) {
             <Store className="h-4 w-4" aria-hidden />
             Open on the Gaijin Market
           </a>
-        </div>
-      )}
-      {skins.length > 0 && (
-        <div>
-          <h3 className="mb-2 flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-fg-3">
-            <Paintbrush className="h-4 w-4 text-gold/80" aria-hidden />
-            {skins.length} skin{skins.length === 1 ? "" : "s"} for sale
-          </h3>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
-            {skins.slice(0, SKINS_SHOWN).map((k) => (
-              <li key={k.name}>
-                <a
-                  href={marketHref(k.name)}
-                  rel="noopener"
-                  target="_blank"
-                  className="panel block overflow-hidden no-underline transition hover:brightness-125"
-                >
-                  {k.icon && (
-                    // eslint-disable-next-line @next/next/no-img-element -- remote Gaijin CDN thumbnail
-                    <img src={k.icon} alt="" loading="lazy" className="aspect-[16/9] w-full bg-black/30 object-cover" />
-                  )}
-                  <span className="block px-2 pt-1.5 text-xs text-fg-2" title={k.title}>
-                    <span className="line-clamp-2">{k.title}</span>
-                  </span>
-                  <span className="block px-2 pb-1.5 font-display text-sm tabular text-gold">
-                    {k.price != null ? gjn(k.price) : "No offers"}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-          {skins.length > SKINS_SHOWN && (
-            <p className="mt-2 text-sm text-fg-3">
-              Plus {skins.length - SKINS_SHOWN} more on the <Link href="/market/">market page</Link>.
-            </p>
-          )}
         </div>
       )}
       {asOf && <p className="text-xs text-fg-3">Prices as of {asOf}. Trading needs a Gaijin login.</p>}

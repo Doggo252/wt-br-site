@@ -1,5 +1,6 @@
 """Build data/: current vehicles, plus BR history when a HistoryResult is given."""
 
+import csv
 import itertools
 import json
 import os
@@ -15,6 +16,7 @@ from pydantic import BaseModel
 from . import (
     ammo,
     armament,
+    camos,
     market,
     news,
     official,
@@ -24,6 +26,7 @@ from . import (
     records,
     store,
     wayback,
+    wiki,
 )
 from .datamine import (
     CONTAINERS,
@@ -32,8 +35,11 @@ from .datamine import (
     MODIFICATIONS_CSV,
     RANK,
     SHOP,
+    SKINS,
+    SKINS_CSV,
     UNITS_CSV,
     UNITTAGS,
+    UNLOCKS,
     WEAPONRY_CSV,
     WPCOST,
     Datamine,
@@ -46,6 +52,7 @@ from .models import (
     ArmorPlate,
     BranchCounts,
     BrChange,
+    Camo,
     DevPreview,
     DevUnit,
     EarlyBr,
@@ -82,6 +89,7 @@ from .models import (
     UnitSummary,
     UpdateDiff,
     VersionInfo,
+    WikiFacts,
 )
 
 # In-game nation order.
@@ -218,6 +226,7 @@ def build_current(
     ).items():
         details[uid].requires = req
     market_data = _attach_market(details, paths.MANUAL / "market")
+    _attach_camos(details, dm, lang)
     store_data = _attach_store(details, paths.CACHE / "store")
     news_posts = _attach_news(details, news.load(paths.CACHE / "news"))
     note_entries = patchnotes.load(paths.CACHE / "patchnotes")
@@ -518,6 +527,35 @@ def _attach_store(details: dict[str, UnitDetail], cache: Path) -> StoreData | No
     return StoreData(fetched=fetched, packs=packs)
 
 
+def _attach_camos(details: dict[str, UnitDetail], dm: Datamine, lang: dict[str, str]) -> None:
+    """The game's camouflages with how each is unlocked, then Marketplace ones: those the wiki
+    lists for the vehicle and those the market snapshot matched to it, cheapest first. Also the
+    wiki page's other facts (cache/wiki, see wiki.py)."""
+    try:
+        game = camos.game_camos(
+            dm.read_json(SKINS),
+            dm.read_json(UNLOCKS).get("unlockable") or [],
+            camos.skin_names(dm.read_text(SKINS_CSV)),
+            {k.removesuffix("_shop"): v for k, v in lang.items() if k.endswith("_shop")},
+        )
+    except FileNotFoundError:  # older sparse checkouts; `wtbr fetch` adds the files
+        game = {}
+    for uid, d in details.items():
+        page = wiki.load(paths.CACHE / "wiki", uid) or {}
+        found = wiki.facts(page)
+        d.wiki = WikiFacts(**found) if found else None
+        d.camos = list(game.get(uid, []))
+        market: dict[str, Camo] = {}
+        for c in page.get("camos", []):
+            market[c["item"]] = Camo(
+                id=c["item"], name=c["name"], market=c["item"], image=c["image"]
+            )
+        for q in d.skins:
+            c = market.setdefault(q.name, Camo(id=q.name, name=q.title, market=q.name))
+            c.price, c.image = q.price, c.image or q.icon
+        d.camos += sorted(market.values(), key=lambda c: (c.price is None, c.price or 0))
+
+
 def _attach_market(details: dict[str, UnitDetail], folder: Path) -> MarketData | None:
     """Prices from the newest Gaijin Market snapshot onto vehicles; every item, with its price
     history across snapshots, for the market page."""
@@ -787,8 +825,69 @@ def _early_history(details: dict[str, UnitDetail], entries: list[dict], manual: 
                             date=e["date"], source="changelog", change=modes_changed, noteId=e["id"]
                         )
                     )
+    _early_sheets(details, ids, manual / "br-sheets")
     for d in details.values():
         d.early.sort(key=lambda x: x.date, reverse=True)
+
+
+MODES = ("ab", "rb", "sb")
+
+
+def _sheet_number(cell: str) -> float | None:
+    """'6.7', '2. 0' (a typo in one sheet), '' -> number or None."""
+    try:
+        return float(cell.replace(" ", "")) if cell.strip() else None
+    except ValueError:
+        return None
+
+
+def _early_sheets(details: dict[str, UnitDetail], ids: Callable, folder: Path) -> None:
+    """The official BR change sheets linked from 2016-2019 changelogs (manual/br-sheets: the CSVs
+    and index.json, which says which columns hold the old and new BR of each mode). Ground RB
+    and SB shared one BR then, so a ground row without SB columns takes RB's."""
+    index = folder / "index.json"
+    if not index.exists():
+        return
+    found: dict[tuple[str, str], tuple[dict, dict]] = {}  # (id, date) -> modes, sheet
+    for sheet in json.loads(index.read_text()):
+        cols = sheet["columns"]
+        with (folder / sheet["file"]).open(encoding="utf-8") as f:
+            rows = list(csv.reader(f))
+        for r in rows:
+            if len(r) <= cols["name"] or not r[cols["name"]].strip():
+                continue
+            modes = {}
+            for m in MODES:
+                if m in cols and max(cols[m]) < len(r):
+                    old, new = (_sheet_number(r[i]) for i in cols[m])
+                    if old is not None or new is not None:
+                        modes[m] = (old, new)
+            if not modes:
+                continue
+            name = r[cols["name"]].strip()
+            m = re.fullmatch(r"(.*?)\s*\(([^()]+)\)", name)
+            nation = wayback.WIKI_COUNTRIES.get(m[2]) if m else None
+            news = tuple(modes[k][1] for k in MODES if k in modes and modes[k][1] is not None)
+            for uid in ids(m[1] if nation else name, nation, news if len(news) == 3 else None):
+                if details[uid].branch == "ground" and "sb" not in cols and "rb" in modes:
+                    modes = {**modes, "sb": modes["rb"]}
+                seen, _ = found.setdefault((uid, sheet["date"]), ({}, sheet))
+                seen.update(modes)
+    for (uid, date), (modes, sheet) in found.items():
+        change = {
+            k: (a, b) for k, (a, b) in modes.items() if a is not None and b is not None and a != b
+        }
+        br = {k: b if b is not None else a for k, (a, b) in modes.items()}
+        details[uid].early.append(
+            EarlyBr(
+                date=date,
+                source="sheet",
+                change=change,
+                br={} if change else br,
+                url=sheet["source"],
+                noteId=sheet.get("note"),
+            )
+        )
 
 
 def _attach_records(details: dict[str, UnitDetail], rows: list, lang: dict) -> None:

@@ -16,9 +16,12 @@ SHOP = "char.vromfs.bin_u/config/shop.blkx"
 UNITTAGS = "char.vromfs.bin_u/config/unittags.blkx"
 RANK = "char.vromfs.bin_u/config/rank.blkx"
 MODIFICATIONS = "char.vromfs.bin_u/config/modifications.blkx"
+SKINS = "char.vromfs.bin_u/config/skins.blkx"
+UNLOCKS = "char.vromfs.bin_u/config/unlocks.blkx"
 UNITS_CSV = "lang.vromfs.bin_u/lang/units.csv"
 WEAPONRY_CSV = "lang.vromfs.bin_u/lang/units_weaponry.csv"
 MODIFICATIONS_CSV = "lang.vromfs.bin_u/lang/units_modifications.csv"
+SKINS_CSV = "lang.vromfs.bin_u/lang/unlocks_skins.csv"
 TANKMODELS = "aces.vromfs.bin_u/gamedata/units/tankmodels"
 GROUND_WEAPONS = "aces.vromfs.bin_u/gamedata/weapons/groundmodels_weapons"
 FLIGHTMODELS = "aces.vromfs.bin_u/gamedata/flightmodels"
@@ -34,9 +37,12 @@ SPARSE_PATHS = [
     UNITTAGS,
     RANK,
     MODIFICATIONS,
+    SKINS,
+    UNLOCKS,
     UNITS_CSV,
     WEAPONRY_CSV,
     MODIFICATIONS_CSV,
+    SKINS_CSV,
     f"{TANKMODELS}/*",
     f"{GROUND_WEAPONS}/*",
     f"{FLIGHTMODELS}/*",

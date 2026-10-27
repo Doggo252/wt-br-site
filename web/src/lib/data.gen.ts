@@ -330,6 +330,8 @@ export interface UnitDetail {
   record?: UnitRecord | null;
   market?: MarketQuote | null;
   skins?: MarketQuote[];
+  camos?: Camo[];
+  wiki?: WikiFacts | null;
   patchNotes?: PatchMention[];
   economy?: Economy | null;
   modifications?: Modification[];
@@ -423,6 +425,56 @@ export interface MarketQuote {
   icon?: string | null;
   quality?: string | null;
   event?: string | null;
+}
+/**
+ * A camouflage: one of the game's (unlocked by playing or bought with Golden Eagles) or a
+ * Marketplace one made by players.
+ */
+
+export interface Camo {
+  id: string;
+  name: string;
+  how?: string | null;
+  gold?: number | null;
+  market?: string | null;
+  price?: number | null;
+  image?: string | null;
+}
+/**
+ * Figures from the official wiki's unit page that the game files we read don't give
+ * directly: stock as well as upgraded performance, flight limits and a few costs.
+ */
+
+export interface WikiFacts {
+  enginePower?: StockUpgraded | null;
+  powerToWeight?: StockUpgraded | null;
+  maxSpeed?: StockUpgraded | null;
+  maxSpeedAltM?: number | null;
+  climb?: StockUpgraded | null;
+  turnTime?: StockUpgraded | null;
+  visibilityPct?: number | null;
+  takeoffRunM?: number | null;
+  wingLoading?: number | null;
+  wingspanM?: number | null;
+  lengthM?: number | null;
+  maxAltitudeM?: number | null;
+  speedLimitKmh?: number | null;
+  machLimit?: number | null;
+  gLimit?: string | null;
+  gearLimitKmh?: number | null;
+  flapLimits?: string | null;
+  fuel?: string | null;
+  talismanGe?: number | null;
+  modsRp?: number | null;
+  modsSl?: number | null;
+}
+/**
+ * A figure stock and fully upgraded: (stock, upgraded) in Arcade and in Realistic/Simulator.
+ */
+
+export interface StockUpgraded {
+  ab?: [number, number] | null;
+  rb?: [number, number] | null;
 }
 /**
  * A patch note item naming this vehicle.

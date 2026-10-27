@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from . import images, news, official, parse, patchnotes, paths, records, store, wayback
+from . import images, news, official, parse, patchnotes, paths, records, store, wayback, wiki
 from .build import build_current
 from .datamine import COUNTRY_ICONS, SHOP, UNITS_CSV, WPCOST, Datamine
 from .history import BlobCache, History, pending_point, timeline
@@ -46,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("store", help="download Gaijin Store pack prices")
     nw = sub.add_parser("news", help="download the warthunder.com news index")
     nw.add_argument("--full", action="store_true", help="re-read every index page")
+    wk = sub.add_parser("wiki", help="read the official wiki's unit pages (a share per run)")
+    wk.add_argument("--limit", type=int, default=1200, help="most pages to read this run")
     wb = sub.add_parser("wayback", help="download old wiki BR lists from the Internet Archive")
     wb.add_argument("--out", default=str(paths.CACHE / "wayback"), help="folder for the captures")
     wb.add_argument("--probe", action="store_true", help="only list what the archive holds")
@@ -180,6 +182,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"store: {len(store.fetch(paths.CACHE / 'store'))} products")
         except OSError as e:  # the store is a nice-to-have; keep the last catalog
             print(f"store: fetch failed ({e}), keeping the cached catalog")
+    if args.cmd in ("wiki", "all"):
+        # A share of the wiki's unit pages each run; the cache keeps the rest (see wiki.py).
+        wp = dm.read_json(WPCOST)
+        ids = sorted({u for _, move_types in BRANCHES.values() for u in unit_ranks(wp, move_types)})
+        try:
+            n = wiki.fetch(paths.CACHE / "wiki", ids, limit=getattr(args, "limit", 1200))
+            print(f"wiki: {n} unit pages read")
+        except OSError as e:
+            print(f"wiki: fetch failed ({e}), keeping the cached pages")
     if args.cmd in ("build", "all"):
         rec_dir = paths.CACHE / "records"
         record_rows = (

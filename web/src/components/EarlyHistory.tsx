@@ -46,7 +46,14 @@ export function EarlyHistory({ early }: { early: EarlyBr[] }) {
               </>
             ) : (
               <>
-                <span className="tabular text-fg">{changeText(e.change ?? {})}</span>
+                <span className="tabular text-fg">
+                  {e.change && Object.keys(e.change).length ? changeText(e.change) : brText(e.br ?? {})}
+                </span>
+                {e.source === "sheet" && e.url && (
+                  <a href={e.url} rel="noopener" target="_blank" className="text-xs text-fg-3">
+                    Official list
+                  </a>
+                )}
                 {e.noteId != null && (
                   <Link href={`/patch-notes/${e.noteId}/`} className="text-xs text-fg-3">
                     Changelog
@@ -58,8 +65,8 @@ export function EarlyHistory({ early }: { early: EarlyBr[] }) {
         ))}
       </ul>
       <p className="border-t border-card-border px-3 py-2 text-xs text-fg-3">
-        The game files we read start in March 2020. Earlier, this is what the official changelogs recorded and what the
-        War Thunder wiki showed when the Internet Archive saved it, mostly during 2019. The wiki was edited by hand and
+        The game files we read start in March 2020. Earlier, this is what the official changelogs and the BR lists they
+        linked recorded, and what the War Thunder wiki showed when the Internet Archive saved it. The wiki was edited by hand and
         sometimes lagged the game, and Gaijin announced many BR changes elsewhere, so there are gaps.
       </p>
     </div>
