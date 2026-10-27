@@ -12,6 +12,7 @@ import type {
   DevPreview,
   MarketData,
   StoreData,
+  ResearchRules,
   Meta,
   PatchNote,
   PatchNoteSummary,
@@ -148,6 +149,11 @@ export const getPlannedRanks = cache(() => {
 /** Gaijin Market snapshot (data/market.json), or null before the first snapshot. */
 export const getMarket = cache((): MarketData | null =>
   existsSync(join(DATA, "market.json")) ? read<MarketData>("market.json") : null,
+);
+
+/** Rank unlock thresholds (data/research.json). */
+export const getResearchRules = cache((): ResearchRules =>
+  existsSync(join(DATA, "research.json")) ? read<ResearchRules>("research.json") : { unlocks: {} },
 );
 
 /** Gaijin Store catalog (data/store.json), or null before the first fetch. */

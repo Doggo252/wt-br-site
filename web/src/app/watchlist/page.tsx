@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SectionTabs, TOOL_TABS } from "@/components/SectionTabs";
 import { WatchlistView } from "@/components/WatchlistView";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function WatchlistPage() {
           Star vehicles on their pages to keep them here. Each card shows how its BR moved since you starred it.
         </p>
       </header>
+      <SectionTabs label="Tools" tabs={TOOL_TABS} current="/watchlist/" />
       <WatchlistView />
     </div>
   );

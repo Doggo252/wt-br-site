@@ -17,6 +17,7 @@ from .models import (
     PatchNote,
     PatchNoteSummary,
     RecordRow,
+    ResearchRules,
     StoreData,
     TimeMachine,
     UnitDetail,
@@ -144,6 +145,7 @@ def write_schema() -> None:
         PatchNote,
         PatchNoteSummary,
         StoreData,
+        ResearchRules,
     ):  # fmt: skip
         schema = model.model_json_schema(mode="serialization")
         (out / f"{model.__name__}.json").write_text(json.dumps(schema, indent=2))

@@ -14,6 +14,7 @@ REPO_URL = "https://github.com/gszabi99/War-Thunder-Datamine.git"
 WPCOST = "char.vromfs.bin_u/config/wpcost.blkx"
 SHOP = "char.vromfs.bin_u/config/shop.blkx"
 UNITTAGS = "char.vromfs.bin_u/config/unittags.blkx"
+RANK = "char.vromfs.bin_u/config/rank.blkx"
 UNITS_CSV = "lang.vromfs.bin_u/lang/units.csv"
 WEAPONRY_CSV = "lang.vromfs.bin_u/lang/units_weaponry.csv"
 MODIFICATIONS_CSV = "lang.vromfs.bin_u/lang/units_modifications.csv"
@@ -28,6 +29,7 @@ SPARSE_PATHS = [
     WPCOST,
     SHOP,
     UNITTAGS,
+    RANK,
     UNITS_CSV,
     WEAPONRY_CSV,
     MODIFICATIONS_CSV,

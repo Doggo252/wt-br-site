@@ -224,3 +224,45 @@ def test_top_speed_comes_from_the_gear_train():
     }
     assert parse._top_speeds(phys) == {"maxSpeedFwd": 68, "maxSpeedRev": 31}
     assert parse._top_speeds({}) == {}
+
+
+def test_requirements_follow_the_column_unless_shop_says_otherwise():
+    U = parse.ShopUnit
+    units = {
+        "a": U("a", "germany", 1, 0, {}),
+        "prem": U("prem", "germany", 1, 0, {}),
+        "b": U("b", "germany", 1, 0, {}),
+        "c": U("c", "germany", 2, 0, {"reqAir": ""}),  # starts its own line
+        "d": U("d", "germany", 2, 0, {}, group="g"),
+        "e": U("e", "germany", 2, 0, {"reqAir": "a"}, group="g"),
+    }
+    tree = parse.ShopTree("germany")
+    tree.columns = [
+        [
+            parse.ShopCell(1, ["a"]),
+            parse.ShopCell(1, ["prem"]),
+            parse.ShopCell(1, ["b"]),
+            parse.ShopCell(2, ["c"]),
+            parse.ShopCell(2, ["d", "e"], group="g"),
+        ]
+    ]
+    req = parse.requirements([tree], units, researchable={"a", "b", "c", "d", "e"})
+    assert req == {"a": None, "b": "a", "c": None, "d": "c", "e": "a"}
+
+
+def test_rank_unlocks():
+    blk = {
+        "needBuyToOpenNextInEra": {
+            "country_germany": {
+                "needBuyToOpenNextInEraTank1": 6,
+                "needBuyToOpenNextInEraAircraft8": 3,
+                "needBuyToOpenNextInEraHelicopter5": 1,
+                "needBuyToOpenNextInEraBoat1": 2,
+            }
+        }
+    }
+    assert parse.rank_unlocks(blk) == {
+        "ground": {"germany": {1: 6}},
+        "air": {"germany": {8: 3}},
+        "heli": {"germany": {5: 1}},
+    }

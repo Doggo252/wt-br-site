@@ -13,6 +13,7 @@ from . import ammo, market, official, parse, patchnotes, paths, records, store
 from .datamine import (
     EXPLOSIVE,
     MODIFICATIONS_CSV,
+    RANK,
     SHOP,
     UNITS_CSV,
     UNITTAGS,
@@ -46,6 +47,7 @@ from .models import (
     PatchNoteSummary,
     Ranks,
     RecordRow,
+    ResearchRules,
     Sight,
     Stats,
     StoreData,
@@ -143,9 +145,11 @@ def build_current(
 
     details: dict[str, UnitDetail] = {}
     shop_trees: list[tuple[str, parse.ShopTree]] = []
+    all_shop_units: dict[str, parse.ShopUnit] = {}
     for branch, (section, move_types) in parse.BRANCHES.items():
         shop_units, trees = parse.parse_shop(shop, section)
         shop_trees += [(branch, t) for t in trees]
+        all_shop_units.update(shop_units)
         ranks = parse.unit_ranks(wpcost, move_types)
         for uid, su in shop_units.items():
             if uid not in ranks or uid in details:
@@ -167,6 +171,13 @@ def build_current(
 
     if record_rows is not None:
         _attach_records(details, record_rows, lang)
+    researchable = {
+        uid for uid, d in details.items() if d.status == "tree" and not d.hidden and not d.removedIn
+    }
+    for uid, req in parse.requirements(
+        [t for _, t in shop_trees], all_shop_units, researchable
+    ).items():
+        details[uid].requires = req
     market_data = _attach_market(details, paths.MANUAL / "market")
     store_data = _attach_store(details, paths.CACHE / "store")
     notes = _patch_notes(
@@ -244,6 +255,10 @@ def build_current(
         _write(out / "market.json", market_data)
     if store_data:
         _write(out / "store.json", store_data)
+    try:
+        _write(out / "research.json", ResearchRules(unlocks=parse.rank_unlocks(dm.read_json(RANK))))
+    except FileNotFoundError:  # older sparse checkouts; `wtbr fetch` adds rank.blkx
+        pass
     if notes:
         _write(
             out / "patchnotes" / "index.json",

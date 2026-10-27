@@ -129,6 +129,40 @@ def parse_shop(shop: dict, section: str = "army") -> tuple[dict[str, ShopUnit], 
     return units, trees
 
 
+def requirements(trees: list[ShopTree], units: dict[str, ShopUnit], researchable: set[str]):
+    """Unit id -> the vehicle you must research first, for researchable (tech tree) units.
+
+    By default a vehicle needs the researchable vehicle before it in its column, folders
+    included, in order. shop.blkx overrides that with `reqAir`: a unit id, or "" for none (a
+    line that starts at a later rank)."""
+    out: dict[str, str | None] = {}
+    for tree in trees:
+        for column in tree.columns:
+            prev = None
+            for cell in column:
+                for uid in cell.units:
+                    if uid not in researchable:
+                        continue
+                    req = units[uid].flags.get("reqAir") if uid in units else None
+                    out[uid] = (req or None) if req is not None else prev
+                    prev = uid
+    return out
+
+
+def rank_unlocks(rank_blk: dict) -> dict[str, dict[str, dict[int, int]]]:
+    """rank.blkx needBuyToOpenNextInEra: branch -> nation -> {rank: vehicles of that rank you
+    must own to open the next one}."""
+    kinds = {"Tank": "ground", "Aircraft": "air", "Helicopter": "heli"}
+    out: dict[str, dict[str, dict[int, int]]] = {}
+    for country, needs in (rank_blk.get("needBuyToOpenNextInEra") or {}).items():
+        for key, n in needs.items():
+            m = re.fullmatch(r"needBuyToOpenNextInEra([A-Za-z]+)(\d+)", key)
+            if m and m.group(1) in kinds:
+                branch = kinds[m.group(1)]
+                out.setdefault(branch, {}).setdefault(nation_of(country), {})[int(m.group(2))] = n
+    return out
+
+
 def _columns(section) -> list[dict]:
     """Columns of one tree. Current files: {"range": [col, ...]}.
     Older files (2020-2022): [{"range": col}, ...]."""

@@ -31,3 +31,10 @@ export const RANKING_TABS = [
   { href: "/shells/", label: "Shell penetration" },
   { href: "/records/", label: "Kill records" },
 ] as const;
+
+export const TOOL_TABS = [
+  { href: "/lineup/", label: "Lineup planner" },
+  { href: "/research/", label: "Research planner" },
+  { href: "/compare/", label: "Compare" },
+  { href: "/watchlist/", label: "Watchlist" },
+] as const;

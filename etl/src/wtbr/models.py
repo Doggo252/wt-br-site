@@ -93,6 +93,7 @@ class UnitSummary(Model):
     geCost: int | None = None
     pack: bool = False
     storePrice: float | None = None
+    requires: str | None = None  # tech tree vehicle to research first
     added: str | None = None  # version first seen; None if already in the first snapshot (2020-03)
     removedIn: str | None = None  # set when the vehicle is no longer in the game
     changes: int = 0  # number of updates that changed its BR in any mode
@@ -406,6 +407,13 @@ class MarketEntry(MarketQuote):
     unit: str | None = None  # vehicle id, for vehicles and matched skins
     country: str | None = None
     history: list[MarketPoint] = []
+
+
+class ResearchRules(Model):
+    """data/research.json: branch -> nation -> {rank: vehicles of that rank you must own to open
+    the next rank} (rank.blkx needBuyToOpenNextInEra)."""
+
+    unlocks: dict[str, dict[str, dict[int, int]]]
 
 
 class StoreData(Model):

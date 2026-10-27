@@ -410,9 +410,16 @@ export default async function VehiclePage({ params }: Params) {
               ) : (
                 <span />
               )}
-              <Link href={treeHref(u.branch, u.nation)} className="text-fg-2">
-                Full {nationName(u.nation)} tree
-              </Link>
+              <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <Link href={treeHref(u.branch, u.nation)} className="text-fg-2">
+                  Full {nationName(u.nation)} tree
+                </Link>
+                {u.status === "tree" && !u.hidden && !u.removedIn && (
+                  <Link href={`/research/?id=${u.id}`} className="text-fg-2">
+                    Plan the research to here
+                  </Link>
+                )}
+              </span>
               {line.next ? (
                 <Link href={`/vehicle/${line.next.id}/`} className="btn" rel="next">
                   {line.next.name} →

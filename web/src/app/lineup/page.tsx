@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SectionTabs, TOOL_TABS } from "@/components/SectionTabs";
 import { CopyLink } from "@/components/CopyLink";
 import { LineupTool } from "@/components/LineupTool";
 import { BRANCHES, type Branch } from "@/lib/branches";
@@ -23,6 +24,7 @@ export default function LineupPage() {
         </p>
         <CopyLink className="mt-3" />
       </header>
+      <SectionTabs label="Tools" tabs={TOOL_TABS} current="/lineup/" />
       <LineupTool nations={nations} />
     </div>
   );

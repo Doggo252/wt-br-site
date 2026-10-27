@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SectionTabs, TOOL_TABS } from "@/components/SectionTabs";
 import { CompareTool } from "@/components/CompareTool";
 import { CopyLink } from "@/components/CopyLink";
 import { getUnitMap } from "@/lib/data";
@@ -32,6 +33,7 @@ export default function ComparePage() {
         </p>
         <CopyLink className="mt-3" />
       </header>
+      <SectionTabs label="Tools" tabs={TOOL_TABS} current="/compare/" />
       <CompareTool suggestions={suggestions} />
     </div>
   );

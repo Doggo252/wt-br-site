@@ -198,6 +198,21 @@ export interface RecordRow {
 }
 
 /**
+ * data/research.json: branch -> nation -> {rank: vehicles of that rank you must own to open
+ * the next rank} (rank.blkx needBuyToOpenNextInEra).
+ */
+
+export interface ResearchRules {
+  unlocks: {
+    [k: string]: {
+      [k: string]: {
+        [k: string]: number;
+      };
+    };
+  };
+}
+
+/**
  * data/store.json.
  */
 
@@ -282,6 +297,7 @@ export interface UnitDetail {
   geCost?: number | null;
   pack?: boolean;
   storePrice?: number | null;
+  requires?: string | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
@@ -521,6 +537,7 @@ export interface UnitSummary {
   geCost?: number | null;
   pack?: boolean;
   storePrice?: number | null;
+  requires?: string | null;
   added?: string | null;
   removedIn?: string | null;
   changes?: number;
