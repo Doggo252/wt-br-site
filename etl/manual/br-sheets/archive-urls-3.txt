@@ -1,0 +1,4 @@
+# The November 2018 BR change sheet was embedded as a widget, whose capture holds only the frame;
+# its tabs load from these pages.
+2018-11-28	904	https://docs.google.com/spreadsheets/d/e/2PACX-1vTSeFw8Dtx4I17dDNgwpdlceVSi0SMJ2RSrf3InGhQmCpzRcahRbu1B-sweI8Gc6KxEmk-YbVW1ofuv/pubhtml/sheet?headers=false&gid=0
+2018-11-28	904	https://docs.google.com/spreadsheets/d/e/2PACX-1vTSeFw8Dtx4I17dDNgwpdlceVSi0SMJ2RSrf3InGhQmCpzRcahRbu1B-sweI8Gc6KxEmk-YbVW1ofuv/pubhtml/sheet?headers=false&gid=1771626157
