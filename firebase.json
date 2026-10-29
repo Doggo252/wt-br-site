@@ -4,7 +4,9 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "fonts/README.md"
+      "fonts/README.md",
+      "**/__next.*.txt",
+      "**/index.txt"
     ],
     "trailingSlash": true,
     "headers": [
